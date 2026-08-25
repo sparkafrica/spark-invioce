@@ -1,0 +1,90 @@
+import { useQuery } from '@tanstack/react-query'
+import { createFileRoute, Link, redirect, useMatch } from '@tanstack/react-router'
+import { getSession } from '#/lib/auth.functions'
+import { InvoiceDetail } from '#/components/invoice/InvoiceDetail'
+import { Button } from '#/components/ui/button'
+import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail'
+
+interface LoaderData {
+  user: import('better-auth').User | null
+  session: import('better-auth').Session | null
+  invoiceId: string
+}
+
+export const Route = createFileRoute('/invoices/$id')({
+  beforeLoad: async ({ params }): Promise<LoaderData> => {
+    const session = await getSession()
+    if (!session) {
+      throw redirect({ to: '/auth/login', search: { redirect: `/invoices/${params.id}` } })
+    }
+    return { user: session.user, session: session.session, invoiceId: params.id }
+  },
+  component: InvoiceDetailPage,
+})
+
+function InvoiceDetailPage() {
+  const match = useMatch({ from: '/invoices/$id' })
+  const invoiceId = (match?.loaderData as LoaderData | undefined)?.invoiceId || ''
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['invoice', { id: invoiceId }],
+    queryFn: () => getInvoiceDetail({ data: { id: invoiceId } }),
+    enabled: !!invoiceId,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <Button>
+            <Link to="/invoices">Back to Invoices</Link>
+          </Button>
+        </div>
+        <div className="rounded-none border bg-white p-12  text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-[#5c5755]">Loading invoice...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <Button>
+            <Link to="/invoices">Back to Invoices</Link>
+          </Button>
+        </div>
+        <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
+          <p className="text-red-600 dark:text-red-400">Failed to load invoice: {(error as Error).message}</p>
+          <Button variant="outline" className="mt-4" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data?.invoice) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <Button>
+            <Link to="/invoices">Back to Invoices</Link>
+          </Button>
+        </div>
+        <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
+          <p className="text-red-600 dark:text-red-400">Invoice not found</p>
+          <Button variant="outline" className="mt-4">
+            <a href="/invoices">Back to Invoices</a>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return <InvoiceDetail invoice={data.invoice} />
+}
