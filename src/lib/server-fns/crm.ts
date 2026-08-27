@@ -28,7 +28,7 @@ export const createClient = createServerFn({ method: 'POST' })
 			throw new Error('Unauthorized');
 		}
 
-		const orgId = 'default-org';
+		const orgId = process.env.ORGANIZATION_ID!;
 
 		const clientId = (
 			await db
@@ -108,7 +108,7 @@ export const createProduct = createServerFn({ method: 'POST' })
 			throw new Error('Unauthorized');
 		}
 
-		const orgId = 'default-org';
+		const orgId = process.env.ORGANIZATION_ID!;
 
 		const productId = (
 			await db
@@ -186,7 +186,7 @@ export const getProducts = createServerFn({ method: 'GET' })
 				currency: products.currency,
 			})
 			.from(products)
-			.where(eq(products.organizationId, 'default-org'))
+			.where(eq(products.organizationId, process.env.ORGANIZATION_ID!))
 			.orderBy(desc(products.createdAt));
 
 		return { products: results };

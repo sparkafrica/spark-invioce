@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { MenuIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '#/components/ui/button'
+import { Skeleton } from '#/components/ui/skeleton'
 import { authClient } from '#/lib/auth-client'
 import { cn } from '#/lib/utils'
 
@@ -15,7 +16,7 @@ export function Header({ className }: HeaderProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { data: session } = authClient.useSession()
+  const { data: session, isPending } = authClient.useSession()
 
   const isActive = (href: string) => location.pathname === href || location.pathname.startsWith(href + '/')
 
@@ -50,15 +51,18 @@ export function Header({ className }: HeaderProps) {
         </Button>
 
         <Link to="/dashboard" className="flex items-center">
-          <img src="/assets/spark-logo.png" alt="Spark Africa Technologies" width={118} height={22} className="h-[22px] w-auto" style={{ width: 118 }} />
+          <img src="/assets/spark-logo.png" alt="Spark Africa Technologies" width={118} height={22} className="h-5.5 w-auto" style={{ width: 118 }} />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-[3px] flex-wrap" aria-label="Main navigation">
+        <nav className="hidden md:flex items-center gap-0.75 flex-wrap" aria-label="Main navigation">
           {[
             { href: '/dashboard', label: 'Overview' },
             { href: '/invoices', label: 'Invoices' },
+            { href: '/memos', label: 'Memos' },
             { href: '/clients', label: 'Clients' },
             { href: '/products', label: 'Products' },
+            { href: '/team', label: 'Team' },
+            { href: '/activity', label: 'Activity' },
             { href: '/settings', label: 'Settings' },
           ].map((item) => (
             <Link key={item.href} to={item.href} className={navBtn(isActive(item.href))}>
@@ -69,30 +73,34 @@ export function Header({ className }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
+        <Button
           type="button"
+          variant="default"
           onClick={() => navigate({ to: '/invoices/new' })}
-          className="hidden sm:inline-flex bg-[#ec3013] text-white border border-transparent px-3 py-2 text-xs font-semibold hover:bg-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] focus-visible:outline-offset-2"
+          className="hidden sm:inline-flex bg-[#ec3013] text-white border border-transparent px-3 py-2 text-xs font-semibold hover:bg-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] focus-visible:outline-offset-2 rounded-none h-auto"
           style={{ padding: '9px 13px', fontSize: 12 }}
         >
           New invoice
-        </button>
-        {session?.user ? (
+        </Button>
+        {isPending ? (
+          <Skeleton className="h-8 w-24 rounded-none" />
+        ) : session?.user ? (
           <>
             <div className="hidden sm:block text-right leading-[1.2]">
               <div className="text-xs font-semibold text-[#201e1d]">{userName}</div>
-              <div className="text-[10px] tracking-[0.1em] text-[#5c5755]">{roleLabel}</div>
+              <div className="text-[10px] tracking-widest text-[#5c5755]">{roleLabel}</div>
             </div>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => {
                 void authClient.signOut().then(() => navigate({ to: '/auth/login' }))
               }}
-              className="border border-[#201e1d] bg-white px-2.5 py-2 text-xs font-semibold text-[#201e1d] hover:bg-[#f0dcd8] focus-visible:outline-2 focus-visible:outline-[#ec3013] focus-visible:outline-offset-2"
+              className="border border-[#201e1d] bg-white px-2.5 py-2 text-xs font-semibold text-[#201e1d] hover:bg-[#f0dcd8] focus-visible:outline-2 focus-visible:outline-[#ec3013] focus-visible:outline-offset-2 rounded-none h-auto"
               style={{ padding: '8px 11px', fontSize: 12 }}
             >
               Sign out
-            </button>
+            </Button>
           </>
         ) : (
           <Link to="/auth/login" className="border border-[#201e1d] bg-white px-2.5 py-2 text-xs font-semibold text-[#201e1d] hover:bg-[#f0dcd8]" style={{ padding: '8px 11px', fontSize: 12 }}>

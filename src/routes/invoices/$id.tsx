@@ -3,6 +3,7 @@ import { createFileRoute, Link, redirect, useMatch } from '@tanstack/react-route
 import { getSession } from '#/lib/auth.functions'
 import { InvoiceDetail } from '#/components/invoice/InvoiceDetail'
 import { Button } from '#/components/ui/button'
+import { Skeleton } from '#/components/ui/skeleton'
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail'
 
 interface LoaderData {
@@ -35,14 +36,16 @@ function InvoiceDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
           <Button>
             <Link to="/invoices">Back to Invoices</Link>
           </Button>
         </div>
-        <div className="rounded-none border bg-white p-12  text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-[#5c5755]">Loading invoice...</p>
+        <div className="border-2 border-[#201e1d] bg-white p-4 space-y-3">
+          <Skeleton className="h-6 w-40 rounded-none" />
+          <Skeleton className="h-10 w-full rounded-none" />
+          <Skeleton className="h-10 w-full rounded-none" />
+          <Skeleton className="h-32 w-full rounded-none" />
         </div>
       </div>
     )
@@ -52,7 +55,7 @@ function InvoiceDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
           <Button>
             <Link to="/invoices">Back to Invoices</Link>
           </Button>
@@ -71,7 +74,7 @@ function InvoiceDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
           <Button>
             <Link to="/invoices">Back to Invoices</Link>
           </Button>

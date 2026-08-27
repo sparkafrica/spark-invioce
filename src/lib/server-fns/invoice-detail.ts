@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '#/db';
 import {
@@ -22,12 +22,14 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 	)
 	.handler(async ({ data }): Promise<{ invoice: any }> => {
 		const { id } = data;
+		const orgId = process.env.ORGANIZATION_ID!;
 
-		// Fetch invoice with all relations
+		// Fetch invoice with all relations (org scoped)
 		const invoiceResult = await db
 			.select({
 				id: invoices.id,
 				number: invoices.number,
+				organizationId: invoices.organizationId,
 				clientId: invoices.clientId,
 				businessId: invoices.businessId,
 				companyId: invoices.companyId,
@@ -51,7 +53,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 				updatedAt: invoices.updatedAt,
 			})
 			.from(invoices)
-			.where(eq(invoices.id, id))
+			.where(and(eq(invoices.id, id), eq(invoices.organizationId, orgId)))
 			.limit(1);
 
 		if (invoiceResult.length === 0) {
@@ -106,7 +108,6 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					phone: companies.phone,
 					tin: companies.tin,
 					defaultCurrency: companies.defaultCurrency,
-					logo: companies.logo,
 				})
 				.from(companies)
 				.where(eq(companies.id, invoice.companyId))
@@ -169,7 +170,6 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 				.select({
 					id: comments.id,
 					userId: comments.userId,
-					userRole: comments.userRole,
 					text: comments.text,
 					createdAt: comments.createdAt,
 				})
@@ -223,7 +223,6 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 			companyPhone: company?.phone || null,
 			companyTin: company?.tin || null,
 			companyDefaultCurrency: company?.defaultCurrency || 'NGN',
-			companyLogo: company?.logo || null,
 			issueDate: invoice.issueDate
 				? new Date(invoice.issueDate).toLocaleDateString()
 				: '',
@@ -278,10 +277,9 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 				recordedBy: p.recordedBy,
 				recordedAt: new Date(p.recordedAt).toLocaleDateString(),
 			})),
-			comments: commentsResult.map((c) => ({
+			comments: commentsResult.map((c: any) => ({
 				id: c.id,
 				userId: c.userId,
-				userRole: c.userRole,
 				text: c.text,
 				createdAt: new Date(c.createdAt).toLocaleDateString(),
 			})),

@@ -17,6 +17,8 @@ To build this application for production:
 pnpm build
 ```
 
+// @better-auth/cli generate --config src/lib/auth.ts --output src/db/auth-schema.ts to run auth-shema generation
+
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.

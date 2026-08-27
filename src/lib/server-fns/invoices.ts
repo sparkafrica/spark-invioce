@@ -49,7 +49,8 @@ export const getInvoices = createServerFn({ method: 'GET' })
 		const { page, pageSize, sortBy, sortDir, filter, status, businessId } =
 			data;
 
-		const whereConditions = [];
+		const orgId = process.env.ORGANIZATION_ID!;
+		const whereConditions = [eq(invoices.organizationId, orgId)];
 
 		if (status) {
 			whereConditions.push(eq(invoices.status, status as any));
@@ -60,17 +61,15 @@ export const getInvoices = createServerFn({ method: 'GET' })
 		}
 
 		if (filter) {
-			whereConditions.push(
-				or(
-					like(invoices.number, `%${filter}%`),
-					like(clients.name, `%${filter}%`),
-					like(businesses.name, `%${filter}%`),
-				),
-			);
+			const filterCond = or(
+				like(invoices.number, `%${filter}%`),
+				like(clients.name, `%${filter}%`),
+				like(businesses.name, `%${filter}%`),
+			)
+			if (filterCond) whereConditions.push(filterCond);
 		}
 
-		const whereClause =
-			whereConditions.length > 0 ? and(...whereConditions) : undefined;
+		const whereClause = and(...whereConditions);
 
 		// Get total count
 		const [{ total }] = await db

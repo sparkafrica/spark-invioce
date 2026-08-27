@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { getSession } from '#/lib/auth.functions'
-import { Loader2 } from 'lucide-react'
 import { InvoiceForm } from '#/components/forms/InvoiceForm'
 import { Button } from '#/components/ui/button'
+import { Skeleton } from '#/components/ui/skeleton'
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail'
 
 export const Route = createFileRoute('/invoices/$id/edit')({
@@ -28,16 +28,19 @@ function EditInvoicePage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
-          <Button variant="ghost">
-            <Loader2 className="h-4 w-4 animate-spin" />
-          </Button>
+          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
+          <Skeleton className="h-6 w-24 rounded-none" />
         </div>
-        <div className="rounded-none border bg-white p-12  text-center">
-          <div className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-[#5c5755]">Loading invoice...</p>
+        <div className="grid lg:grid-cols-[1.55fr_1fr] gap-8 p-6">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-40 rounded-none" />
+            <Skeleton className="h-20 w-full rounded-none" />
+            <Skeleton className="h-20 w-full rounded-none" />
+            <Skeleton className="h-32 w-full rounded-none" />
+          </div>
+          <Skeleton className="h-64 w-full rounded-none" />
         </div>
       </div>
     )
@@ -45,9 +48,9 @@ function EditInvoicePage() {
 
   if (error) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
+          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
           <Button variant="outline" onClick={() => refetch()}>Retry</Button>
         </div>
         <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
@@ -59,9 +62,9 @@ function EditInvoicePage() {
 
   if (!data?.invoice) {
     return (
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
+          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
         </div>
         <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
           <p className="text-red-600 dark:text-red-400">Invoice not found</p>
@@ -108,7 +111,7 @@ function EditInvoicePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6">
       <InvoiceForm initialData={initialData} isEditing={true} invoiceId={invoiceId} />
     </div>
   )

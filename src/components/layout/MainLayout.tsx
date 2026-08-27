@@ -15,20 +15,18 @@ export function MainLayout({ children, className }: MainLayoutProps) {
 
   if (isAuthRoute) {
     return (
-      <div className={cn('min-h-screen bg-[#f3f2f2] text-[#201e1d]', className)}>
-        <main className="flex-1" id="main-content">
-          {children ?? <Outlet />}
-        </main>
-      </div>
+      <main className={cn('min-h-svh bg-[#f3f2f2] text-[#201e1d] flex flex-col', className)}>
+        {children ?? <Outlet />}
+      </main>
     )
   }
 
   return (
-    <div className={cn('min-h-screen bg-[#f3f2f2] text-[#201e1d] flex flex-col', className)}>
+    <main className={cn('min-h-svh bg-[#f3f2f2] text-[#201e1d] flex flex-col', className)}>
       <Header />
-      <main className="flex-1 px-6 py-7 lg:px-7 flex flex-col" id="main-content">
+      <div className="flex-1 px-6 py-7 lg:px-7 flex flex-col" id="main-content">
         {children ?? <Outlet />}
-      </main>
-    </div>
+      </div>
+    </main>
   )
 }

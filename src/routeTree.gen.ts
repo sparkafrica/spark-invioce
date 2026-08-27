@@ -10,32 +10,59 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as SeedRouteImport } from './routes/seed'
+import { Route as SettingRouteImport } from './routes/setting'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as ClientsIndexRouteImport } from './routes/clients/index'
-import { Route as ClientsNewRouteImport } from './routes/clients/new'
 import { Route as InvoicesIndexRouteImport } from './routes/invoices/index'
 import { Route as InvoicesIdRouteImport } from './routes/invoices/$id'
 import { Route as InvoicesNewRouteImport } from './routes/invoices/new'
+import { Route as MemosIndexRouteImport } from './routes/memos/index'
 import { Route as ProductsIndexRouteImport } from './routes/products/index'
-import { Route as ProductsNewRouteImport } from './routes/products/new'
 import { Route as SettingsIndexRouteImport } from './routes/settings/index'
+import { Route as SettingsBanksRouteImport } from './routes/settings/banks'
+import { Route as SettingsBusinessesRouteImport } from './routes/settings/businesses'
+import { Route as SettingsCompaniesRouteImport } from './routes/settings/companies'
+import { Route as SettingsFxRatesRouteImport } from './routes/settings/fx-rates'
+import { Route as SettingsOrganizationRouteImport } from './routes/settings/organization'
+import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ClientsIdEditRouteImport } from './routes/clients/$id.edit'
 import { Route as InvoicesIdEditRouteImport } from './routes/invoices/$id.edit'
-import { Route as ProductsIdEditRouteImport } from './routes/products/$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivityRoute = ActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeedRoute = SeedRouteImport.update({
+  id: '/seed',
+  path: '/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingRoute = SettingRouteImport.update({
+  id: '/setting',
+  path: '/setting',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
@@ -63,11 +90,6 @@ const ClientsIndexRoute = ClientsIndexRouteImport.update({
   path: '/clients/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientsNewRoute = ClientsNewRouteImport.update({
-  id: '/clients/new',
-  path: '/clients/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const InvoicesIndexRoute = InvoicesIndexRouteImport.update({
   id: '/invoices/',
   path: '/invoices/',
@@ -83,14 +105,14 @@ const InvoicesNewRoute = InvoicesNewRouteImport.update({
   path: '/invoices/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MemosIndexRoute = MemosIndexRouteImport.update({
+  id: '/memos/',
+  path: '/memos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductsIndexRoute = ProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductsNewRoute = ProductsNewRouteImport.update({
-  id: '/products/new',
-  path: '/products/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
@@ -98,14 +120,39 @@ const SettingsIndexRoute = SettingsIndexRouteImport.update({
   path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsBanksRoute = SettingsBanksRouteImport.update({
+  id: '/settings/banks',
+  path: '/settings/banks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsBusinessesRoute = SettingsBusinessesRouteImport.update({
+  id: '/settings/businesses',
+  path: '/settings/businesses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsCompaniesRoute = SettingsCompaniesRouteImport.update({
+  id: '/settings/companies',
+  path: '/settings/companies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsFxRatesRoute = SettingsFxRatesRouteImport.update({
+  id: '/settings/fx-rates',
+  path: '/settings/fx-rates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsOrganizationRoute = SettingsOrganizationRouteImport.update({
+  id: '/settings/organization',
+  path: '/settings/organization',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsProfileRoute = SettingsProfileRouteImport.update({
+  id: '/settings/profile',
+  path: '/settings/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientsIdEditRoute = ClientsIdEditRouteImport.update({
-  id: '/clients/$id/edit',
-  path: '/clients/$id/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvoicesIdEditRoute = InvoicesIdEditRouteImport.update({
@@ -113,154 +160,198 @@ const InvoicesIdEditRoute = InvoicesIdEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => InvoicesIdRoute,
 } as any)
-const ProductsIdEditRoute = ProductsIdEditRouteImport.update({
-  id: '/products/$id/edit',
-  path: '/products/$id/edit',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/dashboard': typeof DashboardRoute
+  '/seed': typeof SeedRoute
+  '/setting': typeof SettingRoute
+  '/team': typeof TeamRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/clients/new': typeof ClientsNewRoute
   '/invoices/$id': typeof InvoicesIdRouteWithChildren
   '/invoices/new': typeof InvoicesNewRoute
-  '/products/new': typeof ProductsNewRoute
+  '/settings/banks': typeof SettingsBanksRoute
+  '/settings/businesses': typeof SettingsBusinessesRoute
+  '/settings/companies': typeof SettingsCompaniesRoute
+  '/settings/fx-rates': typeof SettingsFxRatesRoute
+  '/settings/organization': typeof SettingsOrganizationRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/clients/': typeof ClientsIndexRoute
   '/invoices/': typeof InvoicesIndexRoute
+  '/memos/': typeof MemosIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/clients/$id/edit': typeof ClientsIdEditRoute
   '/invoices/$id/edit': typeof InvoicesIdEditRoute
-  '/products/$id/edit': typeof ProductsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/dashboard': typeof DashboardRoute
+  '/seed': typeof SeedRoute
+  '/setting': typeof SettingRoute
+  '/team': typeof TeamRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/clients/new': typeof ClientsNewRoute
   '/invoices/$id': typeof InvoicesIdRouteWithChildren
   '/invoices/new': typeof InvoicesNewRoute
-  '/products/new': typeof ProductsNewRoute
+  '/settings/banks': typeof SettingsBanksRoute
+  '/settings/businesses': typeof SettingsBusinessesRoute
+  '/settings/companies': typeof SettingsCompaniesRoute
+  '/settings/fx-rates': typeof SettingsFxRatesRoute
+  '/settings/organization': typeof SettingsOrganizationRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/clients': typeof ClientsIndexRoute
   '/invoices': typeof InvoicesIndexRoute
+  '/memos': typeof MemosIndexRoute
   '/products': typeof ProductsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/clients/$id/edit': typeof ClientsIdEditRoute
   '/invoices/$id/edit': typeof InvoicesIdEditRoute
-  '/products/$id/edit': typeof ProductsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/dashboard': typeof DashboardRoute
+  '/seed': typeof SeedRoute
+  '/setting': typeof SettingRoute
+  '/team': typeof TeamRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/clients/new': typeof ClientsNewRoute
   '/invoices/$id': typeof InvoicesIdRouteWithChildren
   '/invoices/new': typeof InvoicesNewRoute
-  '/products/new': typeof ProductsNewRoute
+  '/settings/banks': typeof SettingsBanksRoute
+  '/settings/businesses': typeof SettingsBusinessesRoute
+  '/settings/companies': typeof SettingsCompaniesRoute
+  '/settings/fx-rates': typeof SettingsFxRatesRoute
+  '/settings/organization': typeof SettingsOrganizationRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/clients/': typeof ClientsIndexRoute
   '/invoices/': typeof InvoicesIndexRoute
+  '/memos/': typeof MemosIndexRoute
   '/products/': typeof ProductsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/clients/$id/edit': typeof ClientsIdEditRoute
   '/invoices/$id/edit': typeof InvoicesIdEditRoute
-  '/products/$id/edit': typeof ProductsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/activity'
     | '/dashboard'
+    | '/seed'
+    | '/setting'
+    | '/team'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/auth/reset-password'
-    | '/clients/new'
     | '/invoices/$id'
     | '/invoices/new'
-    | '/products/new'
+    | '/settings/banks'
+    | '/settings/businesses'
+    | '/settings/companies'
+    | '/settings/fx-rates'
+    | '/settings/organization'
+    | '/settings/profile'
     | '/clients/'
     | '/invoices/'
+    | '/memos/'
     | '/products/'
     | '/settings/'
     | '/api/auth/$'
-    | '/clients/$id/edit'
     | '/invoices/$id/edit'
-    | '/products/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/activity'
     | '/dashboard'
+    | '/seed'
+    | '/setting'
+    | '/team'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/auth/reset-password'
-    | '/clients/new'
     | '/invoices/$id'
     | '/invoices/new'
-    | '/products/new'
+    | '/settings/banks'
+    | '/settings/businesses'
+    | '/settings/companies'
+    | '/settings/fx-rates'
+    | '/settings/organization'
+    | '/settings/profile'
     | '/clients'
     | '/invoices'
+    | '/memos'
     | '/products'
     | '/settings'
     | '/api/auth/$'
-    | '/clients/$id/edit'
     | '/invoices/$id/edit'
-    | '/products/$id/edit'
   id:
     | '__root__'
     | '/'
+    | '/activity'
     | '/dashboard'
+    | '/seed'
+    | '/setting'
+    | '/team'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
     | '/auth/reset-password'
-    | '/clients/new'
     | '/invoices/$id'
     | '/invoices/new'
-    | '/products/new'
+    | '/settings/banks'
+    | '/settings/businesses'
+    | '/settings/companies'
+    | '/settings/fx-rates'
+    | '/settings/organization'
+    | '/settings/profile'
     | '/clients/'
     | '/invoices/'
+    | '/memos/'
     | '/products/'
     | '/settings/'
     | '/api/auth/$'
-    | '/clients/$id/edit'
     | '/invoices/$id/edit'
-    | '/products/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivityRoute: typeof ActivityRoute
   DashboardRoute: typeof DashboardRoute
+  SeedRoute: typeof SeedRoute
+  SettingRoute: typeof SettingRoute
+  TeamRoute: typeof TeamRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
-  ClientsNewRoute: typeof ClientsNewRoute
   InvoicesIdRoute: typeof InvoicesIdRouteWithChildren
   InvoicesNewRoute: typeof InvoicesNewRoute
-  ProductsNewRoute: typeof ProductsNewRoute
+  SettingsBanksRoute: typeof SettingsBanksRoute
+  SettingsBusinessesRoute: typeof SettingsBusinessesRoute
+  SettingsCompaniesRoute: typeof SettingsCompaniesRoute
+  SettingsFxRatesRoute: typeof SettingsFxRatesRoute
+  SettingsOrganizationRoute: typeof SettingsOrganizationRoute
+  SettingsProfileRoute: typeof SettingsProfileRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
   InvoicesIndexRoute: typeof InvoicesIndexRoute
+  MemosIndexRoute: typeof MemosIndexRoute
   ProductsIndexRoute: typeof ProductsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ClientsIdEditRoute: typeof ClientsIdEditRoute
-  ProductsIdEditRoute: typeof ProductsIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,11 +363,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activity': {
+      id: '/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof ActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seed': {
+      id: '/seed'
+      path: '/seed'
+      fullPath: '/seed'
+      preLoaderRoute: typeof SeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setting': {
+      id: '/setting'
+      path: '/setting'
+      fullPath: '/setting'
+      preLoaderRoute: typeof SettingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/forgot-password': {
@@ -314,13 +433,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/clients/new': {
-      id: '/clients/new'
-      path: '/clients/new'
-      fullPath: '/clients/new'
-      preLoaderRoute: typeof ClientsNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/invoices/': {
       id: '/invoices/'
       path: '/invoices'
@@ -342,18 +454,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvoicesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/memos/': {
+      id: '/memos/'
+      path: '/memos'
+      fullPath: '/memos/'
+      preLoaderRoute: typeof MemosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/products/': {
       id: '/products/'
       path: '/products'
       fullPath: '/products/'
       preLoaderRoute: typeof ProductsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products/new': {
-      id: '/products/new'
-      path: '/products/new'
-      fullPath: '/products/new'
-      preLoaderRoute: typeof ProductsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings/': {
@@ -363,18 +475,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/banks': {
+      id: '/settings/banks'
+      path: '/settings/banks'
+      fullPath: '/settings/banks'
+      preLoaderRoute: typeof SettingsBanksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/businesses': {
+      id: '/settings/businesses'
+      path: '/settings/businesses'
+      fullPath: '/settings/businesses'
+      preLoaderRoute: typeof SettingsBusinessesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/companies': {
+      id: '/settings/companies'
+      path: '/settings/companies'
+      fullPath: '/settings/companies'
+      preLoaderRoute: typeof SettingsCompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/fx-rates': {
+      id: '/settings/fx-rates'
+      path: '/settings/fx-rates'
+      fullPath: '/settings/fx-rates'
+      preLoaderRoute: typeof SettingsFxRatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/organization': {
+      id: '/settings/organization'
+      path: '/settings/organization'
+      fullPath: '/settings/organization'
+      preLoaderRoute: typeof SettingsOrganizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/profile': {
+      id: '/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof SettingsProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clients/$id/edit': {
-      id: '/clients/$id/edit'
-      path: '/clients/$id/edit'
-      fullPath: '/clients/$id/edit'
-      preLoaderRoute: typeof ClientsIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invoices/$id/edit': {
@@ -383,13 +530,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/invoices/$id/edit'
       preLoaderRoute: typeof InvoicesIdEditRouteImport
       parentRoute: typeof InvoicesIdRoute
-    }
-    '/products/$id/edit': {
-      id: '/products/$id/edit'
-      path: '/products/$id/edit'
-      fullPath: '/products/$id/edit'
-      preLoaderRoute: typeof ProductsIdEditRouteImport
-      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -408,22 +548,29 @@ const InvoicesIdRouteWithChildren = InvoicesIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivityRoute: ActivityRoute,
   DashboardRoute: DashboardRoute,
+  SeedRoute: SeedRoute,
+  SettingRoute: SettingRoute,
+  TeamRoute: TeamRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
-  ClientsNewRoute: ClientsNewRoute,
   InvoicesIdRoute: InvoicesIdRouteWithChildren,
   InvoicesNewRoute: InvoicesNewRoute,
-  ProductsNewRoute: ProductsNewRoute,
+  SettingsBanksRoute: SettingsBanksRoute,
+  SettingsBusinessesRoute: SettingsBusinessesRoute,
+  SettingsCompaniesRoute: SettingsCompaniesRoute,
+  SettingsFxRatesRoute: SettingsFxRatesRoute,
+  SettingsOrganizationRoute: SettingsOrganizationRoute,
+  SettingsProfileRoute: SettingsProfileRoute,
   ClientsIndexRoute: ClientsIndexRoute,
   InvoicesIndexRoute: InvoicesIndexRoute,
+  MemosIndexRoute: MemosIndexRoute,
   ProductsIndexRoute: ProductsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ClientsIdEditRoute: ClientsIdEditRoute,
-  ProductsIdEditRoute: ProductsIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

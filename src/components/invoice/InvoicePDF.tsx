@@ -1,6 +1,6 @@
 import '@tanstack/react-start/server-only'
 
-import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Document, Font, Page, StyleSheet, Text, View, Image } from '@react-pdf/renderer'
 
 Font.register({
   family: 'Helvetica',
@@ -40,11 +40,11 @@ export interface InvoicePDFData {
     phone: string | null
     tin: string | null
     reg: string | null
-    logo: string | null
   }
   business: {
     name: string
     prefix: string
+    logo: string | null
   }
   bank: {
     label: string | null
@@ -93,6 +93,15 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderBottomWidth: 2,
     borderBottomColor: '#1f2937',
+  },
+  logoContainer: {
+    width: 120,
+    marginRight: 20,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    resizeMode: 'contain',
   },
   companyInfo: {
     width: '45%',
@@ -296,6 +305,9 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            {data.business.logo && <Image source={{ uri: data.business.logo }} style={styles.logo} />}
+          </View>
           <View style={styles.companyInfo}>
             <Text style={styles.companyName}>{data.company.name}</Text>
             {data.company.address && <Text style={styles.companyDetails}>{data.company.address}</Text>}

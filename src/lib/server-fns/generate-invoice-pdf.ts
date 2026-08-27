@@ -92,6 +92,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					id: businesses.id,
 					name: businesses.name,
 					prefix: businesses.prefix,
+					logo: businesses.logo,
 				})
 				.from(businesses)
 				.where(eq(businesses.id, invoice.businessId))
@@ -106,7 +107,6 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					phone: companies.phone,
 					tin: companies.tin,
 					reg: companies.reg,
-					logo: companies.logo,
 				})
 				.from(companies)
 				.where(eq(companies.id, invoice.companyId))
@@ -222,11 +222,11 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 				phone: company?.phone || null,
 				tin: company?.tin || null,
 				reg: company?.reg || null,
-				logo: company?.logo || null,
 			},
 			business: {
 				name: business?.name || '',
 				prefix: business?.prefix || '',
+				logo: business?.logo || null,
 			},
 			bank: bank
 				? {

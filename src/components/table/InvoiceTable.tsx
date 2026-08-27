@@ -16,6 +16,9 @@ import {
 } from '@tanstack/table-core'
 import { useState, useMemo } from 'react'
 import { cn } from '#/lib/utils'
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '#/components/ui/table'
 
 export interface Invoice {
   id: string
@@ -122,25 +125,29 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
           return (
             <div className="flex items-center justify-end gap-1">
               {onEdit && (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onEdit(invoice)
                   }}
-                  className="border border-[#201e1d] bg-white px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] focus-visible:outline-2 focus-visible:outline-[#ec3013]"
+                  className="border border-[#201e1d] bg-white px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
                 >
                   Edit
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="default"
+                size="sm"
                 onClick={(e) => {
                   e.stopPropagation()
                   onView(invoice)
                 }}
-                className="bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#c02a10] hover:border-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013]"
+                className="bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#c02a10] hover:border-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
               >
                 Open
-              </button>
+              </Button>
             </div>
           )
         },
@@ -163,28 +170,28 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
     <div className="flex flex-col gap-5">
       {/* Toolbar — search */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <input
+        <Input
           type="text"
           placeholder="Search invoices…"
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           aria-label="Search invoices"
-          className="w-full max-w-sm border border-[#201e1d] bg-white px-2.5 py-2 text-[13px] placeholder:text-[#9b9797] focus-visible:outline-2 focus-visible:outline-[#ec3013]"
+          className="w-full max-w-sm border border-[#201e1d] bg-white px-2.5 py-2 text-[13px] placeholder:text-[#9b9797] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none"
         />
         <div className="text-xs text-[#5c5755]">{table.getFilteredRowModel().rows.length} total</div>
       </div>
 
-      {/* Table — template 314-360 */}
-      <div className="overflow-auto bg-white">
-        <table className="w-full bg-white">
-          <thead>
+      {/* Table */}
+      <div className="overflow-auto bg-white border-2 border-[#201e1d]">
+        <Table className="w-full bg-white">
+          <TableHeader>
             {table.getHeaderGroups().map((hg) => (
-              <tr key={hg.id} className="border-b-2 border-[#201e1d] bg-white">
+              <TableRow key={hg.id} className="border-b-2 border-[#201e1d] bg-white hover:bg-transparent">
                 {hg.headers.map((header) => (
-                  <th
+                  <TableHead
                     key={header.id}
                     className={cn(
-                      'px-2.5 py-2.5 text-left text-[10px] tracking-[0.1em] font-semibold text-[#201e1d] whitespace-nowrap',
+                      'px-2.5 py-2.5 text-left text-[10px] tracking-[0.1em] font-semibold text-[#201e1d] whitespace-nowrap h-auto',
                       header.column.getCanSort() && 'cursor-pointer select-none hover:bg-[#f0dcd8]'
                     )}
                     onClick={header.column.getToggleSortingHandler()}
@@ -193,21 +200,21 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getIsSorted() === 'asc' ? ' ▲' : header.column.getIsSorted() === 'desc' ? ' ▼' : null}
                     </span>
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
-          <tbody>
+          </TableHeader>
+          <TableBody>
             {table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-[#5c5755]">
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={columns.length} className="px-4 py-12 text-center text-sm text-[#5c5755]">
                   No invoices found
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <tr
+                <TableRow
                   key={row.id}
                   onClick={() => onView(row.original as Invoice)}
                   className={cn(
@@ -216,15 +223,15 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
                   )}
                 >
                   {row.getAllCells().map((cell) => (
-                    <td key={cell.id} className="px-2.5 py-3.5">
+                    <TableCell key={cell.id} className="px-2.5 py-3.5">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination — sharp, template hover */}
@@ -235,20 +242,24 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
           {table.getFilteredRowModel().rows.length}
         </div>
         <div className="flex gap-1">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="border border-[#201e1d] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] disabled:opacity-40 disabled:pointer-events-none"
+            className="border border-[#201e1d] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] disabled:opacity-40 disabled:pointer-events-none rounded-none"
           >
             Previous
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="border border-[#201e1d] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] disabled:opacity-40 disabled:pointer-events-none"
+            className="border border-[#201e1d] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] disabled:opacity-40 disabled:pointer-events-none rounded-none"
           >
             Next
-          </button>
+          </Button>
         </div>
       </div>
     </div>

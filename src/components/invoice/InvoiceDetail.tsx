@@ -7,6 +7,8 @@ import { PaymentModal } from '#/components/invoice/PaymentModal'
 import { toast } from '#/components/ui/toast'
 import { generateInvoicePDF } from '#/lib/server-fns/generate-invoice-pdf'
 import { recordPayment } from '#/lib/server-fns/payments'
+import { Button } from '#/components/ui/button'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '#/components/ui/table'
 
 export interface InvoiceDetail {
   id: string
@@ -21,6 +23,7 @@ export interface InvoiceDetail {
   businessId: string
   businessName: string
   businessPrefix: string
+  businessLogo: string | null
   companyId: string
   companyName: string
   companyReg: string | null
@@ -95,9 +98,7 @@ interface InvoiceDetailProps {
 }
 
 function formatMoney(n: number, currency: string) {
-  const v = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-  const sym = currency === 'NGN' ? 'NGN' : currency
-  return `${sym} ${v}`
+  return Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2, style: 'currency', currency }).format(n)
 }
 
 export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
@@ -111,7 +112,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
       setShowPaymentModal(false)
     },
     onError: (error) => {
-      toast.add({ title: 'Error', description: (error as Error).message, type: 'error' })
+      toast.add({ description: (error as Error).message, type: 'error' })
     },
   })
 
@@ -180,20 +181,24 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
   return (
     <div className="flex flex-col gap-4 py-6" style={{ padding: 26 }}>
       {/* Chrome */}
-      <div className="mx-auto flex w-full max-w-[860px] items-center justify-between gap-4" data-chrome="1">
-        <button onClick={() => navigate({ to: '/invoices' })} className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8]">Back</button>
+      <div className="mx-auto flex w-full max-w-215 items-center justify-between gap-4" data-chrome="1">
+        <Button type='button' variant="outline" onClick={() => navigate({ to: '/invoices' })} className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Back</Button>
         <div className="flex gap-2">
-          <button onClick={() => navigate({ to: '/invoices/$id/edit', params: { id: invoice.id } })} className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8]">Edit</button>
-          <button onClick={handleDownloadPDF} className="bg-[#ec3013] text-white border border-[#ec3013] px-3.5 py-2 text-xs font-semibold hover:bg-[#c02a10]">Download PDF</button>
+          <Button type='button' variant="outline" onClick={() => navigate({ to: '/invoices/$id/edit', params: { id: invoice.id } })} className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Edit</Button>
+          <Button type='button' variant="default" onClick={handleDownloadPDF} className="bg-[#ec3013] text-white border border-[#ec3013] px-3.5 py-2 text-xs font-semibold hover:bg-[#c02a10] rounded-none">Download PDF</Button>
         </div>
       </div>
 
       {/* Sheet */}
-      <div className="mx-auto w-full max-w-[860px] bg-white p-[54px] flex flex-col gap-5 text-[12.5px] leading-[1.45]" style={{ boxShadow: '0 2px 14px rgba(32,30,29,0.14)' }} data-sheet="1">
+      <div className="mx-auto w-full max-w-215 bg-white p-13.5 flex flex-col gap-5 text-[12.5px] leading-[1.45]" style={{ boxShadow: '0 2px 14px rgba(32,30,29,0.14)' }} data-sheet="1">
         <div className="flex justify-between items-start gap-8">
-          <img src="/assets/spark-logo.png" alt="Spark" width={210} height={40} className="h-10 w-auto" style={{ width: 210 }} />
+          {invoice.businessLogo ? (
+            <img src={invoice.businessLogo} alt={invoice.businessName} width={210} height={40} className="h-10 w-auto" style={{ width: 210 }} />
+          ) : (
+            <img src="/assets/spark-logo.png" alt="Spark" width={210} height={40} className="h-10 w-auto" style={{ width: 210 }} />
+          )}
           <div>
-            <div className="text-[30px] font-bold tracking-[0.02em] leading-none">INVOICE</div>
+            <div className="text-[18px] font-semibold tracking-[0.02em] leading-none">INVOICE</div>
             <div className="mt-2 text-sm">No. {invoice.number}</div>
             <div className="text-sm">Date: {issueDate}</div>
           </div>
@@ -222,30 +227,30 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
           <strong>Re:</strong> {invoice.description || '—'}
         </div>
 
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-[#201e1d]">
-              <th className="text-left py-2 pr-2 text-[9.5px] tracking-[0.1em] font-semibold">MILESTONE</th>
-              <th className="text-left py-2 pr-2 text-[9.5px] tracking-[0.1em] font-semibold">DELIVERABLES</th>
-              <th className="text-left py-2 pr-2 text-[9.5px] tracking-[0.1em] font-semibold">DUE</th>
-              <th className="text-right py-2 pr-2 text-[9.5px] tracking-[0.1em] font-semibold">AMOUNT</th>
-              <th className="text-right py-2 pr-2 text-[9.5px] tracking-[0.1em] font-semibold">TAX</th>
-              <th className="text-right py-2 text-[9.5px] tracking-[0.1em] font-semibold">TOTAL</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="w-full border-collapse">
+          <TableHeader>
+            <TableRow className="border-b-2 border-[#201e1d] hover:bg-transparent">
+              <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">MILESTONE</TableHead>
+              <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">DELIVERABLES</TableHead>
+              <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">DUE</TableHead>
+              <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">AMOUNT</TableHead>
+              <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">TAX</TableHead>
+              <TableHead className="text-right py-2 text-[9.5px] tracking-widest font-semibold h-auto">TOTAL</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {lines.map((l, i) => (
-              <tr key={i} className="border-b border-[#d6d3d1]">
-                <td className="py-2.5 pr-2 font-semibold align-top text-xs">{l.name}</td>
-                <td className="py-2.5 pr-2 align-top text-xs">{l.deliverables}</td>
-                <td className="py-2.5 pr-2 align-top text-xs whitespace-nowrap">{l.due}</td>
-                <td className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">{l.amount}</td>
-                <td className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">{l.tax}</td>
-                <td className="py-2.5 text-right align-top font-semibold tabular-nums text-xs">{l.total}</td>
-              </tr>
+              <TableRow key={i} className="border-b border-[#d6d3d1] hover:bg-transparent">
+                <TableCell className="py-2.5 pr-2 font-semibold align-top text-xs">{l.name}</TableCell>
+                <TableCell className="py-2.5 pr-2 align-top text-xs">{l.deliverables}</TableCell>
+                <TableCell className="py-2.5 pr-2 align-top text-xs whitespace-nowrap">{l.due}</TableCell>
+                <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">{l.amount}</TableCell>
+                <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">{l.tax}</TableCell>
+                <TableCell className="py-2.5 text-right align-top font-semibold tabular-nums text-xs">{l.total}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
 
         <div className="grid grid-cols-[1fr_320px] gap-8">
           <div />
@@ -254,7 +259,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
             <div className="flex justify-between py-1.5 border-b border-[#d6d3d1] text-xs"><span>{invoice.taxName} ({invoice.taxRate}%)</span><span className="tabular-nums font-semibold">{formatMoney(invoice.taxAmount, invoice.currency)}</span></div>
             <div className="flex justify-between py-2 border-b-2 border-[#201e1d] font-bold text-sm"><span>Total due</span><span className="tabular-nums">{formatMoney(invoice.total, invoice.currency)}</span></div>
             <div className="flex justify-between items-baseline mt-3 bg-[#ec3013] text-white p-3">
-              <span className="text-[10px] tracking-[0.1em] font-semibold">DUE NOW</span>
+              <span className="text-[10px] tracking-widest font-semibold">DUE NOW</span>
               <span className="font-bold text-sm tabular-nums">{dueNow}</span>
             </div>
           </div>
@@ -292,7 +297,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         )}
 
         {invoice.status !== 'paid' && invoice.status !== 'voided' && (
-          <button type="button" onClick={() => setShowPaymentModal(true)} className="self-start bg-[#201e1d] text-white px-4 py-2 text-xs font-semibold hover:bg-[#c02a10]">Record Payment</button>
+          <Button type="button" variant="default" onClick={() => setShowPaymentModal(true)} className="self-start bg-[#201e1d] text-white px-4 py-2 text-xs font-semibold hover:bg-[#c02a10] rounded-none">Record Payment</Button>
         )}
       </div>
 

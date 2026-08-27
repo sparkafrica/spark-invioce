@@ -96,7 +96,7 @@ describe('InvoiceTable', () => {
 
   it('filters invoices by search term', async () => {
     render(<InvoiceTable {...defaultProps} />)
-    const searchInput = screen.getByPlaceholderText('Search invoices...')
+    const searchInput = screen.getByPlaceholderText('Search invoices…')
     fireEvent.change(searchInput, { target: { value: 'Acme' } })
     await waitFor(() => {
       expect(screen.getByText('INV-001')).toBeInTheDocument()
@@ -111,31 +111,9 @@ describe('InvoiceTable', () => {
     expect(editButtons.length).toBe(3)
   })
 
-  it('shows delete button for each row when onDelete is provided', () => {
-    render(<InvoiceTable {...defaultProps} />)
-    const deleteButtons = screen.getAllByText('Delete')
-    expect(deleteButtons.length).toBe(3)
-  })
-
-  it('shows duplicate button for each row when onDuplicate is provided', () => {
-    render(<InvoiceTable {...defaultProps} />)
-    const duplicateButtons = screen.getAllByText('Duplicate')
-    expect(duplicateButtons.length).toBe(3)
-  })
-
   it('hides edit button when onEdit is not provided', () => {
     render(<InvoiceTable {...defaultProps} onEdit={undefined} />)
     expect(screen.queryByText('Edit')).not.toBeInTheDocument()
-  })
-
-  it('hides delete button when onDelete is not provided', () => {
-    render(<InvoiceTable {...defaultProps} onDelete={undefined} />)
-    expect(screen.queryByText('Delete')).not.toBeInTheDocument()
-  })
-
-  it('hides duplicate button when onDuplicate is not provided', () => {
-    render(<InvoiceTable {...defaultProps} onDuplicate={undefined} />)
-    expect(screen.queryByText('Duplicate')).not.toBeInTheDocument()
   })
 
   it('shows open button for each row', () => {
@@ -155,25 +133,4 @@ describe('InvoiceTable', () => {
     })
   })
 
-  it('calls onDelete when delete button is clicked', async () => {
-    render(<InvoiceTable {...defaultProps} />)
-    const deleteButtons = screen.getAllByText('Delete')
-    fireEvent.click(deleteButtons[0])
-    await waitFor(() => {
-      expect(defaultProps.onDelete).toHaveBeenCalledWith(
-        expect.objectContaining({ id: '1', number: 'INV-001' })
-      )
-    })
-  })
-
-  it('calls onDuplicate when duplicate button is clicked', async () => {
-    render(<InvoiceTable {...defaultProps} />)
-    const duplicateButtons = screen.getAllByText('Duplicate')
-    fireEvent.click(duplicateButtons[0])
-    await waitFor(() => {
-      expect(defaultProps.onDuplicate).toHaveBeenCalledWith(
-        expect.objectContaining({ id: '1', number: 'INV-001' })
-      )
-    })
-  })
 })
