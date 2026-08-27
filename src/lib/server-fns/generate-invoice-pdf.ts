@@ -70,7 +70,9 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 				updatedAt: invoices.updatedAt,
 			})
 			.from(invoices)
-			.where(and(eq(invoices.id, invoiceId), eq(invoices.organizationId, orgId)))
+			.where(
+				and(eq(invoices.id, invoiceId), eq(invoices.organizationId, orgId)),
+			)
 			.limit(1);
 
 		if (invoiceResult.length === 0) {
@@ -137,7 +139,13 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 						.from(banks)
 						.where(eq(banks.id, invoice.bankId))
 						.limit(1)
-				: Promise.resolve([] as Array<{ id: string; label: string; fields: Array<[string, string]> }>),
+				: Promise.resolve(
+						[] as Array<{
+							id: string;
+							label: string;
+							fields: Array<[string, string]>;
+						}>,
+					),
 
 			db
 				.select({
@@ -280,7 +288,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 
 		// Generate PDF using React-PDF — guarded for font/render failures
 		try {
-			const [React, { Document, renderToStream }, { InvoicePDF }] = await Promise.all([
+			const [React, { renderToStream }, { InvoicePDF }] = await Promise.all([
 				import('react'),
 				import('@react-pdf/renderer'),
 				import('#/components/invoice/InvoicePDF'),
@@ -288,38 +296,18 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 
 			// Generate PDF using React-PDF
 			const stream = await renderToStream(
-				React.createElement(
-					Document,
-					{},
-					React.createElement(InvoicePDF, { data: pdfData }),
-				),
+				React.createElement(InvoicePDF, { data: pdfData }),
 			);
 
-			// 1. Collect chunks into an array of Uint8Arrays (Universal Web API)
-			const chunks: Uint8Array[] = [];
+			// Collect chunks into an array of Buffer
+			const chunks: Buffer[] = [];
 			for await (const chunk of stream) {
-				if (typeof chunk === 'string') {
-					// Fallback if the stream ever emits raw text
-					chunks.push(new TextEncoder().encode(chunk));
-				} else {
-					// Safely cast the Node Buffer to any/Uint8Array for the constructor
-					chunks.push(new Uint8Array(chunk as unknown as ArrayBuffer));
-				}
+				chunks.push(Buffer.from(chunk));
 			}
 
-			// 2. Calculate the total size of all chunks combined
-			const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-			const pdfUint8Array = new Uint8Array(totalLength);
-
-			// 3. Merge chunks together
-			let offset = 0;
-			for (const chunk of chunks) {
-				pdfUint8Array.set(chunk, offset);
-				offset += chunk.length;
-			}
-
-			// 4. Safely convert to a plain Array for serialization — Array.from ensures JSON-serializable numbers
-			const pdfArray = Array.from(pdfUint8Array);
+			// Concatenate all chunks and convert to a plain array for JSON serialization
+			const pdfBuffer = Buffer.concat(chunks);
+			const pdfArray = Array.from(pdfBuffer);
 
 			return {
 				pdf: pdfArray,

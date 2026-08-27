@@ -7,11 +7,11 @@ import type { Currency } from '#/lib/currencies'
 Font.register({
   family: 'Archivo',
   fonts: [
-    { src: 'public/fonts/Archivo-Regular.ttf', fontWeight: 400 },
-    { src: 'public/fonts/Archivo-Regular.ttf', fontWeight: 500 },
-    { src: 'public/fonts/Archivo-Bold.ttf', fontWeight: 600 },
-    { src: 'public/fonts/Archivo-Bold.ttf', fontWeight: 700 },
-    { src: 'public/fonts/Archivo-Bold.ttf', fontWeight: 800 },
+    { src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Regular.ttf`, fontWeight: 400 },
+    { src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Regular.ttf`, fontWeight: 500 },
+    { src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Bold.ttf`, fontWeight: 600 },
+    { src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Bold.ttf`, fontWeight: 700 },
+    { src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Bold.ttf`, fontWeight: 800 },
   ],
 })
 
@@ -432,33 +432,33 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
   const lines =
     data.invoice.paymentType === 'tranche' && data.tranches.length > 0
       ? data.tranches.map((t) => {
-          const amt = Number(t.amount || 0)
-          const tax = amt * (taxRate / 100)
-          return {
-            name: t.name,
-            deliverables: t.deliverables || '—',
-            due: t.dueDate || '—',
-            amount: fmt(amt, data.invoice.currency),
-            tax: fmt(tax, data.invoice.currency),
-            total: fmt(amt + tax, data.invoice.currency),
-          }
-        })
+        const amt = Number(t.amount || 0)
+        const tax = amt * (taxRate / 100)
+        return {
+          name: t.name,
+          deliverables: t.deliverables || '—',
+          due: t.dueDate || '—',
+          amount: fmt(amt, data.invoice.currency),
+          tax: fmt(tax, data.invoice.currency),
+          total: fmt(amt + tax, data.invoice.currency),
+        }
+      })
       : data.items.map((it) => {
-          const qty = Number(it.qty || 0)
-          const cost = Number(it.cost || 0)
-          const amt = qty * cost
-          const disc = Number(it.discountAmt || 0) + (amt * Number(it.discountPct || 0)) / 100
-          const net = amt - disc
-          const tax = net * (taxRate / 100)
-          return {
-            name: it.name,
-            deliverables: it.description || '—',
-            due: data.invoice.dueDate || '—',
-            amount: fmt(net, data.invoice.currency),
-            tax: fmt(tax, data.invoice.currency),
-            total: fmt(net + tax, data.invoice.currency),
-          }
-        })
+        const qty = Number(it.qty || 0)
+        const cost = Number(it.cost || 0)
+        const amt = qty * cost
+        const disc = Number(it.discountAmt || 0) + (amt * Number(it.discountPct || 0)) / 100
+        const net = amt - disc
+        const tax = net * (taxRate / 100)
+        return {
+          name: it.name,
+          deliverables: it.description || '—',
+          due: data.invoice.dueDate || '—',
+          amount: fmt(net, data.invoice.currency),
+          tax: fmt(tax, data.invoice.currency),
+          total: fmt(net + tax, data.invoice.currency),
+        }
+      })
 
   const nextUnpaid = data.tranches.find((t) => !t.paid)
   const dueNowAmount = nextUnpaid
