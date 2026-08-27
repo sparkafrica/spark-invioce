@@ -46,7 +46,7 @@ const trancheSchema = v.object({
   paid: v.optional(v.boolean()),
 })
 
-const invoiceSchema = v.object({
+export const invoiceSchema = v.object({
   businessId: v.pipe(v.string(), v.minLength(1, 'Business is required')),
   companyId: v.pipe(v.string(), v.minLength(1, 'Company is required')),
   clientId: v.pipe(v.string(), v.minLength(1, 'Client is required')),
@@ -67,6 +67,9 @@ const invoiceSchema = v.object({
   items: v.pipe(v.array(itemSchema), v.minLength(1, 'At least one item is required')),
   tranches: v.optional(v.array(trancheSchema)),
 })
+export type InvoiceFormValues = v.InferOutput<typeof invoiceSchema>
+// Use any for form Api to keep Field access simple while preserving values type via inference
+export type InvoiceFormApi = any
 
 type ItemValue = {
   name: string
@@ -254,8 +257,13 @@ export function InvoiceForm({ initialData, isEditing = false, invoiceId }: Invoi
     <form onSubmit={handleSubmit} className="grid lg:grid-cols-[1.55fr_1fr] gap-8 items-start py-6" style={{ padding: '28px 24px 56px', gap: 32 }}>
       {/* Left */}
       <div className="flex flex-col gap-6">
-        <div className="flex items-end gap-4 border-b-2 border-[#201e1d] pb-3">
-          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none">{editTitle}</h1>
+        <div className="flex items-center justify-between gap-4 border-b-2 border-[#201e1d] pb-3">
+          <h1 className="text-[18px] font-medium tracking-[-0.02em] leading-none">{editTitle}</h1>
+
+          <div className="flex gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => navigate({ to: '/invoices' })} className="flex-1 border border-[#201e1d] bg-white py-2.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Cancel</Button>
+            <Button type="submit" size="sm" variant="default" className="flex-1 bg-[#ec3013] text-white border border-[#ec3013] py-2.5 px-6 text-xs font-semibold hover:bg-[#c02a10] rounded-none">{isEditing ? 'Save changes' : 'Create invoice'}</Button>
+          </div>
         </div>
 
         <BusinessEntitySection form={form} />
@@ -284,11 +292,9 @@ export function InvoiceForm({ initialData, isEditing = false, invoiceId }: Invoi
           <div className="text-[10px] tracking-[0.12em] font-semibold mb-2.5">EDIT HISTORY</div>
           <div className="text-xs text-[#5c5755]">No history yet — first save will create an entry.</div>
         </div>
-        <div className="flex gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={() => navigate({ to: '/invoices' })} className="flex-1 border border-[#201e1d] bg-white py-2.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Cancel</Button>
-          <Button type="submit" variant="default" className="flex-1 bg-[#ec3013] text-white border border-[#ec3013] py-2.5 text-xs font-semibold hover:bg-[#c02a10] rounded-none">{isEditing ? 'Save changes' : 'Create invoice'}</Button>
-        </div>
       </div>
+
+      {/* dailog to resolve invioce id collision */}
       <Dialog open={collisionOpen} onOpenChange={setCollisionOpen}>
         <DialogContent className="rounded-none">
           <DialogHeader>
@@ -301,7 +307,7 @@ export function InvoiceForm({ initialData, isEditing = false, invoiceId }: Invoi
               type="button"
               variant="default"
               onClick={() => {
-                ;(form as any).setFieldValue('number', suggestedNumber)
+                ; (form as any).setFieldValue('number', suggestedNumber)
                 setCollisionOpen(false)
                 setTimeout(() => form.handleSubmit(), 0)
               }}

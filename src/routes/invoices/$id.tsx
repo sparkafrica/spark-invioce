@@ -1,31 +1,30 @@
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute, Link, redirect, useMatch } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { getSession } from '#/lib/auth.functions'
 import { InvoiceDetail } from '#/components/invoice/InvoiceDetail'
 import { Button } from '#/components/ui/button'
 import { Skeleton } from '#/components/ui/skeleton'
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail'
 
-interface LoaderData {
-  user: import('better-auth').User | null
-  session: import('better-auth').Session | null
-  invoiceId: string
-}
-
 export const Route = createFileRoute('/invoices/$id')({
-  beforeLoad: async ({ params }): Promise<LoaderData> => {
+  beforeLoad: async ({ location }) => {
     const session = await getSession()
+
     if (!session) {
-      throw redirect({ to: '/auth/login', search: { redirect: `/invoices/${params.id}` } })
+      throw redirect({
+        to: '/auth/login',
+        search: { redirect: location.pathname }
+      })
     }
-    return { user: session.user, session: session.session, invoiceId: params.id }
+
+    return { user: session.user, session: session.session }
   },
   component: InvoiceDetailPage,
 })
 
 function InvoiceDetailPage() {
-  const match = useMatch({ from: '/invoices/$id' })
-  const invoiceId = (match?.loaderData as LoaderData | undefined)?.invoiceId || ''
+  const { id: invoiceId } = Route.useParams()
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['invoice', { id: invoiceId }],
     queryFn: () => getInvoiceDetail({ data: { id: invoiceId } }),
@@ -61,7 +60,7 @@ function InvoiceDetailPage() {
           </Button>
         </div>
         <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
-          <p className="text-red-600 dark:text-red-400">Failed to load invoice: {(error as Error).message}</p>
+          <p className="text-red-600">Failed to load invoice: {(error as Error).message}</p>
           <Button variant="outline" className="mt-4" onClick={() => refetch()}>
             Retry
           </Button>
@@ -80,10 +79,7 @@ function InvoiceDetailPage() {
           </Button>
         </div>
         <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
-          <p className="text-red-600 dark:text-red-400">Invoice not found</p>
-          <Button variant="outline" className="mt-4">
-            <a href="/invoices">Back to Invoices</a>
-          </Button>
+          <p className="text-red-600">Invoice not found</p>
         </div>
       </div>
     )

@@ -170,22 +170,22 @@ h2,
 h3,
 h4 {
   font-family: var(--font-heading);
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.12;
   letter-spacing: -0.015em;
 }
 
 h1 {
-  font-size: 42px;
-}
-h2 {
   font-size: 32px;
 }
+h2 {
+  font-size: 28px;
+}
 h3 {
-  font-size: 25px;
+  font-size: 22px;
 }
 h4 {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 a {

@@ -9,6 +9,7 @@ import {
 	businesses,
 	clients,
 	companies,
+	organization,
 	settings,
 } from '#/db/schema';
 import { auth } from '#/lib/auth';

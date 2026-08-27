@@ -12,14 +12,14 @@ export const Route = createFileRoute('/invoices/$id/edit')({
     if (!session) {
       throw redirect({ to: '/auth/login', search: { redirect: `/invoices/${params.id}/edit` } })
     }
-    return { user: session.user, session: session.session, invoiceId: params.id }
+    return { user: session.user, session: session.session }
   },
   component: EditInvoicePage,
 })
 
 function EditInvoicePage() {
-  const match = Route.useMatch()
-  const invoiceId = (match?.loaderData as { invoiceId: string } | undefined)?.invoiceId || ''
+  const { id: invoiceId } = Route.useParams()
+
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['invoice', { id: invoiceId }],
     queryFn: () => getInvoiceDetail({ data: { id: invoiceId } }),

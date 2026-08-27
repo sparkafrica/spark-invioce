@@ -5,7 +5,7 @@ import { Button } from '#/components/ui/button'
 import { Label } from '#/components/ui/label'
 import { Input } from '#/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '#/components/ui/dialog'
-import { XIcon, Loader2Icon } from 'lucide-react'
+import { Loader2Icon } from 'lucide-react'
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-US', {
@@ -44,9 +44,6 @@ export function PaymentModal({ isOpen, onClose, onSubmit, isPending, invoice }: 
       <DialogContent className="bg-white rounded-none shadow-xl max-w-md w-full p-6">
         <DialogHeader className="flex flex-row items-center justify-between mb-4 space-y-0">
           <DialogTitle className="text-lg font-semibold">Record Payment</DialogTitle>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-6 w-6">
-            <XIcon className="h-5 w-5" />
-          </Button>
         </DialogHeader>
 
         <div className="space-y-4">

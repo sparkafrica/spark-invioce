@@ -10,7 +10,7 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { Field, FieldLabel, FieldError } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { Button } from '#/components/ui/button'
-import { CurrencyField } from '#/components/ui/currency-select'
+import { CurrencySelect } from '#/components/ui/currency-select'
 import { qk } from '#/hooks/useReferences'
 
 const companySchema = v.object({
@@ -150,7 +150,11 @@ function CompanyCard({ company }: { company: Record<string, unknown> & { id: str
 
           <form.Field name="defaultCurrency">
             {(field) => (
-              <CurrencyField field={field as unknown as never} label="Default currency" placeholder="NGN" />
+              <Field>
+                <FieldLabel htmlFor={field.name}>Default currency</FieldLabel>
+                <CurrencySelect value={field.state.value} onValueChange={(value) => field.handleChange(value)} placeholder="NGN" />
+                <FieldError errors={field.state.meta.errors} />
+              </Field>
             )}
           </form.Field>
 

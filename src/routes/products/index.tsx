@@ -8,7 +8,7 @@ import { Card, CardContent } from '#/components/ui/card'
 import { Badge } from '#/components/ui/badge'
 import { Input } from '#/components/ui/input'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '#/components/ui/table'
-import { EditIcon, Trash2Icon, SearchIcon, PlusIcon } from 'lucide-react'
+import { EditIcon, Trash2Icon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from '#/components/ui/toast'
 import { Skeleton } from '#/components/ui/skeleton'
@@ -46,17 +46,6 @@ function ProductsPage() {
   })
 
   const products = data?.products || []
-
-  const formatCurrency = (amount: string) => {
-    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(amount))
-  }
-
-  const catalogueItems = products.map((p) => ({
-    label: p.name + ' - ' + formatCurrency(p.cost) + ' ' + p.currency,
-    add: () => {
-      toast.add({ title: 'Added ' + p.name + ' to catalogue', type: 'success' })
-    },
-  }))
 
   const editingProduct = editingId ? products.find((p) => p.id === editingId) : null
 
@@ -158,32 +147,19 @@ function ProductsPage() {
             )}
           </CardContent>
         </Card>
-
-        <div className="mt-6">
-          <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-3">CATALOGUE</div>
-          <div className="flex flex-wrap gap-3">
-            {catalogueItems.map((item, idx) => (
-              <Button key={idx} variant="outline" size="sm" onClick={item.add} className="h-8 px-3 py-1.5 text-xs font-semibold">
-                <PlusIcon className="h-3 w-3 mr-1" /> {item.label}
-              </Button>
-            ))}
-          </div>
-        </div>
       </div>
 
       <div className="border-l-2 border-[#201e1d] pl-7">
         <div className="text-[10px] tracking-[0.12em] font-semibold mb-3">ADD A PRODUCT OR SERVICE</div>
-        <div className="border-2 border-[#201e1d] bg-white p-4">
-          <ProductForm
-            key={addFormKey}
-            isEditing={false}
-            onCancel={() => setAddFormKey((k) => k + 1)}
-            onSuccess={() => {
-              refetch()
-              setAddFormKey((k) => k + 1)
-            }}
-          />
-        </div>
+        <ProductForm
+          key={addFormKey}
+          isEditing={false}
+          onCancel={() => setAddFormKey((k) => k + 1)}
+          onSuccess={() => {
+            refetch()
+            setAddFormKey((k) => k + 1)
+          }}
+        />
       </div>
 
       <Dialog open={!!editingId} onOpenChange={(open) => { if (!open) setEditingId(null) }}>

@@ -6,7 +6,7 @@ import * as v from 'valibot'
 import { Input } from '#/components/ui/input'
 import { Textarea } from '#/components/ui/textarea'
 import { Field, FieldLabel, FieldError } from '#/components/ui/field'
-import { CurrencyField } from '#/components/ui/currency-select'
+import { CurrencySelect } from '#/components/ui/currency-select'
 import { Button } from '#/components/ui/button'
 
 import { createProduct } from '#/lib/server-fns/crm'
@@ -23,8 +23,8 @@ const productSchema = v.object({
 type ProductFormValues = v.InferOutput<typeof productSchema>
 
 interface ProductFormProps {
-  initialData?: Partial<ProductFormValues>
   isEditing?: boolean
+  initialData?: Partial<ProductFormValues>
   productId?: string
   onCancel?: () => void
   onSuccess?: () => void
@@ -35,7 +35,7 @@ export function ProductForm({ initialData, isEditing = false, productId, onCance
     defaultValues: {
       name: '',
       description: '',
-      cost: '0',
+      cost: '',
       currency: 'NGN',
       ...initialData,
     },
@@ -65,61 +65,57 @@ export function ProductForm({ initialData, isEditing = false, productId, onCance
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-215 flex flex-col gap-6 py-6" style={{ padding: '28px 24px 56px' }}>
-      <div className="flex items-end gap-4 border-b-2 border-[#201e1d] pb-3">
-        <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none">{isEditing ? 'Edit Product' : 'New Product'}</h1>
+    <form onSubmit={handleSubmit} className="mx-auto max-w-215 flex flex-col gap-6">
+      <div className="grid gap-3 md:grid-cols-2">
+        <form.Field name="name">
+          {(field) => (
+            <Field>
+              <FieldLabel htmlFor={field.name}>Name *</FieldLabel>
+              <Input id={field.name} name={field.name} value={field.state.value} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)} placeholder="Professional Consulting Services" />
+              <FieldError errors={field.state.meta.errors} />
+            </Field>
+          )}
+        </form.Field>
+        <form.Field name="currency">
+          {(field) => (
+            <Field>
+              <FieldLabel htmlFor={field.name}>Currency *</FieldLabel>
+              <CurrencySelect value={field.state.value} onValueChange={(value) => field.handleChange(value)} placeholder="Select currency" />
+              <FieldError errors={field.state.meta.errors} />
+            </Field>
+          )}
+        </form.Field>
       </div>
 
-      <div className="border-2 border-[#201e1d] bg-white p-4 flex flex-col gap-4">
-        <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">PRODUCT — {isEditing ? 'EDIT' : 'NEW'}</div>
+      <form.Field name="cost">
+        {(field) => (
+          <Field>
+            <FieldLabel htmlFor={field.name}>Cost *</FieldLabel>
+            <Input id={field.name} name={field.name} type="text" inputMode="decimal" value={field.state.value} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)} placeholder="50000.00" />
+            <FieldError errors={field.state.meta.errors} />
+          </Field>
+        )}
+      </form.Field>
 
-        <div className="grid gap-3 md:grid-cols-2">
-          <form.Field name="name">
-            {(field) => (
-              <Field>
-                <FieldLabel htmlFor={field.name}>Name *</FieldLabel>
-                <Input id={field.name} name={field.name} value={field.state.value} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)} placeholder="Professional Consulting Services" />
-                <FieldError errors={field.state.meta.errors} />
-              </Field>
-            )}
-          </form.Field>
-          <form.Field name="currency">
-            {(field) => (
-              <CurrencyField field={field as any} label="Currency *" placeholder="Select currency" />
-            )}
-          </form.Field>
-        </div>
+      <form.Field name="description">
+        {(field) => (
+          <Field>
+            <FieldLabel htmlFor={field.name}>Description</FieldLabel>
+            <Textarea id={field.name} name={field.name} value={field.state.value || ''} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)} placeholder="Hourly consulting, workshop, etc." rows={3} />
+            <FieldError errors={field.state.meta.errors} />
+          </Field>
+        )}
+      </form.Field>
 
-        <form.Field name="cost">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Cost *</FieldLabel>
-              <Input id={field.name} name={field.name} type="text" inputMode="decimal" value={field.state.value} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)} placeholder="50000.00" />
-              <FieldError errors={field.state.meta.errors} />
-            </Field>
+      <div className="flex gap-2 pt-2">
+        {isEditing && <Button type="button" variant="outline" onClick={onCancel} className="flex-1 border border-[#201e1d] bg-white py-2.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Cancel</Button>}
+        <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
+          {([canSubmit, isSubmitting]) => (
+            <Button type="submit" variant="default" disabled={!canSubmit || isSubmitting} className="flex-1 bg-[#ec3013] text-white border border-[#ec3013] py-2.5 text-xs font-semibold hover:bg-[#c02a10] disabled:opacity-50 rounded-none">
+              {isSubmitting ? 'Saving…' : isEditing ? 'Save changes' : 'Create product'}
+            </Button>
           )}
-        </form.Field>
-
-        <form.Field name="description">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Description</FieldLabel>
-              <Textarea id={field.name} name={field.name} value={field.state.value || ''} onBlur={field.handleBlur} onChange={(e) => field.handleChange(e.target.value)} placeholder="Hourly consulting, workshop, etc." rows={3} />
-              <FieldError errors={field.state.meta.errors} />
-            </Field>
-          )}
-        </form.Field>
-
-        <div className="flex gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel} className="flex-1 border border-[#201e1d] bg-white py-2.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Cancel</Button>
-          <form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button type="submit" variant="default" disabled={!canSubmit || isSubmitting} className="flex-1 bg-[#ec3013] text-white border border-[#ec3013] py-2.5 text-xs font-semibold hover:bg-[#c02a10] disabled:opacity-50 rounded-none">
-                {isSubmitting ? 'Saving…' : isEditing ? 'Save changes' : 'Create product'}
-              </Button>
-            )}
-          </form.Subscribe>
-        </div>
+        </form.Subscribe>
       </div>
     </form>
   )
