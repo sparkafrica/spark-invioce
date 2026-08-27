@@ -296,7 +296,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 
 			// Generate PDF using React-PDF
 			const stream = await renderToStream(
-				React.createElement(InvoicePDF, { data: pdfData }),
+				React.createElement(InvoicePDF, { data: pdfData }) as unknown as any,
 			);
 
 			// Collect chunks into an array of Buffer
