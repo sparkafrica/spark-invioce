@@ -51,7 +51,7 @@ function MemosPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-end justify-between gap-5 border-b-2 border-[#201e1d] pb-3">
-          <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Memos</h1>
+          <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Memos</h1>
           <Skeleton className="h-6 w-24 rounded-none" />
         </div>
         <div className="bg-white border-2 border-[#201e1d] p-4 space-y-3">
@@ -68,7 +68,7 @@ function MemosPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Memos</h1>
+          <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Memos</h1>
           <p className="text-[#5c5755]">{memos.length} memo(s)</p>
         </div>
         <Button onClick={handleAddNew}>New memo</Button>

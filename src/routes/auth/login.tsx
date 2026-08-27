@@ -41,7 +41,7 @@ function LoginPage() {
       <div className="hidden lg:flex flex-col justify-between border-r-2 border-[#201e1d] px-14 py-16">
         <img src="/assets/spark-logo.png" alt="Spark Africa Technologies" width={190} height={36} className="h-9 w-min" />
         <div>
-          <h1 className="max-w-[9em] text-[19px] font-semibold leading-[1.02] tracking-[-0.03em]">Invoicing for The Spark Africa Technologies</h1>
+          <h1 className="max-w-[9em] text-[32px] font-medium leading-[1.02] tracking-[-0.03em]">Invoicing for The Spark Africa Technologies</h1>
           <p className="mt-5 max-w-[34em] text-sm leading-6 text-[#5c5755]">Milestone invoices, tranche schedules and a full edit trail. invoices.sparkmarkets.co</p>
         </div>
         <div className="text-[11px] tracking-widest text-[#5c5755]">TIN 31067651-0001 · SPARK — NIGERIA · UNITED KINGDOM</div>

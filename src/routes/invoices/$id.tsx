@@ -35,7 +35,7 @@ function InvoiceDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
           <Button>
             <Link to="/invoices">Back to Invoices</Link>
           </Button>
@@ -54,7 +54,7 @@ function InvoiceDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
           <Button>
             <Link to="/invoices">Back to Invoices</Link>
           </Button>
@@ -73,7 +73,7 @@ function InvoiceDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
+          <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Invoice Detail</h1>
           <Button>
             <Link to="/invoices">Back to Invoices</Link>
           </Button>

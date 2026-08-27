@@ -69,7 +69,7 @@ export function ClientForm({ initialData, isEditing = false, clientId, onCancel,
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-215 flex flex-col gap-6 py-6" style={{ padding: '28px 24px 56px' }}>
       <div className="flex items-end gap-4 border-b-2 border-[#201e1d] pb-3">
-        <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none">{isEditing ? 'Edit Client' : 'New Client'}</h1>
+        <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none">{isEditing ? 'Edit Client' : 'New Client'}</h1>
       </div>
 
       <div className="border-2 border-[#201e1d] bg-white p-4 flex flex-col gap-4">

@@ -36,7 +36,7 @@ export function SettingsLayout() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-end justify-between gap-5 border-b-2 border-[#201e1d] pb-3">
-        <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none">Settings</h1>
+        <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">Settings</h1>
         <div className="flex gap-1 flex-wrap">
           {TABS.map((t) => (
             <Link key={t.id} to={t.href} className={activeId === t.id ? btnActive : btnIdle}>{t.label}</Link>

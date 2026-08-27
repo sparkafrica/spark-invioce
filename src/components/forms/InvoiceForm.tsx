@@ -258,7 +258,7 @@ export function InvoiceForm({ initialData, isEditing = false, invoiceId }: Invoi
       {/* Left */}
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between gap-4 border-b-2 border-[#201e1d] pb-3">
-          <h1 className="text-[18px] font-medium tracking-[-0.02em] leading-none">{editTitle}</h1>
+          <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none">{editTitle}</h1>
 
           <div className="flex gap-2">
             <Button type="button" size="sm" variant="outline" onClick={() => navigate({ to: '/invoices' })} className="flex-1 border border-[#201e1d] bg-white py-2.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Cancel</Button>

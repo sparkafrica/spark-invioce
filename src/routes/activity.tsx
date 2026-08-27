@@ -57,7 +57,7 @@ function ActivityPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-end justify-between gap-5 border-b-2 border-[#201e1d] pb-3">
-        <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none">Activity</h1>
+        <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">Activity</h1>
         <div className="flex items-center gap-4">
           <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Select date range" className="w-64" />
           <div className="relative max-w-lg">

@@ -105,7 +105,7 @@ function Dashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-end justify-between gap-5 border-b-2 border-[#201e1d] pb-3">
-        <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none">Overview</h1>
+        <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">Overview</h1>
         <div className="text-[11px] text-[#5c5755] text-right max-w-[34em]">RC 1959660 · TIN 31067651-0001 · {today}</div>
       </div>
 

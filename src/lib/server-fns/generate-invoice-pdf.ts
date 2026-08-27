@@ -1,5 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
-import { desc, eq } from 'drizzle-orm';
+import { getRequestHeaders } from '@tanstack/react-start/server';
+import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '#/db';
 import {
@@ -12,12 +13,16 @@ import {
 	invoiceTranches,
 	payments,
 } from '#/db/schema';
+import { auth } from '#/lib/auth';
 
 interface GeneratePDFResponse {
 	pdf: Array<number>;
 	filename: string;
 }
 
+// NOTE: GET limits URL/query size (~2KB typical). Payload here is only { invoiceId }
+// so GET is safe; response is serialized Array<number> via JSON. For large binary
+// payloads or future POST params, prefer method: 'POST' to avoid URL length limits.
 export const generateInvoicePDF = createServerFn({ method: 'GET' })
 	.validator(
 		z.object({
@@ -27,11 +32,21 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 	.handler(async ({ data }): Promise<GeneratePDFResponse> => {
 		const { invoiceId } = data;
 
-		// Fetch invoice with all relations
+		// Auth check — require session (mirrors invoice-detail.ts org scoping pattern)
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+		if (!session) {
+			throw new Error('Unauthorized');
+		}
+		const orgId = process.env.ORGANIZATION_ID!;
+		if (!orgId) throw new Error('ORGANIZATION_ID not configured');
+
+		// Fetch invoice org-scoped like invoice-detail.ts
 		const invoiceResult = await db
 			.select({
 				id: invoices.id,
 				number: invoices.number,
+				organizationId: invoices.organizationId,
 				clientId: invoices.clientId,
 				businessId: invoices.businessId,
 				companyId: invoices.companyId,
@@ -55,7 +70,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 				updatedAt: invoices.updatedAt,
 			})
 			.from(invoices)
-			.where(eq(invoices.id, invoiceId))
+			.where(and(eq(invoices.id, invoiceId), eq(invoices.organizationId, orgId)))
 			.limit(1);
 
 		if (invoiceResult.length === 0) {
@@ -64,7 +79,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 
 		const invoice = invoiceResult[0];
 
-		// Fetch all related data in parallel
+		// Fetch all related data in parallel — bankId null guard avoids eq(banks.id, null) crash
 		const [
 			clientResult,
 			businessResult,
@@ -112,15 +127,17 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 				.where(eq(companies.id, invoice.companyId))
 				.limit(1),
 
-			db
-				.select({
-					id: banks.id,
-					label: banks.label,
-					fields: banks.fields,
-				})
-				.from(banks)
-				.where(eq(banks.id, invoice.bankId!))
-				.limit(1),
+			invoice.bankId
+				? db
+						.select({
+							id: banks.id,
+							label: banks.label,
+							fields: banks.fields,
+						})
+						.from(banks)
+						.where(eq(banks.id, invoice.bankId))
+						.limit(1)
+				: Promise.resolve([] as Array<{ id: string; label: string; fields: Array<[string, string]> }>),
 
 			db
 				.select({
@@ -261,72 +278,55 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 			total,
 		};
 
-		// Generate PDF using React-PDF
-		// 	const stream = await renderToStream(
-		// 		React.createElement(
-		// 			Document,
-		// 			{},
-		// 			React.createElement(InvoicePDF, { data: pdfData }),
-		// 		),
-		// 	);
+		// Generate PDF using React-PDF — guarded for font/render failures
+		try {
+			const [React, { Document, renderToStream }, { InvoicePDF }] = await Promise.all([
+				import('react'),
+				import('@react-pdf/renderer'),
+				import('#/components/invoice/InvoicePDF'),
+			]);
 
-		// 	const chunks: Buffer[] = [];
-		// 	for await (const chunk of stream) {
-		// 		chunks.push(Buffer.from(chunk));
-		// 	}
+			// Generate PDF using React-PDF
+			const stream = await renderToStream(
+				React.createElement(
+					Document,
+					{},
+					React.createElement(InvoicePDF, { data: pdfData }),
+				),
+			);
 
-		// 	const pdfBuffer = Buffer.concat(chunks);
-		// 	const pdfArray = Array.from(new Uint8Array(pdfBuffer));
-
-		// 	return {
-		// 		pdf: pdfArray,
-		// 		filename: `${invoice.number}.pdf`,
-		// 	};
-		// });
-
-		const [React, { Document, renderToStream }, { InvoicePDF }] = await Promise.all([
-			import('react'),
-			import('@react-pdf/renderer'),
-			import('#/components/invoice/InvoicePDF'),
-		]);
-
-		// Generate PDF using React-PDF
-		const stream = await renderToStream(
-			React.createElement(
-				Document,
-				{},
-				React.createElement(InvoicePDF, { data: pdfData }),
-			),
-		);
-
-		// 1. Collect chunks into an array of Uint8Arrays (Universal Web API)
-		const chunks: Uint8Array[] = [];
-		for await (const chunk of stream) {
-			if (typeof chunk === 'string') {
-				// Fallback if the stream ever emits raw text
-				chunks.push(new TextEncoder().encode(chunk));
-			} else {
-				// Safely cast the Node Buffer to any/Uint8Array for the constructor
-				chunks.push(new Uint8Array(chunk));
+			// 1. Collect chunks into an array of Uint8Arrays (Universal Web API)
+			const chunks: Uint8Array[] = [];
+			for await (const chunk of stream) {
+				if (typeof chunk === 'string') {
+					// Fallback if the stream ever emits raw text
+					chunks.push(new TextEncoder().encode(chunk));
+				} else {
+					// Safely cast the Node Buffer to any/Uint8Array for the constructor
+					chunks.push(new Uint8Array(chunk as unknown as ArrayBuffer));
+				}
 			}
+
+			// 2. Calculate the total size of all chunks combined
+			const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+			const pdfUint8Array = new Uint8Array(totalLength);
+
+			// 3. Merge chunks together
+			let offset = 0;
+			for (const chunk of chunks) {
+				pdfUint8Array.set(chunk, offset);
+				offset += chunk.length;
+			}
+
+			// 4. Safely convert to a plain Array for serialization — Array.from ensures JSON-serializable numbers
+			const pdfArray = Array.from(pdfUint8Array);
+
+			return {
+				pdf: pdfArray,
+				filename: `${invoice.number}.pdf`,
+			};
+		} catch (err) {
+			// Surface font or render failures explicitly (e.g. missing Archivo fonts)
+			throw new Error(`Failed to generate PDF: ${(err as Error).message}`);
 		}
-
-		// 2. Calculate the total size of all chunks combined
-		const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-		const pdfUint8Array = new Uint8Array(totalLength);
-
-		// 3. Merge chunks together
-		let offset = 0;
-		for (const chunk of chunks) {
-			pdfUint8Array.set(chunk, offset);
-			offset += chunk.length;
-		}
-
-		// 4. Safely convert to a plain Array for serialization
-		const pdfArray = Array.from(pdfUint8Array);
-
-		return {
-			pdf: pdfArray,
-			filename: `${invoice.number}.pdf`,
-		};
 	});

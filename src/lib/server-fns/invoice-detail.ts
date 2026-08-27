@@ -56,8 +56,6 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 			.where(and(eq(invoices.id, id), eq(invoices.organizationId, orgId)))
 			.limit(1);
 
-		console.log('found invoice:', invoiceResult);
-
 		if (invoiceResult.length === 0) {
 			return { invoice: null };
 		}

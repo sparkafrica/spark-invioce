@@ -30,7 +30,7 @@ function EditInvoicePage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
+          <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
           <Skeleton className="h-6 w-24 rounded-none" />
         </div>
         <div className="grid lg:grid-cols-[1.55fr_1fr] gap-8 p-6">
@@ -50,7 +50,7 @@ function EditInvoicePage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
+          <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
           <Button variant="outline" onClick={() => refetch()}>Retry</Button>
         </div>
         <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
@@ -64,7 +64,7 @@ function EditInvoicePage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
+          <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Edit Invoice</h1>
         </div>
         <div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
           <p className="text-red-600 dark:text-red-400">Invoice not found</p>

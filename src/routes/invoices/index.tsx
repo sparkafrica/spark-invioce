@@ -33,7 +33,7 @@ function InvoicesPage() {
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-end justify-between gap-5 border-b-2 border-[#201e1d] pb-3">
-          <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none">Invoices</h1>
+          <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">Invoices</h1>
           <Skeleton className="h-6 w-24 rounded-none" />
         </div>
         <div className="bg-white border-2 border-[#201e1d] p-4 space-y-3">
@@ -50,7 +50,7 @@ function InvoicesPage() {
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-end justify-between gap-5 border-b-2 border-[#201e1d] pb-3">
-          <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none">Invoices</h1>
+          <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">Invoices</h1>
           <Link to="/invoices/new" className="bg-[#ec3013] text-white px-3.5 py-2 text-xs font-semibold hover:bg-[#c02a10]">New invoice</Link>
         </div>
         <div className="bg-[#f0dcd8] border border-[#201e1d] p-4 text-sm">
@@ -67,7 +67,7 @@ function InvoicesPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-end justify-between gap-5 border-b-2 border-[#201e1d] pb-3">
-        <h1 className="text-[19px] font-semibold tracking-[-0.02em] leading-none">Invoices</h1>
+        <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">Invoices</h1>
         <div className="flex gap-1 flex-wrap">
           {bizOptions.map((b) => (
             <Button type="button" key={b} variant={bizFilter === b ? 'default' : 'outline'} size="sm" onClick={() => setBizFilter(b)} className={bizFilter === b ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold rounded-none' : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none'}>

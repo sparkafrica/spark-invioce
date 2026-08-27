@@ -48,7 +48,7 @@ function ResetPasswordPage() {
       <div className="min-h-screen bg-[#f3f2f2] text-[#201e1d] flex items-center justify-center p-6">
         <div className="w-full max-w-[360px] border-2 border-[#201e1d] bg-white p-6">
           <div className="text-[11px] font-semibold tracking-[0.12em] text-[#c02a10]">INVALID LINK</div>
-          <h1 className="mt-2 text-[18px] font-semibold tracking-[-0.02em]">Invalid link</h1>
+          <h1 className="mt-2 text-[30px] font-medium tracking-[-0.02em]">Invalid link</h1>
           <p className="mt-2 text-xs leading-5 text-[#5c5755]">This password reset link is invalid or has expired.</p>
           <Link to="/auth/forgot-password" className="mt-4 inline-block border border-[#201e1d] px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8]">Request a new reset link</Link>
         </div>
@@ -62,7 +62,7 @@ function ResetPasswordPage() {
         <div className="hidden lg:flex flex-col justify-between border-r-2 border-[#201e1d] px-14 py-16">
           <img src="/assets/spark-logo.png" alt="Spark Africa Technologies" width={190} height={36} className="h-9 w-auto" />
           <div>
-            <h1 className="max-w-[9em] text-[19px] font-semibold leading-[1.02] tracking-[-0.03em]">Invoices, memos and money across the three businesses</h1>
+            <h1 className="max-w-[9em] text-[32px] font-medium leading-[1.02] tracking-[-0.03em]">Invoices, memos and money across the three businesses</h1>
             <p className="mt-5 max-w-[34em] text-sm leading-6 text-[#5c5755]">New Business · Africa Startup Festival · Africa Technology Expo.</p>
           </div>
           <div className="text-[11px] tracking-[0.1em] text-[#5c5755]">SPARK — NIGERIA · UNITED KINGDOM</div>

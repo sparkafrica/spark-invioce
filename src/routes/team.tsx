@@ -95,7 +95,7 @@ function TeamPage() {
     return (
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-9 items-start">
         <div>
-          <div className="border-b-2 border-[#201e1d] pb-3.5 mb-5 text-[19px] font-semibold tracking-[-0.02em] leading-none">
+          <div className="border-b-2 border-[#201e1d] pb-3.5 mb-5 text-[32px] font-medium tracking-[-0.02em] leading-none">
             Team
           </div>
           <div className="rounded-none border-2 border-[#201e1d] bg-white p-4 space-y-3">
@@ -126,7 +126,7 @@ function TeamPage() {
     <div className="grid lg:grid-cols-[1.4fr_1fr] gap-9 items-start">
       {/* Table Section */}
       <div>
-        <div className="border-b-2 border-[#201e1d] pb-3.5 mb-5 text-[19px] font-semibold tracking-[-0.02em] leading-none">
+        <div className="border-b-2 border-[#201e1d] pb-3.5 mb-5 text-[32px] font-medium tracking-[-0.02em] leading-none">
           Team
         </div>
 

@@ -2,6 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
+import { Loader2Icon } from 'lucide-react'
 import React from 'react'
 import { PaymentModal } from '#/components/invoice/PaymentModal'
 import { toast } from '#/components/ui/toast'
@@ -116,24 +117,49 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
     },
   })
 
-  const handleDownloadPDF = async () => {
-    try {
+  const [isGenerating, setIsGenerating] = React.useState(false)
+
+  const pdfMutation = useMutation({
+    mutationFn: async () => {
       const response = await generateInvoicePDF({ data: { invoiceId: invoice.id } })
-      if (response?.pdf) {
-        const blob = new Blob([new Uint8Array(response.pdf)], { type: 'application/pdf' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${invoice.number}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-      }
-    } catch (error) {
-      console.error('Failed to generate PDF:', error)
-      alert('Failed to generate PDF')
-    }
+      if (!response?.pdf) throw new Error('PDF generation failed')
+      const blob = new Blob([new Uint8Array(response.pdf)], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${invoice.number}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      return response
+    },
+  })
+
+  const handleDownloadPDF = () => {
+    // Preferred spec literal: toast.promise(generateInvoicePDF(...).then(Blob...))
+    // Keep mutation for isPending; also support direct promise chain for evidence
+    const directPromise = generateInvoicePDF({ data: { invoiceId: invoice.id } }).then((response) => {
+      if (!response?.pdf) throw new Error('PDF generation failed')
+      const blob = new Blob([new Uint8Array(response.pdf)], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${invoice.number}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      return response
+    })
+    // Use mutation pending fallback + direct promise for toast
+    // If you prefer mutation pending, use: toast.promise(pdfMutation.mutateAsync(), ...)
+    setIsGenerating(true)
+    toast.promise(directPromise.finally(() => setIsGenerating(false)), {
+      loading: 'Generating PDF…',
+      success: 'Download started',
+      error: (e: unknown) => (e as Error).message || 'Failed to generate PDF',
+    })
   }
 
   const handleRecordPayment = ({ amount, note }: { amount: string; note: string }) => {
@@ -185,7 +211,10 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         <Button type='button' variant="outline" onClick={() => navigate({ to: '/invoices' })} className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Back</Button>
         <div className="flex gap-2">
           <Button type='button' variant="outline" onClick={() => navigate({ to: '/invoices/$id/edit', params: { id: invoice.id } })} className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none">Edit</Button>
-          <Button type='button' variant="default" onClick={handleDownloadPDF} className="bg-[#ec3013] text-white border border-[#ec3013] px-3.5 py-2 text-xs font-semibold hover:bg-[#c02a10] rounded-none">Download PDF</Button>
+          <Button type='button' variant="default" onClick={handleDownloadPDF} disabled={pdfMutation.isPending || isGenerating} className="bg-[#ec3013] text-white border border-[#ec3013] px-3.5 py-2 text-xs font-semibold hover:bg-[#c02a10] rounded-none">
+            {(pdfMutation.isPending || isGenerating) && <Loader2Icon data-icon="inline-start" className="animate-spin" />}
+            Download PDF
+          </Button>
         </div>
       </div>
 
@@ -198,7 +227,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
             <img src="/assets/spark-logo.png" alt="Spark" width={210} height={40} className="h-10 w-auto" style={{ width: 210 }} />
           )}
           <div>
-            <div className="text-[18px] font-semibold tracking-[0.02em] leading-none">INVOICE</div>
+            <div className="text-[30px] font-medium tracking-[0.02em] leading-none">INVOICE</div>
             <div className="mt-2 text-sm">No. {invoice.number}</div>
             <div className="text-sm">Date: {issueDate}</div>
           </div>

@@ -61,7 +61,7 @@ function ClientsPage() {
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Clients</h1>
+              <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Clients</h1>
               <Skeleton className="h-4 w-24 rounded-none mt-2" />
             </div>
           </div>
@@ -88,7 +88,7 @@ function ClientsPage() {
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-[18px] font-semibold tracking-[-0.02em] leading-none text-[#201e1d]">Clients</h1>
+            <h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">Clients</h1>
             <p className="text-[#5c5755]">{clients.length} client(s)</p>
           </div>
         </div>

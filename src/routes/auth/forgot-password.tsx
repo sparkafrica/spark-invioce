@@ -38,7 +38,7 @@ function ForgotPasswordPage() {
         <div className="hidden lg:flex flex-col justify-between border-r-2 border-[#201e1d] px-14 py-16">
           <img src="/assets/spark-logo.png" alt="Spark Africa Technologies" width={190} height={36} className="h-9 w-auto" />
           <div>
-            <h1 className="max-w-[9em] text-[19px] font-semibold leading-[1.02] tracking-[-0.03em]">Invoices, memos and money across the three businesses</h1>
+            <h1 className="max-w-[9em] text-[32px] font-medium leading-[1.02] tracking-[-0.03em]">Invoices, memos and money across the three businesses</h1>
             <p className="mt-5 max-w-[34em] text-sm leading-6 text-[#5c5755]">New Business · Africa Startup Festival · Africa Technology Expo.</p>
           </div>
           <div className="text-[11px] tracking-[0.1em] text-[#5c5755]">SPARK — NIGERIA · UNITED KINGDOM</div>
