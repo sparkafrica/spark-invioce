@@ -1,5 +1,5 @@
 {
-  "name": "spark-invioce",
+  "name": "spark-invoice",
   "private": true,
   "type": "module",
   "imports": {
@@ -95,8 +95,13 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@prisma/client",
+      "bcrypt",
+      "better-sqlite3",
       "esbuild",
-      "lightningcss"
+      "lightningcss",
+      "msw"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.33.4"
 }
