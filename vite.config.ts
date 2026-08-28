@@ -14,7 +14,7 @@ const config = defineConfig({
 		devtools(),
 		nitro({
 			// preset: 'bun',
-			rollupConfig: { external: [/^@sentry\//] },
+			rollupConfig: { external: [/^@sentry\//, '@react-pdf/renderer'] },
 		}),
 		tailwindcss(),
 		// tanstackRouter({
