@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as SeedRouteImport } from './routes/seed'
 import { Route as SettingRouteImport } from './routes/setting'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
@@ -48,11 +47,6 @@ const ActivityRoute = ActivityRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SeedRoute = SeedRouteImport.update({
-  id: '/seed',
-  path: '/seed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingRoute = SettingRouteImport.update({
@@ -165,7 +159,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/dashboard': typeof DashboardRoute
-  '/seed': typeof SeedRoute
   '/setting': typeof SettingRoute
   '/team': typeof TeamRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -192,7 +185,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/dashboard': typeof DashboardRoute
-  '/seed': typeof SeedRoute
   '/setting': typeof SettingRoute
   '/team': typeof TeamRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -220,7 +212,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/dashboard': typeof DashboardRoute
-  '/seed': typeof SeedRoute
   '/setting': typeof SettingRoute
   '/team': typeof TeamRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
@@ -249,7 +240,6 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/dashboard'
-    | '/seed'
     | '/setting'
     | '/team'
     | '/auth/forgot-password'
@@ -276,7 +266,6 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/dashboard'
-    | '/seed'
     | '/setting'
     | '/team'
     | '/auth/forgot-password'
@@ -303,7 +292,6 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/dashboard'
-    | '/seed'
     | '/setting'
     | '/team'
     | '/auth/forgot-password'
@@ -331,7 +319,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivityRoute: typeof ActivityRoute
   DashboardRoute: typeof DashboardRoute
-  SeedRoute: typeof SeedRoute
   SettingRoute: typeof SettingRoute
   TeamRoute: typeof TeamRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
@@ -375,13 +362,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/seed': {
-      id: '/seed'
-      path: '/seed'
-      fullPath: '/seed'
-      preLoaderRoute: typeof SeedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/setting': {
@@ -550,7 +530,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivityRoute: ActivityRoute,
   DashboardRoute: DashboardRoute,
-  SeedRoute: SeedRoute,
   SettingRoute: SettingRoute,
   TeamRoute: TeamRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
