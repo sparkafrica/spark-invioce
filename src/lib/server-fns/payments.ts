@@ -153,9 +153,10 @@ export const recordPayment = createServerFn({ method: 'POST' })
 			{
 				entity: 'Invoice',
 				getLabel: (args) => args.invoiceId,
-				getDetail: (args, result) => `Recorded payment of ${result.currency} ${Number(args.amount).toLocaleString()} on invoice ${args.invoiceId}`,
-			}
-		)
+				getDetail: (args, result) =>
+					`Recorded payment of ${result.currency} ${Number(args.amount).toLocaleString()} on invoice ${args.invoiceId}`,
+			},
+		),
 	);
 
 export const getInvoicePayments = createServerFn({ method: 'GET' })

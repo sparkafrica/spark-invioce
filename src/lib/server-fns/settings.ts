@@ -8,7 +8,13 @@ import { CURRENCIES } from '#/lib/currencies';
 
 const currencyEnumValues = CURRENCIES;
 
-const logoSchema = z.string().optional().nullable().refine((v) => !v || v.startsWith('data:') || v.startsWith('http'), { message: 'Logo must be URL or data URI' });
+const logoSchema = z
+	.string()
+	.optional()
+	.nullable()
+	.refine((v) => !v || v.startsWith('data:') || v.startsWith('http'), {
+		message: 'Logo must be URL or data URI',
+	});
 
 const createBusinessSchema = z.object({
 	name: z.string().min(1),

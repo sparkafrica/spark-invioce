@@ -65,7 +65,7 @@ export const getInvoices = createServerFn({ method: 'GET' })
 				like(invoices.number, `%${filter}%`),
 				like(clients.name, `%${filter}%`),
 				like(businesses.name, `%${filter}%`),
-			)
+			);
 			if (filterCond) whereConditions.push(filterCond);
 		}
 

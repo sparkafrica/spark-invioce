@@ -40,11 +40,20 @@ const invoiceTrancheSchema = z.object({
 });
 
 // helper to compute next number for a business within org
-async function computeNextInvoiceNumber(businessId: string, orgId: string, prefix: string): Promise<{ nextNumber: string; next: number }> {
+async function computeNextInvoiceNumber(
+	businessId: string,
+	orgId: string,
+	prefix: string,
+): Promise<{ nextNumber: string; next: number }> {
 	const rows = await db
 		.select({ number: invoices.number })
 		.from(invoices)
-		.where(and(eq(invoices.organizationId, orgId), eq(invoices.businessId, businessId)));
+		.where(
+			and(
+				eq(invoices.organizationId, orgId),
+				eq(invoices.businessId, businessId),
+			),
+		);
 	let max = 0;
 	for (const r of rows) {
 		const m = r.number.match(/(\d+)$/);
@@ -65,10 +74,19 @@ export const getLatestInvoiceNumber = createServerFn({ method: 'GET' })
 		const biz = await db
 			.select({ prefix: businesses.prefix })
 			.from(businesses)
-			.where(and(eq(businesses.id, data.businessId), eq(businesses.organizationId, orgId)))
+			.where(
+				and(
+					eq(businesses.id, data.businessId),
+					eq(businesses.organizationId, orgId),
+				),
+			)
 			.limit(1);
 		if (!biz[0]) throw new Error('Business not found');
-		const { nextNumber, next } = await computeNextInvoiceNumber(data.businessId, orgId, biz[0].prefix);
+		const { nextNumber, next } = await computeNextInvoiceNumber(
+			data.businessId,
+			orgId,
+			biz[0].prefix,
+		);
 		return { nextNumber, next, prefix: biz[0].prefix };
 	});
 
@@ -97,7 +115,10 @@ const createInvoiceSchema = z.object({
 	payLinkLabel: z.string().optional().nullable().default('Pay online'),
 	payLinkCurrency: z.preprocess(
 		(v) => (typeof v === 'string' && v.trim() === '' ? null : v),
-		z.enum(CURRENCIES as unknown as [string, ...string[]]).nullable().optional(),
+		z
+			.enum(CURRENCIES as unknown as [string, ...string[]])
+			.nullable()
+			.optional(),
 	),
 	items: z.array(invoiceItemSchema).min(1),
 	tranches: z.array(invoiceTrancheSchema).optional(),
@@ -122,7 +143,12 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				const business = await db
 					.select({ prefix: businesses.prefix })
 					.from(businesses)
-					.where(and(eq(businesses.id, data.businessId), eq(businesses.organizationId, orgId)))
+					.where(
+						and(
+							eq(businesses.id, data.businessId),
+							eq(businesses.organizationId, orgId),
+						),
+					)
 					.limit(1);
 
 				if (!business[0]) {
@@ -130,7 +156,8 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				}
 
 				const prefix = business[0].prefix;
-				const { nextNumber: computedNext, next: initialNext } = await computeNextInvoiceNumber(data.businessId, orgId, prefix);
+				const { nextNumber: computedNext, next: initialNext } =
+					await computeNextInvoiceNumber(data.businessId, orgId, prefix);
 
 				let invoiceNumber = data.number?.trim() || '';
 				const isManual = invoiceNumber !== '';
@@ -138,14 +165,21 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					invoiceNumber = computedNext;
 				}
 
-				const bankIdVal = (data.bankId as unknown as string | null)?.trim?.() ? (data.bankId as string).trim() : null;
-				const payLinkCurrencyVal = (data as unknown as { payLinkCurrency?: string | null }).payLinkCurrency?.trim?.()
-					? (data as unknown as { payLinkCurrency: string }).payLinkCurrency.trim()
+				const bankIdVal = (data.bankId as unknown as string | null)?.trim?.()
+					? (data.bankId as string).trim()
+					: null;
+				const payLinkCurrencyVal = (
+					data as unknown as { payLinkCurrency?: string | null }
+				).payLinkCurrency?.trim?.()
+					? (
+							data as unknown as { payLinkCurrency: string }
+						).payLinkCurrency.trim()
 					: null;
 
 				// Normalize payLinkCurrency "" already via preprocess but double ensure
 				const finalBankId = bankIdVal === '' ? null : bankIdVal;
-				const finalPayLinkCurrency = payLinkCurrencyVal === '' ? null : payLinkCurrencyVal;
+				const finalPayLinkCurrency =
+					payLinkCurrencyVal === '' ? null : payLinkCurrencyVal;
 
 				let currentNumber = invoiceNumber;
 				let nextCounter = initialNext;
@@ -172,7 +206,8 @@ export const createInvoice = createServerFn({ method: 'POST' })
 							clientId: data.clientId,
 							issueDate: new Date(data.issueDate),
 							dueDate: new Date(data.dueDate),
-							currency: data.currency as unknown as typeof invoices.$inferInsert.currency,
+							currency:
+								data.currency as unknown as typeof invoices.$inferInsert.currency,
 							taxName: data.taxName,
 							taxRate: data.taxRate,
 							description: data.description,
@@ -182,7 +217,8 @@ export const createInvoice = createServerFn({ method: 'POST' })
 							paymentMethod: data.paymentMethod,
 							payLink: data.payLink,
 							payLinkLabel: data.payLinkLabel || 'Pay online',
-							payLinkCurrency: finalPayLinkCurrency as unknown as typeof invoices.$inferInsert.payLinkCurrency,
+							payLinkCurrency:
+								finalPayLinkCurrency as unknown as typeof invoices.$inferInsert.payLinkCurrency,
 							status: 'draft',
 							createdAt: now,
 							updatedAt: now,
@@ -191,15 +227,28 @@ export const createInvoice = createServerFn({ method: 'POST' })
 						invoiceNumber = currentNumber;
 						break;
 					} catch (e: unknown) {
-						const err = e as { code?: string; message?: string; cause?: { code?: string } };
+						const err = e as {
+							code?: string;
+							message?: string;
+							cause?: { code?: string };
+						};
 						const code = err?.code || err?.cause?.code;
 						const msg = String(err?.message || '');
-						const isUniqueViolation = code === '23505' || msg.includes('23505') || msg.includes('invoices_number_org_unique');
+						const isUniqueViolation =
+							code === '23505' ||
+							msg.includes('23505') ||
+							msg.includes('invoices_number_org_unique');
 						if (isUniqueViolation) {
 							if (isManual) {
 								// Suggest next free number (recompute to ensure fresh)
-								const fresh = await computeNextInvoiceNumber(data.businessId, orgId, prefix);
-								throw new Error(`Number already exists — proceed with ${fresh.nextNumber}?`);
+								const fresh = await computeNextInvoiceNumber(
+									data.businessId,
+									orgId,
+									prefix,
+								);
+								throw new Error(
+									`Number already exists — proceed with ${fresh.nextNumber}?`,
+								);
 							} else {
 								// Auto path: increment and retry
 								nextCounter += 1;
@@ -213,7 +262,9 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				}
 
 				if (!inserted) {
-					throw new Error('Failed to generate unique invoice number after 5 attempts');
+					throw new Error(
+						'Failed to generate unique invoice number after 5 attempts',
+					);
 				}
 
 				// Create invoice items
@@ -274,7 +325,9 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					type: 'Created',
 					entity: 'Invoice',
 					label: invoiceNumber,
-					detail: data.saveNote ? `Invoice ${invoiceNumber} created — ${data.saveNote}` : `Invoice ${invoiceNumber} created for ${ctx.session.user.name}`,
+					detail: data.saveNote
+						? `Invoice ${invoiceNumber} created — ${data.saveNote}`
+						: `Invoice ${invoiceNumber} created for ${ctx.session.user.name}`,
 					metadata: data.saveNote ? { saveNote: data.saveNote } : undefined,
 				});
 
@@ -349,7 +402,10 @@ const updateInvoiceSchema = z.object({
 	payLinkLabel: z.string().optional().nullable().default('Pay online'),
 	payLinkCurrency: z.preprocess(
 		(v) => (typeof v === 'string' && v.trim() === '' ? null : v),
-		z.enum(CURRENCIES as unknown as [string, ...string[]]).nullable().optional(),
+		z
+			.enum(CURRENCIES as unknown as [string, ...string[]])
+			.nullable()
+			.optional(),
 	),
 	status: z
 		.enum(['draft', 'sent', 'paid', 'part_paid', 'overdue', 'voided'])
@@ -374,18 +430,31 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 				const orgId = process.env.ORGANIZATION_ID!;
 				const now = new Date();
 
-				const bankIdVal = (data.bankId as unknown as string | null)?.trim?.() ? (data.bankId as string).trim() : null;
-				const payLinkCurrencyVal = (data as unknown as { payLinkCurrency?: string | null }).payLinkCurrency?.trim?.()
-					? (data as unknown as { payLinkCurrency: string }).payLinkCurrency.trim()
+				const bankIdVal = (data.bankId as unknown as string | null)?.trim?.()
+					? (data.bankId as string).trim()
+					: null;
+				const payLinkCurrencyVal = (
+					data as unknown as { payLinkCurrency?: string | null }
+				).payLinkCurrency?.trim?.()
+					? (
+							data as unknown as { payLinkCurrency: string }
+						).payLinkCurrency.trim()
 					: null;
 				const finalBankId = bankIdVal === '' ? null : bankIdVal;
-				const finalPayLinkCurrency = payLinkCurrencyVal === '' ? null : payLinkCurrencyVal;
+				const finalPayLinkCurrency =
+					payLinkCurrencyVal === '' ? null : payLinkCurrencyVal;
 
 				// Fetch existing for org scoping and diff
 				const existing = await db
-					.select({ id: invoices.id, number: invoices.number, organizationId: invoices.organizationId })
+					.select({
+						id: invoices.id,
+						number: invoices.number,
+						organizationId: invoices.organizationId,
+					})
 					.from(invoices)
-					.where(and(eq(invoices.id, data.id), eq(invoices.organizationId, orgId)))
+					.where(
+						and(eq(invoices.id, data.id), eq(invoices.organizationId, orgId)),
+					)
 					.limit(1);
 				if (!existing[0]) throw new Error('Invoice not found');
 
@@ -398,18 +467,34 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 						const dup = await db
 							.select({ id: invoices.id })
 							.from(invoices)
-							.where(and(eq(invoices.organizationId, orgId), eq(invoices.number, trimmed)))
+							.where(
+								and(
+									eq(invoices.organizationId, orgId),
+									eq(invoices.number, trimmed),
+								),
+							)
 							.limit(1);
 						if (dup.length > 0) {
 							// Suggest next
 							const biz = await db
 								.select({ prefix: businesses.prefix })
 								.from(businesses)
-								.where(and(eq(businesses.id, data.businessId), eq(businesses.organizationId, orgId)))
+								.where(
+									and(
+										eq(businesses.id, data.businessId),
+										eq(businesses.organizationId, orgId),
+									),
+								)
 								.limit(1);
 							const prefix = biz[0]?.prefix || 'INV';
-							const fresh = await computeNextInvoiceNumber(data.businessId, orgId, prefix);
-							throw new Error(`Number already exists — proceed with ${fresh.nextNumber}?`);
+							const fresh = await computeNextInvoiceNumber(
+								data.businessId,
+								orgId,
+								prefix,
+							);
+							throw new Error(
+								`Number already exists — proceed with ${fresh.nextNumber}?`,
+							);
 						}
 						numberToSet = trimmed;
 					}
@@ -426,7 +511,8 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							clientId: data.clientId,
 							issueDate: new Date(data.issueDate),
 							dueDate: new Date(data.dueDate),
-							currency: data.currency as unknown as typeof invoices.$inferInsert.currency,
+							currency:
+								data.currency as unknown as typeof invoices.$inferInsert.currency,
 							taxName: data.taxName,
 							taxRate: data.taxRate,
 							description: data.description,
@@ -436,24 +522,46 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							paymentMethod: data.paymentMethod,
 							payLink: data.payLink,
 							payLinkLabel: data.payLinkLabel || 'Pay online',
-							payLinkCurrency: finalPayLinkCurrency as unknown as typeof invoices.$inferInsert.payLinkCurrency,
+							payLinkCurrency:
+								finalPayLinkCurrency as unknown as typeof invoices.$inferInsert.payLinkCurrency,
 							status: data.status ?? 'draft',
 							updatedAt: now,
 						})
-						.where(and(eq(invoices.id, data.id), eq(invoices.organizationId, orgId)));
+						.where(
+							and(eq(invoices.id, data.id), eq(invoices.organizationId, orgId)),
+						);
 				} catch (e: unknown) {
-					const err = e as { code?: string; message?: string; cause?: { code?: string } };
+					const err = e as {
+						code?: string;
+						message?: string;
+						cause?: { code?: string };
+					};
 					const code = err?.code || err?.cause?.code;
 					const msg = String(err?.message || '');
-					if (code === '23505' || msg.includes('23505') || msg.includes('invoices_number_org_unique')) {
+					if (
+						code === '23505' ||
+						msg.includes('23505') ||
+						msg.includes('invoices_number_org_unique')
+					) {
 						const biz = await db
 							.select({ prefix: businesses.prefix })
 							.from(businesses)
-							.where(and(eq(businesses.id, data.businessId), eq(businesses.organizationId, orgId)))
+							.where(
+								and(
+									eq(businesses.id, data.businessId),
+									eq(businesses.organizationId, orgId),
+								),
+							)
 							.limit(1);
 						const prefix = biz[0]?.prefix || 'INV';
-						const fresh = await computeNextInvoiceNumber(data.businessId, orgId, prefix);
-						throw new Error(`Number already exists — proceed with ${fresh.nextNumber}?`);
+						const fresh = await computeNextInvoiceNumber(
+							data.businessId,
+							orgId,
+							prefix,
+						);
+						throw new Error(
+							`Number already exists — proceed with ${fresh.nextNumber}?`,
+						);
 					}
 					throw e;
 				}
@@ -568,7 +676,9 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 				entity: 'Invoice',
 				getLabel: (_args: { id: string }) => _args.id,
 				getDetail: (_args: unknown, _result: unknown, changes: unknown) => {
-					const ch = changes as Array<{ field: string; from: string; to: string }> | undefined;
+					const ch = changes as
+						| Array<{ field: string; from: string; to: string }>
+						| undefined;
 					return ch && ch.length > 0
 						? `Updated invoice: ${ch.map((c) => `${c.field}: ${c.from} → ${c.to}`).join('; ')}`
 						: 'Invoice updated';

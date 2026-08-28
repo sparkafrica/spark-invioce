@@ -12,10 +12,10 @@ const config = defineConfig({
 	ssr: { noExternal: [] },
 	plugins: [
 		devtools(),
-    nitro({
-      // preset: 'bun',
-      rollupConfig: { external: [/^@sentry\//] }
-    }),
+		nitro({
+			// preset: 'bun',
+			rollupConfig: { external: [/^@sentry\//] },
+		}),
 		tailwindcss(),
 		// tanstackRouter({
 		// 	target: 'react',

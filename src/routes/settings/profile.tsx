@@ -1,12 +1,16 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { SettingsLayout } from '#/components/settings/SettingsLayout'
-import { getSession } from '#/lib/auth.functions'
+import { createFileRoute, redirect } from '@tanstack/react-router';
+import { SettingsLayout } from '#/components/settings/SettingsLayout';
+import { getSession } from '#/lib/auth.functions';
 
 export const Route = createFileRoute('/settings/profile')({
-  beforeLoad: async () => {
-    const session = await getSession()
-    if (!session) throw redirect({ to: '/auth/login', search: { redirect: '/settings/profile' } })
-    return { user: session.user }
-  },
-  component: () => <SettingsLayout />,
-})
+	beforeLoad: async () => {
+		const session = await getSession();
+		if (!session)
+			throw redirect({
+				to: '/auth/login',
+				search: { redirect: '/settings/profile' },
+			});
+		return { user: session.user };
+	},
+	component: () => <SettingsLayout />,
+});

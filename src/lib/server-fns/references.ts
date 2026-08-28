@@ -307,7 +307,12 @@ export const getOrganization = createServerFn({ method: 'GET' }).handler(
 		}
 		const orgId = process.env.ORGANIZATION_ID!;
 		const [org] = await db
-			.select({ id: organization.id, name: organization.name, slug: organization.slug, logo: organization.logo })
+			.select({
+				id: organization.id,
+				name: organization.name,
+				slug: organization.slug,
+				logo: organization.logo,
+			})
 			.from(organization)
 			.where(eq(organization.id, orgId))
 			.limit(1);
@@ -325,6 +330,9 @@ export const updateOrganization = createServerFn({ method: 'POST' })
 			throw new Error('Unauthorized');
 		}
 		const orgId = process.env.ORGANIZATION_ID!;
-		await db.update(organization).set({ name: data.name, slug: data.slug }).where(eq(organization.id, orgId));
+		await db
+			.update(organization)
+			.set({ name: data.name, slug: data.slug })
+			.where(eq(organization.id, orgId));
 		return { success: true };
 	});
