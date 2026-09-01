@@ -2,38 +2,29 @@
 'use client';
 
 import { standardSchemaValidators, useForm } from '@tanstack/react-form';
-import {
-	CheckIcon,
-	ChevronsUpDownIcon,
-	PlusIcon,
-	TrashIcon,
-} from 'lucide-react';
+import { CheckIcon, PlusIcon, TrashIcon } from 'lucide-react';
 import { useState } from 'react';
 import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-} from '#/components/ui/command';
 import { CurrencySelect } from '#/components/ui/currency-select';
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogDescription,
 } from '#/components/ui/dialog';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
 import { Input } from '#/components/ui/input';
+import { NumberInput } from '#/components/ui/number-input';
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '#/components/ui/popover';
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '#/components/ui/select';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Textarea } from '#/components/ui/textarea';
 import { toast } from '#/components/ui/toast';
@@ -44,9 +35,10 @@ import {
 	useCompanies,
 	useProducts,
 } from '#/hooks/useReferences';
-import type { InvoiceFormApi } from './InvoiceForm';
+import { getErrorMessage } from '#/lib/errors';
 import { createClient } from '#/lib/server-fns/crm';
 import { getLatestInvoiceNumber } from '#/lib/server-fns/invoice-create';
+import type { InvoiceFormApi } from './InvoiceForm';
 
 export function BusinessEntitySection({ form }: { form: InvoiceFormApi }) {
 	const { data: businessesData, isLoading: loadingBiz } = useBusinesses();
@@ -82,13 +74,14 @@ export function BusinessEntitySection({ form }: { form: InvoiceFormApi }) {
 											className="w-full justify-between border-[#201e1d] bg-white rounded-none h-9 px-2.5 text-[13px] font-normal"
 										>
 											{businessesData?.businesses?.find(
-												(b: any) => b.id === field.state.value,
+												(b: { id: string; name: string }) =>
+													b.id === field.state.value,
 											)?.name || 'Select business'}
 											<ChevronsUpDownIcon className="h-4 w-4 opacity-50" />
 										</Button>
 									}
 								></PopoverTrigger>
-								<PopoverContent className="w-[300px] p-0 rounded-none border border-[#201e1d] bg-white">
+								<PopoverContent className="w-75 p-0 rounded-none border border-[#201e1d] bg-white">
 									<Command>
 										<CommandInput
 											placeholder="Search business…"
@@ -97,7 +90,7 @@ export function BusinessEntitySection({ form }: { form: InvoiceFormApi }) {
 										<CommandList>
 											<CommandEmpty>No business found.</CommandEmpty>
 											<CommandGroup>
-												{businessesData?.businesses?.map((b: any) => (
+												{businessesData?.businesses?.map((b) => (
 													<CommandItem
 														key={b.id}
 														value={b.name}
@@ -130,13 +123,14 @@ export function BusinessEntitySection({ form }: { form: InvoiceFormApi }) {
 											className="w-full justify-between border-[#201e1d] bg-white rounded-none h-9 px-2.5 text-[13px] font-normal"
 										>
 											{companiesData?.companies?.find(
-												(c: any) => c.id === field.state.value,
+												(c: { id: string; name: string }) =>
+													c.id === field.state.value,
 											)?.name || 'Select company'}
 											<ChevronsUpDownIcon className="h-4 w-4 opacity-50" />
 										</Button>
 									}
 								></PopoverTrigger>
-								<PopoverContent className="w-[300px] p-0 rounded-none border border-[#201e1d] bg-white">
+								<PopoverContent className="w-75 p-0 rounded-none border border-[#201e1d] bg-white">
 									<Command>
 										<CommandInput
 											placeholder="Search company…"
@@ -145,17 +139,19 @@ export function BusinessEntitySection({ form }: { form: InvoiceFormApi }) {
 										<CommandList>
 											<CommandEmpty>No company found.</CommandEmpty>
 											<CommandGroup>
-												{companiesData?.companies?.map((c: any) => (
-													<CommandItem
-														key={c.id}
-														value={c.name}
-														onSelect={() => field.handleChange(c.id)}
-														className="rounded-none"
-														data-checked={field.state.value === c.id}
-													>
-														{c.name}
-													</CommandItem>
-												))}
+												{companiesData?.companies?.map(
+													(c: { id: string; name: string }) => (
+														<CommandItem
+															key={c.id}
+															value={c.name}
+															onSelect={() => field.handleChange(c.id)}
+															className="rounded-none"
+															data-checked={field.state.value === c.id}
+														>
+															{c.name}
+														</CommandItem>
+													),
+												)}
 											</CommandGroup>
 										</CommandList>
 									</Command>
@@ -180,8 +176,8 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 		try {
 			const res = await getLatestInvoiceNumber({ data: { businessId } });
 			form.setFieldValue('number', res.nextNumber);
-		} catch (e) {
-			toast.add({ description: (e as Error).message, type: 'error' });
+		} catch (e: unknown) {
+			toast.add({ description: getErrorMessage(e), type: 'error' });
 		}
 	};
 
@@ -250,7 +246,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 							<CurrencySelect
 								value={field.state.value}
 								onValueChange={(v) => field.handleChange(v)}
-								placeholder="Select a currency"
+								placeholder="Search currency..."
 							/>
 							<FieldError errors={field.state.meta.errors} />
 						</Field>
@@ -344,13 +340,14 @@ export function ClientSection({ form }: { form: InvoiceFormApi }) {
 												className="w-full justify-between border-[#201e1d] bg-white rounded-none h-9 px-2.5 text-[13px] font-normal"
 											>
 												{clientsData?.clients?.find(
-													(c: any) => c.id === field.state.value,
+													(c: { id: string; name: string }) =>
+														c.id === field.state.value,
 												)?.name || 'Select client'}
 												<ChevronsUpDownIcon className="h-4 w-4 opacity-50" />
 											</Button>
 										}
 									></PopoverTrigger>
-									<PopoverContent className="w-[300px] p-0 rounded-none border border-[#201e1d] bg-white">
+									<PopoverContent className="w-75 p-0 rounded-none border border-[#201e1d] bg-white">
 										<Command>
 											<CommandInput
 												placeholder="Search client…"
@@ -359,7 +356,7 @@ export function ClientSection({ form }: { form: InvoiceFormApi }) {
 											<CommandList>
 												<CommandEmpty>No client found.</CommandEmpty>
 												<CommandGroup>
-													{clientsData?.clients?.map((c: any) => (
+													{clientsData?.clients?.map((c) => (
 														<CommandItem
 															key={c.id}
 															value={c.name}
@@ -393,7 +390,7 @@ export function ClientSection({ form }: { form: InvoiceFormApi }) {
 				<form.Field name="clientId">
 					{(field) => {
 						const selected = clientsData?.clients?.find(
-							(c: any) => c.id === field.state.value,
+							(c: { id: string; name: string }) => c.id === field.state.value,
 						);
 						if (!selected) return null;
 						return (
@@ -410,7 +407,7 @@ export function ClientSection({ form }: { form: InvoiceFormApi }) {
 				</form.Field>
 			</div>
 			<Dialog open={showNewClientDialog} onOpenChange={setShowNewClientDialog}>
-				<DialogContent className="max-w-[500px]">
+				<DialogContent className="max-w-125">
 					<DialogHeader>
 						<DialogTitle>New Client</DialogTitle>
 						<DialogDescription>
@@ -627,14 +624,14 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									type="button"
 									size="sm"
 									onClick={() => {
-										const items = field.state.value as any[];
+										const items = field.state.value as ItemValue[];
 										const total = items.reduce(
 											(sum: number, it: any) =>
 												sum + Number(it.qty || 0) * Number(it.cost || 0),
 											0,
 										);
 										const split = total / items.length;
-										const newItems = items.map((it: any, i: number) => ({
+										const newItems = items.map((it, i: number) => ({
 											...it,
 											cost: (split / Number(it.qty || 1)).toFixed(2),
 											sortOrder: i,
@@ -653,32 +650,41 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 
 			{productsData?.products && productsData.products.length > 0 && (
 				<div className="mb-3 flex flex-wrap gap-2">
-					{productsData.products.slice(0, 6).map((p: any) => (
-						<form.Field key={p.id} name="items" mode="array">
-							{(field) => (
-								<Button
-									type="button"
-									variant="outline"
-									onClick={() =>
-										field.pushValue({
-											name: p.name,
-											description: p.description || '',
-											qty: '1',
-											cost: p.cost,
-											discountName: '',
-											discountPct: '0',
-											discountAmt: '0',
-											sortOrder: field.state.value.length,
-										})
-									}
-									className="h-7 px-2 text-[11px] rounded-none border-[#201e1d] hover:bg-[#f0dcd8]"
-								>
-									<PlusIcon className="h-3 w-3 mr-1" />
-									{p.name}
-								</Button>
-							)}
-						</form.Field>
-					))}
+					{productsData.products
+						.slice(0, 6)
+						.map(
+							(p: {
+								id: string;
+								name: string;
+								description: string | null;
+								cost: string;
+							}) => (
+								<form.Field key={p.id} name="items" mode="array">
+									{(field) => (
+										<Button
+											type="button"
+											variant="outline"
+											onClick={() =>
+												field.pushValue({
+													name: p.name,
+													description: p.description || '',
+													qty: '1',
+													cost: p.cost,
+													discountName: '',
+													discountPct: '0',
+													discountAmt: '0',
+													sortOrder: field.state.value.length,
+												})
+											}
+											className="h-7 px-2 text-[11px] rounded-none border-[#201e1d] hover:bg-[#f0dcd8]"
+										>
+											<PlusIcon className="h-3 w-3 mr-1" />
+											{p.name}
+										</Button>
+									)}
+								</form.Field>
+							),
+						)}
 				</div>
 			)}
 
@@ -707,11 +713,13 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 								<form.Field name={`items[${index}].qty`}>
 									{(sub: any) => (
 										<Field>
-											<Input
-												type="text"
-												inputMode="decimal"
-												value={sub.state.value}
-												onChange={(e) => sub.handleChange(e.target.value)}
+											<NumberInput
+												value={sub.state.value ? Number(sub.state.value) : 0}
+												onValueChange={(nextValue) => {
+													sub.handleChange(
+														nextValue === null ? '' : nextValue.toFixed(2),
+													);
+												}}
 												onBlur={sub.handleBlur}
 												placeholder="Qty"
 												className="h-9 px-2.5 text-[13px] text-right font-mono tabular-nums"
@@ -723,11 +731,13 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 								<form.Field name={`items[${index}].cost`}>
 									{(sub: any) => (
 										<Field>
-											<Input
-												type="text"
-												inputMode="decimal"
-												value={sub.state.value}
-												onChange={(e) => sub.handleChange(e.target.value)}
+											<NumberInput
+												value={sub.state.value ? Number(sub.state.value) : 0}
+												onValueChange={(nextValue) => {
+													sub.handleChange(
+														nextValue === null ? '' : nextValue.toFixed(2),
+													);
+												}}
 												onBlur={sub.handleBlur}
 												placeholder="Cost"
 												className="h-9 px-2.5 text-[13px] text-right font-mono tabular-nums"
@@ -739,11 +749,13 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 								<form.Field name={`items[${index}].discountPct`}>
 									{(sub: any) => (
 										<Field>
-											<Input
-												type="text"
-												inputMode="decimal"
-												value={sub.state.value || ''}
-												onChange={(e) => sub.handleChange(e.target.value)}
+											<NumberInput
+												value={sub.state.value ? Number(sub.state.value) : 0}
+												onValueChange={(nextValue) => {
+													sub.handleChange(
+														nextValue === null ? '' : nextValue.toFixed(2),
+													);
+												}}
 												onBlur={sub.handleBlur}
 												placeholder="Disc %"
 												className="h-9 px-2.5 text-[13px] text-right font-mono tabular-nums"
@@ -780,7 +792,7 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 					<div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-3">
 						PAYMENT TERMS
 					</div>
-					<div className="flex gap-2 mb-3">
+					<div className="flex gap-2 mb-12">
 						<Button
 							type="button"
 							variant={
@@ -810,8 +822,8 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 					) : (
 						<form.Field name="tranches" mode="array">
 							{(field) => (
-								<>
-									<div className="flex gap-2 mb-3">
+								<div>
+									<div className="flex gap-2 mb-12">
 										<Button
 											type="button"
 											onClick={() =>
@@ -825,7 +837,7 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 													sortOrder: field.state.value.length,
 												})
 											}
-											className="border border-[#201e1d] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#201e1d]"
+											className="border border-[#201e1d] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#201e1d] h-9"
 										>
 											Add tranche
 										</Button>
@@ -833,7 +845,7 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 											type="button"
 											onClick={() => {
 												const items =
-													(form.getFieldValue('items') as any[]) || [];
+													(form.getFieldValue('items') as ItemValue[]) || [];
 												const subtotal = items.reduce(
 													(s: number, it: any) =>
 														s + Number(it.qty || 0) * Number(it.cost || 0),
@@ -842,7 +854,7 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 												const n = field.state.value.length || 1;
 												const each = Math.round((subtotal / n) * 100) / 100;
 												const newTranches = field.state.value.map(
-													(t: any, i: number) => ({
+													(t: TrancheValue, i: number) => ({
 														...t,
 														amount:
 															i === n - 1
@@ -856,12 +868,12 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 												);
 												field.handleChange(newTranches);
 											}}
-											className="border border-[#201e1d] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#201e1d]"
+											className="border border-[#201e1d] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#201e1d] h-9"
 										>
 											Split subtotal evenly
 										</Button>
 									</div>
-									<div className="flex flex-col gap-[2px] bg-[#201e1d] border-2 border-[#201e1d] p-[2px]">
+									<div className="flex flex-col gap-0.5 bg-[#201e1d] border-2 border-[#201e1d] p-0.5">
 										{(field.state.value || []).map((_, index) => (
 											<div
 												key={index}
@@ -963,7 +975,7 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 										))}
 									</div>
 									<TrancheSummary form={form} />
-								</>
+								</div>
 							)}
 						</form.Field>
 					)}
@@ -987,7 +999,7 @@ function TrancheSummary({ form }: { form: InvoiceFormApi }) {
 			}
 		>
 			{([items, currency, taxName, taxRate, tranches]) => {
-				const subtotal = (items as any[]).reduce(
+				const subtotal = (items as ItemValue[]).reduce(
 					(s: number, it: any) =>
 						s + Number(it.qty || 0) * Number(it.cost || 0),
 					0,
@@ -996,12 +1008,13 @@ function TrancheSummary({ form }: { form: InvoiceFormApi }) {
 				const tax = subtotal * (rate / 100);
 				const total = subtotal + tax;
 				const trSum =
-					(tranches as any[] | undefined)?.reduce(
-						(s: number, t: any) => s + Number(t.amount || 0),
+					(tranches as ItemValue[] | undefined)?.reduce(
+						(s: number, t: TrancheValue) => s + Number(t.amount || 0),
 						0,
 					) ?? 0;
 				const hasWarn =
-					Math.abs(trSum - subtotal) > 0.5 && (tranches as any[])?.length > 0;
+					Math.abs(trSum - subtotal) > 0.5 &&
+					(tranches as ItemValue[])?.length > 0;
 				const fmt = (n: number) => {
 					try {
 						return new Intl.NumberFormat('en-NG', {
@@ -1014,7 +1027,7 @@ function TrancheSummary({ form }: { form: InvoiceFormApi }) {
 					}
 				};
 				return (
-					<>
+					<div>
 						{hasWarn && (
 							<div className="mt-2 text-xs font-semibold text-[#c02a10]">
 								Tranches total {fmt(trSum)} — subtotal is {fmt(subtotal)}
@@ -1033,7 +1046,7 @@ function TrancheSummary({ form }: { form: InvoiceFormApi }) {
 								Total <strong className="tabular-nums">{fmt(total)}</strong>
 							</div>
 						</div>
-					</>
+					</div>
 				);
 			}}
 		</form.Subscribe>
@@ -1048,7 +1061,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 					<div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-3">
 						PAYMENT DESTINATION & MEMO
 					</div>
-					<div className="flex gap-2 mb-3">
+					<div className="flex gap-2 mb-12">
 						<Button
 							type="button"
 							variant={pmField.state.value === 'bank' ? 'default' : 'outline'}
@@ -1072,7 +1085,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 							{(bankField) => (
 								<Field>
 									<FieldLabel>Bank account on the invoice</FieldLabel>
-									<BankSelect field={bankField} />
+									<BankSelect value={bankField.state.value || ''} onValueChange={bankField.handleChange} />
 									<FieldError errors={bankField.state.meta.errors} />
 								</Field>
 							)}
@@ -1116,7 +1129,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 										<CurrencySelect
 											value={field.state.value || ''}
 											onValueChange={(v) => field.handleChange(v)}
-											placeholder="Select currency"
+											placeholder="Search currency..."
 										/>
 										<FieldError errors={field.state.meta.errors} />
 									</Field>
@@ -1149,42 +1162,47 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 	);
 }
 
-function BankSelect({ field }: { field: any }) {
+type BankSelectProps = {
+	value?: string;
+	onValueChange: (v: Currency) => void;
+	placeholder?: string;
+	disabled?: boolean;
+	className?: string;
+};
+
+function BankSelect({
+	value,
+	onValueChange,
+	placeholder,
+	disabled,
+	className,
+}: BankSelectProps) {
 	const { data: banksData, isLoading } = useBanks();
 
 	if (isLoading) return <Skeleton className="h-9 w-full rounded-none" />;
 
 	return (
-		<Popover>
-			<PopoverTrigger
-				render={
-					<Button
-						variant="outline"
-						className="w-full justify-between border-[#201e1d] bg-white rounded-none h-9 px-2.5 text-[13px] font-normal"
-					>
-						{banksData?.banks?.find((b: any) => b.id === field.state.value)
-							?.label || 'Select bank account'}
-						<ChevronsUpDownIcon className="h-4 w-4 opacity-50" />
-					</Button>
-				}
-			></PopoverTrigger>
-			<PopoverContent className="w-[350px] p-0 rounded-none border border-[#201e1d] bg-white">
-				<Command>
-					<CommandInput
-						placeholder="Search bank…"
-						className="h-9 border-b border-[#d6d3d1] rounded-none"
-					/>
-					<CommandList>
-						<CommandEmpty>No bank account found.</CommandEmpty>
-						<CommandGroup>
-							{banksData?.banks?.map((b: any) => (
-								<CommandItem
-									key={b.id}
-									value={b.label}
-									onSelect={() => field.handleChange(b.id)}
-									className="rounded-none"
-									data-checked={field.state.value === b.id}
-								>
+		<Select
+			value={value ?? ''}
+			onValueChange={onValueChange}
+			disabled={disabled}
+		>
+			<SelectTrigger className={cn("w-full h-9 border border-[#201e1d] bg-white rounded-none", className)}>
+				<SelectValue placeholder={placeholder ?? 'Select bank account'} />
+			</SelectTrigger>
+			<SelectContent>
+				{isLoading ? (
+					<Skeleton className="h-9 w-full rounded-none" />
+				) : (
+					<SelectGroup>
+						{banksData?.banks?.map(
+							(b: {
+								id: string;
+								label: string;
+								currency: string;
+								fields: Array<[string, string]>;
+							}) => (
+								<SelectItem key={b.id} value={b.id}>
 									<div className="grid">
 										<span className="font-medium">{b.label}</span>
 										<span className="text-xs text-[#5c5755]">
@@ -1194,16 +1212,12 @@ function BankSelect({ field }: { field: any }) {
 												.join(' • ')}
 										</span>
 									</div>
-								</CommandItem>
-							))}
-						</CommandGroup>
-					</CommandList>
-				</Command>
-			</PopoverContent>
-		</Popover>
+								</SelectItem>
+							),
+						)}
+					</SelectGroup>
+				)}
+			</SelectContent>
+		</Select>
 	);
-}
-
-export function RightPanelSection({ form: _form }: { form: any }) {
-	return null;
 }

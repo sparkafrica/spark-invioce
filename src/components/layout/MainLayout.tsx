@@ -1,8 +1,8 @@
 'use client';
 
 import { Outlet, useLocation } from '@tanstack/react-router';
-import { Header } from './Header';
 import { cn } from '#/lib/utils';
+import { Header } from './Header';
 
 interface MainLayoutProps {
 	children?: React.ReactNode;

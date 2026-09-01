@@ -52,6 +52,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "countries-list": "^3.4.1",
+    "country-data-list": "^1.6.3",
     "date-fns": "^4.4.0",
     "drizzle-kit": "^0.31.9",
     "drizzle-orm": "^0.45.1",

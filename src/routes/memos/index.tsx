@@ -1,22 +1,22 @@
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
-import { getMemos, deleteMemo } from '#/lib/server-fns/memos';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { EditIcon, FileTextIcon, SearchIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent } from '#/components/ui/card';
 import { Input } from '#/components/ui/input';
+import { Skeleton } from '#/components/ui/skeleton';
 import {
 	Table,
-	TableHeader,
 	TableBody,
-	TableRow,
-	TableHead,
 	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from '#/components/ui/table';
-import { Skeleton } from '#/components/ui/skeleton';
-import { EditIcon, Trash2Icon, FileTextIcon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from '#/components/ui/toast';
+import { getSession } from '#/lib/auth.functions';
+import { deleteMemo, getMemos } from '#/lib/server-fns/memos';
 
 export const Route = createFileRoute('/memos/')({
 	beforeLoad: async () => {
@@ -50,7 +50,7 @@ function MemosPage() {
 	const memos = data?.memos || [];
 
 	const handleAddNew = () => {
-		// @ts-ignore - route tree not yet updated
+		// @ts-expect-error - route tree not yet updated
 		navigate({ to: '/memos/new' });
 	};
 

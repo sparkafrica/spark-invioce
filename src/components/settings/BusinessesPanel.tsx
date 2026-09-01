@@ -1,16 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBusinesses } from '#/lib/server-fns/references';
-import { updateBusiness } from '#/lib/server-fns/settings';
-import { toast } from '#/components/ui/toast';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2Icon } from 'lucide-react';
-import { Skeleton } from '#/components/ui/skeleton';
+import { useState } from 'react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
+import { Skeleton } from '#/components/ui/skeleton';
+import { toast } from '#/components/ui/toast';
 import { qk } from '#/hooks/useReferences';
+import { getBusinesses } from '#/lib/server-fns/references';
+import { updateBusiness } from '#/lib/server-fns/settings';
 
 export function BusinessesPanel({ canManage }: { canManage: boolean }) {
 	const qc = useQueryClient();

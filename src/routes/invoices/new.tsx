@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
 import { InvoiceForm } from '#/components/forms/InvoiceForm';
+import { getSession } from '#/lib/auth.functions';
 
 export const Route = createFileRoute('/invoices/new')({
 	beforeLoad: async () => {

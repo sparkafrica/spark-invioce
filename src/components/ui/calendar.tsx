@@ -1,18 +1,17 @@
-import * as React from 'react';
 import {
-	DayPicker,
-	getDefaultClassNames,
-	type DayButton,
-	type Locale,
-} from 'react-day-picker';
-
-import { cn } from '#/lib/utils.ts';
-import { Button, buttonVariants } from '#/components/ui/button.tsx';
-import {
+	ChevronDownIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
-	ChevronDownIcon,
 } from 'lucide-react';
+import * as React from 'react';
+import {
+	type DayButton,
+	DayPicker,
+	getDefaultClassNames,
+	type Locale,
+} from 'react-day-picker';
+import { Button, buttonVariants } from '#/components/ui/button.tsx';
+import { cn } from '#/lib/utils.ts';
 
 function Calendar({
 	className,

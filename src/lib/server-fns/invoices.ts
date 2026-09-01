@@ -13,6 +13,14 @@ import {
 	payments,
 } from '#/db/schema';
 
+type InvoiceStatus =
+	| 'draft'
+	| 'sent'
+	| 'paid'
+	| 'part_paid'
+	| 'overdue'
+	| 'voided';
+
 interface InvoiceResult {
 	id: string;
 	number: string;
@@ -21,8 +29,9 @@ interface InvoiceResult {
 	issued: string;
 	due: string;
 	type: 'full' | 'tranche';
+	currency: string;
 	total: string;
-	status: 'draft' | 'sent' | 'paid' | 'part_paid' | 'overdue' | 'voided';
+	status: InvoiceStatus;
 	commentCount: number;
 }
 
@@ -53,7 +62,7 @@ export const getInvoices = createServerFn({ method: 'GET' })
 		const whereConditions = [eq(invoices.organizationId, orgId)];
 
 		if (status) {
-			whereConditions.push(eq(invoices.status, status as any));
+			whereConditions.push(eq(invoices.status, status as InvoiceStatus));
 		}
 
 		if (businessId) {
@@ -80,9 +89,12 @@ export const getInvoices = createServerFn({ method: 'GET' })
 			.where(whereClause);
 
 		// Build order by
-		let orderByClause: any;
+		let orderByClause:
+			| ReturnType<typeof asc>
+			| ReturnType<typeof desc>
+			| undefined;
 		if (sortBy) {
-			const columnMap: Record<string, any> = {
+			const columnMap = {
 				number: invoices.number,
 				client: clients.name,
 				business: businesses.name,
@@ -90,7 +102,7 @@ export const getInvoices = createServerFn({ method: 'GET' })
 				due: invoices.dueDate,
 				type: invoices.paymentType,
 				status: invoices.status,
-			};
+			} as const;
 			const column = columnMap[sortBy];
 			if (column) {
 				orderByClause = sortDir === 'desc' ? desc(column) : asc(column);
@@ -108,6 +120,7 @@ export const getInvoices = createServerFn({ method: 'GET' })
 				issued: invoices.issueDate,
 				due: invoices.dueDate,
 				type: invoices.paymentType,
+				currency: invoices.currency,
 				taxRate: invoices.taxRate,
 				status: invoices.status,
 				// Calculate subtotal from invoice items
@@ -138,6 +151,7 @@ export const getInvoices = createServerFn({ method: 'GET' })
 				issued: r.issued ? new Date(r.issued).toLocaleDateString() : '',
 				due: r.due ? new Date(r.due).toLocaleDateString() : '',
 				type: r.type,
+				currency: r.currency || 'NGN',
 				total: totalWithTax.toFixed(2),
 				status: r.status,
 				commentCount: 0,

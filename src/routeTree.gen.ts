@@ -14,9 +14,9 @@ import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as SettingRouteImport } from './routes/setting'
 import { Route as TeamRouteImport } from './routes/team'
+import { Route as AuthAcceptInvitationRouteImport } from './routes/auth/accept-invitation'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
 import { Route as ClientsIndexRouteImport } from './routes/clients/index'
 import { Route as InvoicesIndexRouteImport } from './routes/invoices/index'
@@ -32,6 +32,7 @@ import { Route as SettingsFxRatesRouteImport } from './routes/settings/fx-rates'
 import { Route as SettingsOrganizationRouteImport } from './routes/settings/organization'
 import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiCronFxRatesRouteImport } from './routes/api/cron/fx-rates'
 import { Route as InvoicesIdEditRouteImport } from './routes/invoices/$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const TeamRoute = TeamRouteImport.update({
   path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthAcceptInvitationRoute = AuthAcceptInvitationRouteImport.update({
+  id: '/auth/accept-invitation',
+  path: '/auth/accept-invitation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
   path: '/auth/forgot-password',
@@ -67,11 +73,6 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/auth/register',
-  path: '/auth/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
@@ -149,6 +150,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronFxRatesRoute = ApiCronFxRatesRouteImport.update({
+  id: '/api/cron/fx-rates',
+  path: '/api/cron/fx-rates',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvoicesIdEditRoute = InvoicesIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
@@ -161,9 +167,9 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/setting': typeof SettingRoute
   '/team': typeof TeamRoute
+  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
-  '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/invoices/$id': typeof InvoicesIdRouteWithChildren
   '/invoices/new': typeof InvoicesNewRoute
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/products/': typeof ProductsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
   '/invoices/$id/edit': typeof InvoicesIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -187,9 +194,9 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/setting': typeof SettingRoute
   '/team': typeof TeamRoute
+  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
-  '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/invoices/$id': typeof InvoicesIdRouteWithChildren
   '/invoices/new': typeof InvoicesNewRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsIndexRoute
   '/settings': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
   '/invoices/$id/edit': typeof InvoicesIdEditRoute
 }
 export interface FileRoutesById {
@@ -214,9 +222,9 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/setting': typeof SettingRoute
   '/team': typeof TeamRoute
+  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
-  '/auth/register': typeof AuthRegisterRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/invoices/$id': typeof InvoicesIdRouteWithChildren
   '/invoices/new': typeof InvoicesNewRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/products/': typeof ProductsIndexRoute
   '/settings/': typeof SettingsIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
   '/invoices/$id/edit': typeof InvoicesIdEditRoute
 }
 export interface FileRouteTypes {
@@ -242,9 +251,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
+    | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/login'
-    | '/auth/register'
     | '/auth/reset-password'
     | '/invoices/$id'
     | '/invoices/new'
@@ -260,6 +269,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/settings/'
     | '/api/auth/$'
+    | '/api/cron/fx-rates'
     | '/invoices/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -268,9 +278,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
+    | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/login'
-    | '/auth/register'
     | '/auth/reset-password'
     | '/invoices/$id'
     | '/invoices/new'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/settings'
     | '/api/auth/$'
+    | '/api/cron/fx-rates'
     | '/invoices/$id/edit'
   id:
     | '__root__'
@@ -294,9 +305,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
+    | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/login'
-    | '/auth/register'
     | '/auth/reset-password'
     | '/invoices/$id'
     | '/invoices/new'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/settings/'
     | '/api/auth/$'
+    | '/api/cron/fx-rates'
     | '/invoices/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -321,9 +333,9 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   SettingRoute: typeof SettingRoute
   TeamRoute: typeof TeamRoute
+  AuthAcceptInvitationRoute: typeof AuthAcceptInvitationRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
-  AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
   InvoicesIdRoute: typeof InvoicesIdRouteWithChildren
   InvoicesNewRoute: typeof InvoicesNewRoute
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   ProductsIndexRoute: typeof ProductsIndexRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiCronFxRatesRoute: typeof ApiCronFxRatesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -378,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/accept-invitation': {
+      id: '/auth/accept-invitation'
+      path: '/auth/accept-invitation'
+      fullPath: '/auth/accept-invitation'
+      preLoaderRoute: typeof AuthAcceptInvitationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/forgot-password': {
       id: '/auth/forgot-password'
       path: '/auth/forgot-password'
@@ -390,13 +410,6 @@ declare module '@tanstack/react-router' {
       path: '/auth/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/register': {
-      id: '/auth/register'
-      path: '/auth/register'
-      fullPath: '/auth/register'
-      preLoaderRoute: typeof AuthRegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/reset-password': {
@@ -504,6 +517,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/fx-rates': {
+      id: '/api/cron/fx-rates'
+      path: '/api/cron/fx-rates'
+      fullPath: '/api/cron/fx-rates'
+      preLoaderRoute: typeof ApiCronFxRatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invoices/$id/edit': {
       id: '/invoices/$id/edit'
       path: '/edit'
@@ -532,9 +552,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   SettingRoute: SettingRoute,
   TeamRoute: TeamRoute,
+  AuthAcceptInvitationRoute: AuthAcceptInvitationRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
-  AuthRegisterRoute: AuthRegisterRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
   InvoicesIdRoute: InvoicesIdRouteWithChildren,
   InvoicesNewRoute: InvoicesNewRoute,
@@ -550,6 +570,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductsIndexRoute: ProductsIndexRoute,
   SettingsIndexRoute: SettingsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiCronFxRatesRoute: ApiCronFxRatesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

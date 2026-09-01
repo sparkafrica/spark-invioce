@@ -1,16 +1,17 @@
-import * as React from 'react';
-
-import { cn } from '#/lib/utils.ts';
-import { Button } from '#/components/ui/button.tsx';
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
 	MoreHorizontalIcon,
 } from 'lucide-react';
+import type * as React from 'react';
+import { Button } from '#/components/ui/button.tsx';
+import { cn } from '#/lib/utils.ts';
 
 function Pagination({ className, ...props }: React.ComponentProps<'nav'>) {
 	return (
-		<nav
+		// biome-ignore lint/a11y/useSemanticElements: <explanation>
+<nav
+			// biome-ignore lint/a11y/noRedundantRoles: <explanation>
 			role="navigation"
 			aria-label="pagination"
 			data-slot="pagination"

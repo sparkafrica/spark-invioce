@@ -1,7 +1,7 @@
 'use client';
 
-import type * as React from 'react';
 import { Switch } from '@base-ui/react/switch';
+import type * as React from 'react';
 import { cn } from '#/lib/utils.ts';
 
 function SwitchComponent({

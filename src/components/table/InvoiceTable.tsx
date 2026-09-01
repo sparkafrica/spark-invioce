@@ -190,7 +190,7 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
 
 	const table = useTable({
 		features,
-		columns: columns as any,
+		columns,
 		data,
 		state: { sorting, columnFilters, globalFilter, pagination },
 		onSortingChange: setSorting,

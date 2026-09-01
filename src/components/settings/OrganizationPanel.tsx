@@ -1,19 +1,19 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, standardSchemaValidators } from '@tanstack/react-form';
-import * as v from 'valibot';
+import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from '#/components/ui/toast';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
-import { Input } from '#/components/ui/input';
+import { useEffect } from 'react';
+import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
 import { Skeleton } from '#/components/ui/skeleton';
+import { toast } from '#/components/ui/toast';
+import { authClient } from '#/lib/auth-client';
 import {
 	getOrganization,
 	updateOrganization,
 } from '#/lib/server-fns/references';
-import { authClient } from '#/lib/auth-client';
 
 const organizationSchema = v.object({
 	name: v.pipe(v.string(), v.minLength(1, 'Organization name is required')),
@@ -81,7 +81,7 @@ export function OrganizationPanel() {
 		},
 	});
 
-	// Fix stale defaultValues: org arrives async after isPending -> sync into form
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Fix stale defaultValues: org arrives async after isPending -> sync into form
 	useEffect(() => {
 		const org = orgData?.organization as
 			| { name?: string; slug?: string }

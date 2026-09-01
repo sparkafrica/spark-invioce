@@ -1,12 +1,11 @@
+import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useForm } from '@tanstack/react-form';
-import { standardSchemaValidators } from '@tanstack/react-form';
 import * as v from 'valibot';
-import { authClient } from '#/lib/auth-client';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
-import { Input } from '#/components/ui/input';
 import { Button } from '#/components/ui/button';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
 import { toast } from '#/components/ui/toast';
+import { authClient } from '#/lib/auth-client';
 
 const loginSchema = v.object({
 	email: v.pipe(
@@ -166,13 +165,8 @@ function LoginPage() {
             Demo accounts — <strong className="font-semibold text-[#201e1d]">clinton@sparkafrica.co</strong> (admin) or <strong className="font-semibold text-[#201e1d]">ada@sparkafrica.co</strong> (editor). Any password.
           </div>*/}
 					<p className="text-xs text-[#5c5755]">
-						Don&apos;t have an account?{' '}
-						<Link
-							to="/auth/register"
-							className="font-semibold text-[#c02a10] hover:text-[#ec3013] underline-offset-2 hover:underline"
-						>
-							Sign up
-						</Link>
+						Access is by invitation only. Contact your administrator for an
+						invite.
 					</p>
 				</div>
 			</div>

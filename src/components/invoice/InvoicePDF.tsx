@@ -3,36 +3,36 @@ import '@tanstack/react-start/server-only';
 import {
 	Document,
 	Font,
+	Image,
 	Page,
 	StyleSheet,
 	Text,
 	View,
-	Image,
 } from '@react-pdf/renderer';
-import { formatCurrency as formatCurrencyLib } from '#/lib/currencies';
 import type { Currency } from '#/lib/currencies';
+import { formatCurrency as formatCurrencyLib } from '#/lib/currencies';
 
 Font.register({
 	family: 'Archivo',
 	fonts: [
 		{
-			src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Regular.ttf`,
+			src: `${process.env.BETTER_AUTH_URL}/fonts/Archivo-Regular.ttf`,
 			fontWeight: 400,
 		},
 		{
-			src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Regular.ttf`,
+			src: `${process.env.BETTER_AUTH_URL}/fonts/Archivo-Regular.ttf`,
 			fontWeight: 500,
 		},
 		{
-			src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Bold.ttf`,
+			src: `${process.env.BETTER_AUTH_URL}/fonts/Archivo-Bold.ttf`,
 			fontWeight: 600,
 		},
 		{
-			src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Bold.ttf`,
+			src: `${process.env.BETTER_AUTH_URL}/fonts/Archivo-Bold.ttf`,
 			fontWeight: 700,
 		},
 		{
-			src: `${process.env.BETTER_AUTH_URL}public/fonts/Archivo-Bold.ttf`,
+			src: `${process.env.BETTER_AUTH_URL}/fonts/Archivo-Bold.ttf`,
 			fontWeight: 800,
 		},
 	],

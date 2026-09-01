@@ -10,8 +10,8 @@ import {
 	invoices,
 	invoiceTranches,
 } from '#/db/schema';
-import { CURRENCIES } from '#/lib/currencies';
 import { logActivity, withActivity } from '#/lib/activity';
+import { CURRENCIES } from '#/lib/currencies';
 
 const invoiceItemSchema = z.object({
 	name: z.string().min(1),
@@ -190,7 +190,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					if (m) nextCounter = parseInt(m[1], 10);
 				}
 
-				let invoiceId = createId();
+				const invoiceId = createId();
 				const now = new Date();
 				let inserted = false;
 				let attempts = 0;
@@ -459,7 +459,7 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 				if (!existing[0]) throw new Error('Invoice not found');
 
 				// If number is being changed, check collision proactively and handle
-				let numberToSet: string | undefined = undefined;
+				let numberToSet: string | undefined;
 				if (data.number && data.number.trim() !== '') {
 					const trimmed = data.number.trim();
 					if (trimmed !== existing[0].number) {

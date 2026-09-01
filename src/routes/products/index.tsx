@@ -1,25 +1,25 @@
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
-import { getProducts, deleteProduct } from '#/lib/server-fns/crm';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { EditIcon, SearchIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
 import { ProductForm } from '#/components/forms/ProductForm';
+import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent } from '#/components/ui/card';
-import { Badge } from '#/components/ui/badge';
+import { Dialog, DialogContent } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
+import { Skeleton } from '#/components/ui/skeleton';
 import {
 	Table,
-	TableHeader,
 	TableBody,
-	TableRow,
-	TableHead,
 	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from '#/components/ui/table';
-import { EditIcon, Trash2Icon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from '#/components/ui/toast';
-import { Skeleton } from '#/components/ui/skeleton';
-import { Dialog, DialogContent } from '#/components/ui/dialog';
+import { getSession } from '#/lib/auth.functions';
+import { deleteProduct, getProducts } from '#/lib/server-fns/crm';
 
 export const Route = createFileRoute('/products/')({
 	beforeLoad: async () => {
@@ -219,6 +219,9 @@ function ProductsPage() {
 				}}
 			>
 				<DialogContent className="rounded-none max-w-xl max-h-[90vh] overflow-y-auto">
+					<p className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">
+						EDIT PRODUCT OR SERVICE
+					</p>
 					{editingProduct && (
 						<ProductForm
 							key={editingProduct.id}

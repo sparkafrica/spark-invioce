@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, redirect } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
 import { InvoiceDetail } from '#/components/invoice/InvoiceDetail';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
+import { getSession } from '#/lib/auth.functions';
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail';
 
 export const Route = createFileRoute('/invoices/$id')({

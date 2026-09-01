@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
 import { InvoiceForm } from '#/components/forms/InvoiceForm';
 import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
+import { getSession } from '#/lib/auth.functions';
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail';
 
 export const Route = createFileRoute('/invoices/$id/edit')({
@@ -109,6 +109,7 @@ function EditInvoicePage() {
 		paymentMethod: invoice.paymentMethod,
 		payLink: invoice.payLink,
 		payLinkLabel: invoice.payLinkLabel,
+		status: invoice.status,
 		items: invoice.items.map(
 			(item: {
 				id: string;
@@ -147,6 +148,21 @@ function EditInvoicePage() {
 					: '',
 				amount: t.amount,
 				paid: t.paid,
+			}),
+		),
+		payments: invoice.payments.map(
+			(p: {
+				id: string;
+				amount: string;
+				note: string | null;
+				recordedBy: string;
+				recordedAt: string;
+			}) => ({
+				id: p.id,
+				amount: p.amount,
+				note: p.note,
+				recordedBy: p.recordedBy,
+				recordedAt: p.recordedAt,
 			}),
 		),
 	};

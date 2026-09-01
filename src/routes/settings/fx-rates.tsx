@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
 import { SettingsLayout } from '#/components/settings/SettingsLayout';
+import { getSession } from '#/lib/auth.functions';
 
 export const Route = createFileRoute('/settings/fx-rates')({
 	beforeLoad: async () => {

@@ -70,7 +70,7 @@
   --accent-foreground: var(--color-text);
   --destructive: var(--color-accent);
   --destructive-foreground: var(--color-bg);
-  --border: var(--color-neutral-300);
+  --border: #201e1d;
   --input: var(--color-divider);
   --ring: var(--color-accent);
   --chart-1: var(--color-accent);

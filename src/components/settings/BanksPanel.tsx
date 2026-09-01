@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBanks } from '#/lib/server-fns/references';
-import { createBank, updateBank, deleteBank } from '#/lib/server-fns/settings';
-import { toast } from '#/components/ui/toast';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2Icon } from 'lucide-react';
-import { Skeleton } from '#/components/ui/skeleton';
+import { useState } from 'react';
 import { Button } from '#/components/ui/button';
+import { CurrencySelect } from '#/components/ui/currency-select';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { CurrencySelect } from '#/components/ui/currency-select';
+import { Skeleton } from '#/components/ui/skeleton';
+import { toast } from '#/components/ui/toast';
 import { qk } from '#/hooks/useReferences';
+import { getBanks } from '#/lib/server-fns/references';
+import { createBank, deleteBank, updateBank } from '#/lib/server-fns/settings';
 
 export function BanksPanel() {
 	const qc = useQueryClient();

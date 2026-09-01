@@ -1,24 +1,24 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
 import { useQuery } from '@tanstack/react-query';
-import { getActivityLog } from '#/lib/server-fns/references';
-import {
-	DateRangePicker,
-	type DateRange,
-} from '#/components/ui/date-range-picker';
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Button } from '#/components/ui/button';
 import { Badge } from '#/components/ui/badge';
-import { Skeleton } from '#/components/ui/skeleton';
+import { Button } from '#/components/ui/button';
+import {
+	type DateRange,
+	DateRangePicker,
+} from '#/components/ui/date-range-picker';
 import { Input } from '#/components/ui/input';
+import { Skeleton } from '#/components/ui/skeleton';
 import {
 	Table,
-	TableHeader,
 	TableBody,
-	TableRow,
-	TableHead,
 	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from '#/components/ui/table';
+import { getSession } from '#/lib/auth.functions';
+import { getActivityLog } from '#/lib/server-fns/references';
 
 export const Route = createFileRoute('/activity')({
 	beforeLoad: async () => {

@@ -4,6 +4,7 @@ import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '#/db';
 import { clients, products } from '#/db/schema';
+import { CURRENCIES } from '#/lib/currencies';
 
 // ============================================
 // CLIENTS SERVER FUNCTIONS
@@ -28,7 +29,10 @@ export const createClient = createServerFn({ method: 'POST' })
 			throw new Error('Unauthorized');
 		}
 
-		const orgId = process.env.ORGANIZATION_ID!;
+		const orgId = process.env.ORGANIZATION_ID;
+		if (!orgId) {
+			throw new Error('ORGANIZATION_ID is not configured');
+		}
 
 		const clientId = (
 			await db
@@ -95,7 +99,7 @@ const productSchema = z.object({
 	name: z.string().min(1, 'Name is required'),
 	description: z.string().optional().nullable(),
 	cost: z.string().regex(/^\d+(\.\d+)?$/, 'Cost must be a number'),
-	currency: z.string().min(1, 'Currency is required'),
+	currency: z.enum(CURRENCIES as [string, ...string[]]),
 });
 
 export const createProduct = createServerFn({ method: 'POST' })
@@ -108,7 +112,10 @@ export const createProduct = createServerFn({ method: 'POST' })
 			throw new Error('Unauthorized');
 		}
 
-		const orgId = process.env.ORGANIZATION_ID!;
+		const orgId = process.env.ORGANIZATION_ID;
+		if (!orgId) {
+			throw new Error('ORGANIZATION_ID is not configured');
+		}
 
 		const productId = (
 			await db
@@ -119,7 +126,7 @@ export const createProduct = createServerFn({ method: 'POST' })
 					name: data.name,
 					description: data.description,
 					cost: data.cost,
-					currency: data.currency as any,
+					currency: data.currency as (typeof products.$inferInsert)['currency'],
 				})
 				.returning({ id: products.id })
 		)[0].id;
@@ -144,7 +151,7 @@ export const updateProduct = createServerFn({ method: 'POST' })
 			.set({
 				...updates,
 				cost: updates.cost ?? undefined,
-				currency: updates.currency as any,
+				currency: updates.currency as (typeof products.$inferInsert)['currency'],
 				updatedAt: new Date(),
 			})
 			.where(eq(products.id, id));
@@ -177,6 +184,11 @@ export const getProducts = createServerFn({ method: 'GET' })
 			throw new Error('Unauthorized');
 		}
 
+		const orgId = process.env.ORGANIZATION_ID;
+		if (!orgId) {
+			throw new Error('ORGANIZATION_ID is not configured');
+		}
+
 		const results = await db
 			.select({
 				id: products.id,
@@ -186,7 +198,7 @@ export const getProducts = createServerFn({ method: 'GET' })
 				currency: products.currency,
 			})
 			.from(products)
-			.where(eq(products.organizationId, process.env.ORGANIZATION_ID!))
+			.where(eq(products.organizationId, orgId))
 			.orderBy(desc(products.createdAt));
 
 		return { products: results };

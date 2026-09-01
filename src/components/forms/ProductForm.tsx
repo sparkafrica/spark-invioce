@@ -1,17 +1,15 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
-import { standardSchemaValidators } from '@tanstack/react-form';
+import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import * as v from 'valibot';
-import { Input } from '#/components/ui/input';
-import { Textarea } from '#/components/ui/textarea';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
-import { CurrencySelect } from '#/components/ui/currency-select';
 import { Button } from '#/components/ui/button';
-
-import { createProduct } from '#/lib/server-fns/crm';
-import { updateProduct } from '#/lib/server-fns/crm';
+import { CurrencySelect } from '#/components/ui/currency-select';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
+import { NumberInput } from '#/components/ui/number-input';
+import { Textarea } from '#/components/ui/textarea';
 import { toast } from '#/components/ui/toast';
+import { createProduct, updateProduct } from '#/lib/server-fns/crm';
 
 const productSchema = v.object({
 	name: v.pipe(v.string(), v.minLength(1, 'Name is required')),
@@ -81,53 +79,55 @@ export function ProductForm({
 	return (
 		<form
 			onSubmit={handleSubmit}
-			className="mx-auto max-w-215 flex flex-col gap-6"
+			className="flex flex-col gap-6"
 		>
-			<div className="grid gap-3 md:grid-cols-2">
-				<form.Field name="name">
-					{(field) => (
-						<Field>
-							<FieldLabel htmlFor={field.name}>Name *</FieldLabel>
-							<Input
-								id={field.name}
-								name={field.name}
-								value={field.state.value}
-								onBlur={field.handleBlur}
-								onChange={(e) => field.handleChange(e.target.value)}
-								placeholder="Professional Consulting Services"
-							/>
-							<FieldError errors={field.state.meta.errors} />
-						</Field>
-					)}
-				</form.Field>
-				<form.Field name="currency">
-					{(field) => (
-						<Field>
-							<FieldLabel htmlFor={field.name}>Currency *</FieldLabel>
-							<CurrencySelect
-								value={field.state.value}
-								onValueChange={(value) => field.handleChange(value)}
-								placeholder="Select currency"
-							/>
-							<FieldError errors={field.state.meta.errors} />
-						</Field>
-					)}
-				</form.Field>
-			</div>
+			<form.Field name="name">
+				{(field) => (
+					<Field className="w-full">
+						<FieldLabel htmlFor={field.name}>Name *</FieldLabel>
+						<Input
+							id={field.name}
+							name={field.name}
+							value={field.state.value}
+							onBlur={field.handleBlur}
+							onChange={(e) => field.handleChange(e.target.value)}
+							placeholder="Professional Consulting Services"
+						/>
+						<FieldError errors={field.state.meta.errors} />
+					</Field>
+				)}
+			</form.Field>
+
+			<form.Field name="currency">
+				{(field) => (
+					<Field>
+						<FieldLabel htmlFor={field.name}>Currency *</FieldLabel>
+						<CurrencySelect
+							value={field.state.value}
+							onValueChange={(value) => field.handleChange(value)}
+							placeholder="Select currency"
+						/>
+						<FieldError errors={field.state.meta.errors} />
+					</Field>
+				)}
+			</form.Field>
 
 			<form.Field name="cost">
 				{(field) => (
 					<Field>
 						<FieldLabel htmlFor={field.name}>Cost *</FieldLabel>
-						<Input
+						<NumberInput
 							id={field.name}
 							name={field.name}
-							type="text"
-							inputMode="decimal"
-							value={field.state.value}
+							value={field.state.value ? Number(field.state.value) : 0}
 							onBlur={field.handleBlur}
-							onChange={(e) => field.handleChange(e.target.value)}
-							placeholder="50000.00"
+							onValueChange={(nextValue) => {
+								field.handleChange(
+									nextValue === null ? '' : nextValue.toFixed(2),
+								);
+							}}
+							placeholder="50,000.00"
+							className="h-9 px-2.5 text-[13px] text-right"
 						/>
 						<FieldError errors={field.state.meta.errors} />
 					</Field>

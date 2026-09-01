@@ -1,14 +1,14 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { getProducts } from '#/lib/server-fns/crm';
 import {
 	getBanks,
 	getBusinesses,
-	getCompanies,
 	getClients,
+	getCompanies,
 	getFXRates,
 } from '#/lib/server-fns/references';
-import { getProducts } from '#/lib/server-fns/crm';
 
 export const qk = {
 	businesses: ['references', 'businesses'] as const,

@@ -1,24 +1,25 @@
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
-import { getClients, deleteClient } from '#/lib/server-fns/references';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { EditIcon, SearchIcon, Trash2Icon } from 'lucide-react';
+import { useState } from 'react';
 import { ClientForm } from '#/components/forms/ClientForm';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent } from '#/components/ui/card';
+import { Dialog, DialogContent } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
+import { Skeleton } from '#/components/ui/skeleton';
 import {
 	Table,
-	TableHeader,
 	TableBody,
-	TableRow,
-	TableHead,
 	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from '#/components/ui/table';
-import { EditIcon, Trash2Icon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
 import { toast } from '#/components/ui/toast';
-import { Skeleton } from '#/components/ui/skeleton';
-import { Dialog, DialogContent } from '#/components/ui/dialog';
+import { qk } from '#/hooks/useReferences';
+import { getSession } from '#/lib/auth.functions';
+import { deleteClient, getClients } from '#/lib/server-fns/references';
 
 export const Route = createFileRoute('/clients/')({
 	beforeLoad: async () => {
@@ -36,7 +37,7 @@ function ClientsPage() {
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [addFormKey, setAddFormKey] = useState(0);
 	const { data, isLoading, refetch } = useQuery({
-		queryKey: ['clients'],
+		queryKey: qk.clients,
 		queryFn: () => getClients({ data: {} }),
 	});
 
@@ -198,17 +199,15 @@ function ClientsPage() {
 				<div className="text-[10px] tracking-[0.12em] font-semibold mb-3">
 					ADD A CLIENT
 				</div>
-				<div className="border-2 border-[#201e1d] bg-white p-4">
-					<ClientForm
-						key={addFormKey}
-						isEditing={false}
-						onCancel={() => setAddFormKey((k) => k + 1)}
-						onSuccess={() => {
-							refetch();
-							setAddFormKey((k) => k + 1);
-						}}
-					/>
-				</div>
+				<ClientForm
+					key={addFormKey}
+					isEditing={false}
+					onCancel={() => setAddFormKey((k) => k + 1)}
+					onSuccess={() => {
+						refetch();
+						setAddFormKey((k) => k + 1);
+					}}
+				/>
 			</div>
 
 			<Dialog
@@ -218,6 +217,9 @@ function ClientsPage() {
 				}}
 			>
 				<DialogContent className="rounded-none max-w-xl max-h-[90vh] overflow-y-auto">
+					<p className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">
+						EDIT CLIENT
+					</p>
 					{editingClient && (
 						<ClientForm
 							key={editingClient.id}
@@ -230,7 +232,7 @@ function ClientsPage() {
 								notes: editingClient.notes || '',
 							}}
 							isEditing={true}
-							clientId={editingId!}
+								clientId={editingClient.id}
 							onCancel={() => setEditingId(null)}
 							onSuccess={() => {
 								refetch();

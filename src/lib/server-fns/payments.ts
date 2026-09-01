@@ -10,6 +10,7 @@ const recordPaymentSchema = z.object({
 	invoiceId: z.string().min(1),
 	amount: z.string().regex(/^\d+(\.\d+)?$/),
 	note: z.string().optional().nullable(),
+	trancheId: z.string().optional().nullable(),
 });
 
 export const recordPayment = createServerFn({ method: 'POST' })
@@ -101,6 +102,43 @@ export const recordPayment = createServerFn({ method: 'POST' })
 					recordedBy: userName,
 					recordedAt: new Date(),
 				});
+
+				// If trancheId provided, mark that tranche as paid
+				if (data.trancheId) {
+					const trancheResult = await db
+						.select({
+							id: invoiceTranches.id,
+							amount: invoiceTranches.amount,
+						})
+						.from(invoiceTranches)
+						.where(eq(invoiceTranches.id, data.trancheId))
+						.limit(1);
+
+					if (trancheResult[0]) {
+						const trancheAmount = Number(trancheResult[0].amount);
+						const paymentAmount = Number(data.amount);
+
+						// Validate amount matches tranche amount (for full payment)
+						// For partial, allow amount <= tranche amount
+						if (paymentAmount > trancheAmount) {
+							throw new Error(
+								`Payment amount cannot exceed tranche amount (${trancheAmount})`,
+							);
+						}
+
+						// Mark tranche as paid if full amount paid
+						if (paymentAmount >= trancheAmount) {
+							await db
+								.update(invoiceTranches)
+								.set({
+									paid: true,
+									paidAt: new Date(),
+									updatedAt: new Date(),
+								})
+								.where(eq(invoiceTranches.id, data.trancheId));
+						}
+					}
+				}
 
 				// Update invoice status
 				await db

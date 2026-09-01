@@ -1,17 +1,17 @@
+import { useQuery } from '@tanstack/react-query';
 import {
 	createFileRoute,
-	redirect,
 	Link,
+	redirect,
 	useNavigate,
 } from '@tanstack/react-router';
-import { getSession } from '#/lib/auth.functions';
-import { InvoiceTable } from '#/components/table/InvoiceTable';
-import { getInvoices } from '#/lib/server-fns/invoices';
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Skeleton } from '#/components/ui/skeleton';
+import { InvoiceTable } from '#/components/table/InvoiceTable';
 import { Button } from '#/components/ui/button';
+import { Skeleton } from '#/components/ui/skeleton';
 import { useBusinesses } from '#/hooks/useReferences';
+import { getSession } from '#/lib/auth.functions';
+import { getInvoices } from '#/lib/server-fns/invoices';
 
 export const Route = createFileRoute('/invoices/')({
 	beforeLoad: async () => {
@@ -27,6 +27,8 @@ export const Route = createFileRoute('/invoices/')({
 function InvoicesPage() {
 	const navigate = useNavigate();
 	const [bizFilter, setBizFilter] = useState<string>('All');
+	const [statusFilter, setStatusFilter] = useState<'All' | 'paid' | 'part_paid' | 'overdue' | 'draft' | 'sent' | 'voided'>('All');
+	const [currencyFilter, setCurrencyFilter] = useState<'All' | 'NGN' | 'USD' | 'KES' | 'RWF' | 'GBP' | 'EUR'>('All');
 	const { data, isLoading, error, refetch } = useQuery({
 		queryKey: ['invoices'],
 		queryFn: () => getInvoices({ data: {} }),
@@ -34,7 +36,7 @@ function InvoicesPage() {
 	const { data: businessesData } = useBusinesses();
 	const bizOptions = [
 		'All',
-		...((businessesData?.businesses as any[])?.map((b: any) => b.name) ?? []),
+		...((businessesData?.businesses as unknown as Array<{ name: string }>)?.map((b) => b.name) ?? []),
 	];
 
 	if (isLoading) {
@@ -89,10 +91,34 @@ function InvoicesPage() {
 	}
 
 	const invoices = data?.invoices || [];
-	const filtered =
-		bizFilter === 'All'
-			? invoices
-			: invoices.filter((i) => i.business === bizFilter);
+	const filtered = invoices.filter((invoice) => {
+		const matchesBusiness =
+			bizFilter === 'All' || invoice.business === bizFilter;
+		const matchesStatus =
+			statusFilter === 'All' || invoice.status === statusFilter;
+		const matchesCurrency =
+			currencyFilter === 'All' || invoice.currency === currencyFilter;
+		return matchesBusiness && matchesStatus && matchesCurrency;
+	});
+
+	const statusOptions: Array<typeof statusFilter> = [
+		'All',
+		'paid',
+		'part_paid',
+		'overdue',
+		'draft',
+		'sent',
+		'voided',
+	] as const;
+	const currencyOptions: Array<typeof currencyFilter> = [
+		'All',
+		'NGN',
+		'USD',
+		'KES',
+		'RWF',
+		'GBP',
+		'EUR',
+	] as const;
 
 	return (
 		<div className="flex flex-col gap-5">
@@ -100,7 +126,7 @@ function InvoicesPage() {
 				<h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">
 					Invoices
 				</h1>
-				<div className="flex gap-1 flex-wrap">
+				<div className="flex gap-1 flex-wrap justify-end">
 					{bizOptions.map((b) => (
 						<Button
 							type="button"
@@ -115,6 +141,45 @@ function InvoicesPage() {
 							}
 						>
 							{b}
+						</Button>
+					))}
+				</div>
+			</div>
+
+			<div className="flex flex-col gap-3 rounded-none border-2 border-[#201e1d] bg-white p-3">
+				<div className="flex flex-wrap gap-1">
+					{statusOptions.map((option) => (
+						<Button
+							type="button"
+							key={option}
+							variant={statusFilter === option ? 'default' : 'outline'}
+							size="sm"
+							onClick={() => setStatusFilter(option)}
+							className={
+								statusFilter === option
+									? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold rounded-none'
+									: 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] rounded-none'
+							}
+						>
+							{option === 'All' ? 'All statuses' : option.replace('_', ' ')}
+						</Button>
+					))}
+				</div>
+				<div className="flex flex-wrap gap-1">
+					{currencyOptions.map((option) => (
+						<Button
+							type="button"
+							key={option}
+							variant={currencyFilter === option ? 'default' : 'outline'}
+							size="sm"
+							onClick={() => setCurrencyFilter(option)}
+							className={
+								currencyFilter === option
+									? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold rounded-none'
+									: 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] rounded-none'
+							}
+						>
+							{option === 'All' ? 'All currencies' : option}
 						</Button>
 					))}
 				</div>

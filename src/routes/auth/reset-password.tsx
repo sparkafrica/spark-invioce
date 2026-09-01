@@ -1,12 +1,11 @@
+import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router';
-import { useForm } from '@tanstack/react-form';
-import { standardSchemaValidators } from '@tanstack/react-form';
-import * as v from 'valibot';
 import { useState } from 'react';
-import { authClient } from '#/lib/auth-client';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
-import { Input } from '#/components/ui/input';
+import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
+import { authClient } from '#/lib/auth-client';
 
 const resetSchema = v.pipe(
 	v.object({
@@ -63,7 +62,7 @@ function ResetPasswordPage() {
 	if (!token) {
 		return (
 			<div className="min-h-screen bg-[#f3f2f2] text-[#201e1d] flex items-center justify-center p-6">
-				<div className="w-full max-w-[360px] border-2 border-[#201e1d] bg-white p-6">
+				<div className="w-full max-w-90 border-2 border-[#201e1d] bg-white p-6">
 					<div className="text-[11px] font-semibold tracking-[0.12em] text-[#c02a10]">
 						INVALID LINK
 					</div>
@@ -103,17 +102,18 @@ function ResetPasswordPage() {
 							New Business · Africa Startup Festival · Africa Technology Expo.
 						</p>
 					</div>
-					<div className="text-[11px] tracking-[0.1em] text-[#5c5755]">
+					<div className="text-[11px] tracking-widest text-[#5c5755]">
 						SPARK — NIGERIA · UNITED KINGDOM
 					</div>
 				</div>
 				<div className="flex items-center px-6 py-12 lg:px-14">
-					<div className="w-full max-w-[360px] mx-auto flex flex-col gap-4">
+					<div className="w-full max-w-90 mx-auto flex flex-col gap-4">
 						<div className="text-[11px] font-semibold tracking-[0.12em] text-[#c02a10]">
 							RESET PASSWORD
 						</div>
 						<h2 className="text-xs font-semibold">Enter your new password</h2>
 						{success && (
+							// biome-ignore lint/a11y/useSemanticElements: This is a status message, not a heading
 							<div
 								className="border border-[#201e1d] bg-[#f0dcd8] p-3 text-xs font-semibold"
 								role="status"

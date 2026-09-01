@@ -16,7 +16,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '#/components/ui/popover';
-import { CURRENCIES, type Currency } from '#/lib/currencies';
+import { CURRENCY_INFO, type Currency, filterCurrencies } from '#/lib/currencies';
 import { cn } from '#/lib/utils';
 
 type Props = {
@@ -35,6 +35,8 @@ export function CurrencySelect({
 	className,
 }: Props) {
 	const [open, setOpen] = useState(false);
+	const [query, setQuery] = useState('');
+	const filtered = filterCurrencies(query);
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger
@@ -49,31 +51,48 @@ export function CurrencySelect({
 							className,
 						)}
 					>
-						{value || placeholder}
+						{value
+							? `${value} — ${CURRENCY_INFO[value as Currency]?.name ?? value}`
+							: placeholder}
 						<ChevronsUpDownIcon className="h-4 w-4 opacity-50" />
 					</Button>
 				}
 			/>
-			<PopoverContent className="w-[280px] p-0 rounded-none border border-[#201e1d] bg-white">
+			<PopoverContent className="w-85 p-0 rounded-none border border-[#201e1d] bg-white">
 				<Command>
-					<CommandInput placeholder="Search currency…" className="h-9" />
+					<CommandInput
+						placeholder="Search by code, name or country…"
+						value={query}
+						onValueChange={setQuery}
+						className="h-9"
+					/>
 					<CommandList>
 						<CommandEmpty>No currency found.</CommandEmpty>
 						<CommandGroup>
-							{CURRENCIES.map((c) => (
-								<CommandItem
-									key={c}
-									value={c}
-									onSelect={() => {
-										onValueChange(c);
-										setOpen(false);
-									}}
-									className="rounded-none flex justify-between"
-									data-checked={value === c}
-								>
-									{c}
-								</CommandItem>
-							))}
+							{filtered.map((c) => {
+								const info = CURRENCY_INFO[c];
+								return (
+									<CommandItem
+										key={c}
+										value={`${info.code} ${info.name} ${info.country ?? ''}`}
+										onSelect={() => {
+											onValueChange(c);
+											setOpen(false);
+										}}
+										className="rounded-none"
+										data-checked={value === c}
+									>
+										<span className="font-medium">
+											{info.code} — {info.name}
+										</span>
+										{/* {info.country && (
+											<span className="text-xs text-muted-foreground">
+												{info.country}
+											</span>
+										)} */}
+									</CommandItem>
+								);
+							})}
 						</CommandGroup>
 					</CommandList>
 				</Command>

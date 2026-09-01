@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useForm, standardSchemaValidators } from '@tanstack/react-form';
-import * as v from 'valibot';
+import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getFXRates, updateFXRates } from '#/lib/server-fns/references';
-import { toast } from '#/components/ui/toast';
-import { Skeleton } from '#/components/ui/skeleton';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
-import { Input } from '#/components/ui/input';
+import { useEffect, useState } from 'react';
+import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '#/components/ui/radio-group';
+import { Skeleton } from '#/components/ui/skeleton';
+import { toast } from '#/components/ui/toast';
 import { qk } from '#/hooks/useReferences';
+import { getFXRates, updateFXRates } from '#/lib/server-fns/references';
 
 const defaultFx = {
 	mode: 'manual' as const,
@@ -79,8 +79,8 @@ export function FXRatesPanel({ canManage }: { canManage: boolean }) {
 		},
 	});
 
-	// sync form when server data arrives (only when not editing to avoid clobbering draft)
-	useEffect(() => {
+	// biome-ignore lint/correctness/useExhaustiveDependencies:  sync form when server data arrives (only when not editing to avoid clobbering draft)
+		useEffect(() => {
 		if (raw && !isEditing) {
 			form.reset({ mode: raw.mode as 'manual' | 'api', rates: raw.rates });
 		}

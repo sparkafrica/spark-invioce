@@ -1,14 +1,15 @@
-import * as React from 'react';
+/** biome-ignore-all lint/a11y/useSemanticElements: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
 import { cva, type VariantProps } from 'class-variance-authority';
-
-import { cn } from '#/lib/utils.ts';
+import type * as React from 'react';
 import { Button } from '#/components/ui/button.tsx';
 import { Input } from '#/components/ui/input.tsx';
 import { Textarea } from '#/components/ui/textarea.tsx';
+import { cn } from '#/lib/utils.ts';
 
 function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
-		<div
+<div
 			data-slot="input-group"
 			role="group"
 			className={cn(

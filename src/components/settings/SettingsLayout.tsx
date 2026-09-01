@@ -2,12 +2,12 @@
 
 import { Link, useLocation } from '@tanstack/react-router';
 import { authClient } from '#/lib/auth-client';
-import { ProfilePanel } from './ProfilePanel';
-import { OrganizationPanel } from './OrganizationPanel';
-import { CompaniesPanel } from './CompaniesPanel';
 import { BanksPanel } from './BanksPanel';
 import { BusinessesPanel } from './BusinessesPanel';
+import { CompaniesPanel } from './CompaniesPanel';
 import { FXRatesPanel } from './FxRatesPanel';
+import { OrganizationPanel } from './OrganizationPanel';
+import { ProfilePanel } from './ProfilePanel';
 
 const TABS = [
 	{ id: 'profile', label: 'Profile', href: '/settings/profile' as const },

@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useForm, standardSchemaValidators } from '@tanstack/react-form';
-import * as v from 'valibot';
+import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
-import { authClient } from '#/lib/auth-client';
-import { toast } from '#/components/ui/toast';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
-import { Input } from '#/components/ui/input';
+import { useEffect } from 'react';
+import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
 import { Skeleton } from '#/components/ui/skeleton';
+import { toast } from '#/components/ui/toast';
+import { authClient } from '#/lib/auth-client';
 
 const profileSchema = v.object({
 	name: v.pipe(v.string(), v.minLength(1, 'Name is required')),

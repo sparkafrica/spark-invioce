@@ -1,8 +1,8 @@
 import { createServerFn } from '@tanstack/react-start';
 import {
-	seedDb as seedDbLib,
 	clearDb as clearDbLib,
 	getSeedStatus as getSeedStatusLib,
+	seedDb as seedDbLib,
 } from '#/lib/seed';
 
 export const getSeedStatus = createServerFn({ method: 'GET' }).handler(

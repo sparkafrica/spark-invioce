@@ -1,17 +1,17 @@
 'use client';
 
-import { useForm, standardSchemaValidators } from '@tanstack/react-form';
-import * as v from 'valibot';
+import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getCompanies } from '#/lib/server-fns/references';
-import { updateCompany } from '#/lib/server-fns/settings';
-import { toast } from '#/components/ui/toast';
-import { Skeleton } from '#/components/ui/skeleton';
-import { Field, FieldLabel, FieldError } from '#/components/ui/field';
-import { Input } from '#/components/ui/input';
+import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
 import { CurrencySelect } from '#/components/ui/currency-select';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
+import { Skeleton } from '#/components/ui/skeleton';
+import { toast } from '#/components/ui/toast';
 import { qk } from '#/hooks/useReferences';
+import { getCompanies } from '#/lib/server-fns/references';
+import { updateCompany } from '#/lib/server-fns/settings';
 
 const companySchema = v.object({
 	name: v.pipe(v.string(), v.minLength(1, 'Name is required')),
