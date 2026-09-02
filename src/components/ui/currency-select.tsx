@@ -16,7 +16,11 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '#/components/ui/popover';
-import { CURRENCY_INFO, type Currency, filterCurrencies } from '#/lib/currencies';
+import {
+	CURRENCY_INFO,
+	type Currency,
+	filterCurrencies,
+} from '#/lib/currencies';
 import { cn } from '#/lib/utils';
 
 type Props = {

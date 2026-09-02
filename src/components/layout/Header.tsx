@@ -19,7 +19,7 @@ export function Header({ className }: HeaderProps) {
 	const { data: session, isPending } = authClient.useSession();
 
 	const isActive = (href: string) =>
-		location.pathname === href || location.pathname.startsWith(href + '/');
+		location.pathname === href || location.pathname.startsWith(`${href}/`);
 
 	const navBtn = (active: boolean) =>
 		cn(
@@ -88,6 +88,35 @@ export function Header({ className }: HeaderProps) {
 					))}
 				</nav>
 			</div>
+
+			{/* Mobile menu drawer */}
+			{sidebarOpen && (
+				<div className="absolute left-0 top-full z-40 w-full bg-white border-t border-[#201e1d] lg:hidden">
+					<div className="p-3">
+						<nav className="flex flex-col gap-2">
+							{[
+								{ href: '/dashboard', label: 'Overview' },
+								{ href: '/invoices', label: 'Invoices' },
+								{ href: '/memos', label: 'Memos' },
+								{ href: '/clients', label: 'Clients' },
+								{ href: '/products', label: 'Products' },
+								{ href: '/team', label: 'Team' },
+								{ href: '/activity', label: 'Activity' },
+								{ href: '/settings', label: 'Settings' },
+							].map((item) => (
+								<Link
+									key={item.href}
+									to={item.href}
+									onClick={() => setSidebarOpen(false)}
+									className={navBtn(isActive(item.href))}
+								>
+									{item.label}
+								</Link>
+							))}
+						</nav>
+					</div>
+				</div>
+			)}
 
 			<div className="flex items-center gap-3">
 				<Button

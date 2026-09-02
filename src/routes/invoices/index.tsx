@@ -27,8 +27,12 @@ export const Route = createFileRoute('/invoices/')({
 function InvoicesPage() {
 	const navigate = useNavigate();
 	const [bizFilter, setBizFilter] = useState<string>('All');
-	const [statusFilter, setStatusFilter] = useState<'All' | 'paid' | 'part_paid' | 'overdue' | 'draft' | 'sent' | 'voided'>('All');
-	const [currencyFilter, setCurrencyFilter] = useState<'All' | 'NGN' | 'USD' | 'KES' | 'RWF' | 'GBP' | 'EUR'>('All');
+	const [statusFilter, setStatusFilter] = useState<
+		'All' | 'paid' | 'part_paid' | 'overdue' | 'draft' | 'sent' | 'voided'
+	>('All');
+	const [currencyFilter, setCurrencyFilter] = useState<
+		'All' | 'NGN' | 'USD' | 'KES' | 'RWF' | 'GBP' | 'EUR'
+	>('All');
 	const { data, isLoading, error, refetch } = useQuery({
 		queryKey: ['invoices'],
 		queryFn: () => getInvoices({ data: {} }),
@@ -36,7 +40,9 @@ function InvoicesPage() {
 	const { data: businessesData } = useBusinesses();
 	const bizOptions = [
 		'All',
-		...((businessesData?.businesses as unknown as Array<{ name: string }>)?.map((b) => b.name) ?? []),
+		...((businessesData?.businesses as unknown as Array<{ name: string }>)?.map(
+			(b) => b.name,
+		) ?? []),
 	];
 
 	if (isLoading) {

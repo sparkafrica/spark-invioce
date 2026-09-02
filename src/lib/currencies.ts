@@ -150,8 +150,7 @@ Object.entries(countries).forEach(([, data]) => {
 			return;
 		}
 
-		const friendlyName =
-			CURRENCY_NAMES[curr] || `${countryName} ${curr}`;
+		const friendlyName = CURRENCY_NAMES[curr] || `${countryName} ${curr}`;
 
 		currencyMap.set(curr, {
 			code: curr,

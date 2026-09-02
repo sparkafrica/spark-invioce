@@ -20,7 +20,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 			id: z.string().min(1),
 		}),
 	)
-	.handler(async ({ data }): Promise<{ invoice: any }> => {
+	.handler(async ({ data }) => {
 		const { id } = data;
 		const orgId = process.env.ORGANIZATION_ID!;
 
@@ -214,6 +214,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 			clientNotes: client?.notes || null,
 			businessId: business?.id || '',
 			businessName: business?.name || '',
+			businessLogo: business?.logo || null,
 			businessPrefix: business?.prefix || '',
 			companyId: company?.id || '',
 			companyName: company?.name || '',

@@ -89,26 +89,22 @@ export const getInvoices = createServerFn({ method: 'GET' })
 			.where(whereClause);
 
 		// Build order by
-		let orderByClause:
-			| ReturnType<typeof asc>
-			| ReturnType<typeof desc>
-			| undefined;
+		const columnMap = {
+			number: invoices.number,
+			client: clients.name,
+			business: businesses.name,
+			issued: invoices.issueDate,
+			due: invoices.dueDate,
+			type: invoices.paymentType,
+			status: invoices.status,
+		} as const;
+		let orderByClause = desc(invoices.createdAt);
 		if (sortBy) {
-			const columnMap = {
-				number: invoices.number,
-				client: clients.name,
-				business: businesses.name,
-				issued: invoices.issueDate,
-				due: invoices.dueDate,
-				type: invoices.paymentType,
-				status: invoices.status,
-			} as const;
-			const column = columnMap[sortBy];
+			const sortKey = sortBy as keyof typeof columnMap;
+			const column = sortKey in columnMap ? columnMap[sortKey] : undefined;
 			if (column) {
 				orderByClause = sortDir === 'desc' ? desc(column) : asc(column);
 			}
-		} else {
-			orderByClause = desc(invoices.createdAt);
 		}
 
 		const results = await db

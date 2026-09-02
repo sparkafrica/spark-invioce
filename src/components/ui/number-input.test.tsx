@@ -18,9 +18,7 @@ describe('NumberInput', () => {
 
 	it('emits a numeric value when the user types', () => {
 		const handleValueChange = vi.fn();
-		render(
-			<NumberInput value={0} onValueChange={handleValueChange} />,
-		);
+		render(<NumberInput value={0} onValueChange={handleValueChange} />);
 
 		const input = screen.getByRole('textbox');
 		fireEvent.change(input, { target: { value: '3,000.00' } });

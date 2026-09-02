@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/a11y/useSemanticElements: allow un-semantic element */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: allow element cliek events */
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -9,9 +11,8 @@ import { cn } from '#/lib/utils.ts';
 
 function Pagination({ className, ...props }: React.ComponentProps<'nav'>) {
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: <explanation>
-<nav
-			// biome-ignore lint/a11y/noRedundantRoles: <explanation>
+		<nav
+			// biome-ignore lint/a11y/noRedundantRoles: allow redundant roles
 			role="navigation"
 			aria-label="pagination"
 			data-slot="pagination"

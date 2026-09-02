@@ -77,10 +77,7 @@ export function ProductForm({
 	};
 
 	return (
-		<form
-			onSubmit={handleSubmit}
-			className="flex flex-col gap-6"
-		>
+		<form onSubmit={handleSubmit} className="flex flex-col gap-6">
 			<form.Field name="name">
 				{(field) => (
 					<Field className="w-full">

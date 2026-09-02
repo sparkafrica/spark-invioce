@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/correctness/useExhaustiveDependencies: not all deps need to be included, only filtered and reportCur are relevant */
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link, redirect } from '@tanstack/react-router';
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import {
 	Area,
@@ -49,7 +49,7 @@ export const Route = createFileRoute('/dashboard')({
 	component: Dashboard,
 });
 
-type ReportCur = 'NGN' | 'USD' | 'All';
+type ReportCur = 'NGN' | 'USD' | 'GBP' | 'All';
 type Period = 'All time' | '2026' | 'Last 90 days' | 'This month';
 
 function Dashboard() {
@@ -94,9 +94,9 @@ function Dashboard() {
 	};
 	const invoices = (data?.invoices as unknown as InvoiceRow[]) || [];
 	const fxRates = useMemo<Record<string, number>>(() => {
-		const rawRates =
-			((fxData as { fxRates?: { rates?: Record<string, number> } } | undefined)
-				?.fxRates?.rates ?? DEFAULT_FX_RATES) as Record<string, number>;
+		const rawRates = ((
+			fxData as { fxRates?: { rates?: Record<string, number> } } | undefined
+		)?.fxRates?.rates ?? DEFAULT_FX_RATES) as Record<string, number>;
 		return Object.fromEntries(
 			Object.entries(rawRates).map(([code, value]) => [
 				code.toUpperCase(),
@@ -164,7 +164,10 @@ function Dashboard() {
 		let paidCount = 0;
 		filtered.forEach((inv) => {
 			const totalStr = String(inv.total || '0').replace(/[^0-9.-]/g, '');
-			const total = convertToReportCurrency(Number(totalStr) || 0, inv.currency);
+			const total = convertToReportCurrency(
+				Number(totalStr) || 0,
+				inv.currency,
+			);
 			invoiced += total;
 			if (inv.status === 'paid') {
 				collected += total;
@@ -223,7 +226,31 @@ function Dashboard() {
 
 	const periodNote = period === 'All time' ? 'All invoices' : period;
 
+	const navigate = useNavigate();
+
+	const handleSegmentClick = (key: string) => {
+		const mapping: Record<string, string> = {
+			paid: 'paid',
+			part_paid: 'part_paid',
+			overdue: 'overdue',
+		};
+		const status = mapping[key] ?? key;
+		const search: Record<string, string | undefined> = {
+			status,
+			currency: includeCur === 'All' ? undefined : includeCur,
+			reportCur: reportCur === 'All' ? undefined : reportCur,
+		};
+		navigate({ to: '/invoices', search });
+	};
+
 	const invoiceStatusData = useMemo(() => {
+		const overduePredicate = (i: InvoiceRow) => {
+			const due = i.due || i.dueDate || '';
+			return (
+				due && due < todayISO && !['paid', 'voided'].includes(i.status)
+			);
+		};
+
 		const statuses = [
 			{
 				name: 'Paid',
@@ -260,12 +287,11 @@ function Dashboard() {
 				color: '#f7d9d3',
 			},
 			{
-				name: 'Unpaid',
-				key: 'unpaid',
-				count: filtered.filter((i) => !['paid', 'part_paid'].includes(i.status))
-					.length,
+				name: 'Overdue',
+				key: 'overdue',
+				count: filtered.filter(overduePredicate).length,
 				value: filtered
-					.filter((i) => !['paid', 'part_paid'].includes(i.status))
+					.filter(overduePredicate)
 					.reduce(
 						(s, i) =>
 							s +
@@ -275,8 +301,7 @@ function Dashboard() {
 							),
 						0,
 					),
-				color: '#e7e4e2',
-				border: true,
+				color: '#ec3013',
 			},
 		];
 
@@ -446,15 +471,16 @@ function Dashboard() {
 									<SelectValue placeholder="Report in" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="NGN">NGN</SelectItem>
-									<SelectItem value="USD">USD</SelectItem>
-									<SelectItem value="All">All</SelectItem>
+											<SelectItem value="NGN">NGN</SelectItem>
+											<SelectItem value="USD">USD</SelectItem>
+											<SelectItem value="GBP">GBP</SelectItem>
+											<SelectItem value="All">All</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 						<div className="gap-1 items-center hidden lg:flex">
 							<span className="text-[11px] text-[#5c5755] mr-1">Report in</span>
-							{(['NGN', 'USD', 'All'] as ReportCur[]).map((c) => (
+							{(['USD', 'NGN', 'GBP', 'All'] as ReportCur[]).map((c) => (
 								<Button
 									key={c}
 									type="button"
@@ -480,16 +506,16 @@ function Dashboard() {
 									<SelectValue placeholder="Include" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="NGN">NGN</SelectItem>
-									<SelectItem value="KES">KES</SelectItem>
-									<SelectItem value="RWF">RWF</SelectItem>
 									<SelectItem value="All">All</SelectItem>
+									<SelectItem value="KES">KES</SelectItem>
+									<SelectItem value="NGN">NGN</SelectItem>
+									<SelectItem value="USD">USD</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 						<div className="gap-1 items-center hidden lg:flex">
 							<span className="text-[11px] text-[#5c5755] mr-1">Include</span>
-							{(['NGN', 'KES', 'RWF', 'All'] as string[]).map((c) => (
+							{(['All', 'KES', 'NGN', 'USD'] as string[]).map((c) => (
 								<Button
 									key={c}
 									type="button"
@@ -593,7 +619,8 @@ function Dashboard() {
 						</div>
 					) : (
 						<div className="h-45 bg-[#faf9f9] border border-[#e7e4e2] p-2">
-							<ResponsiveContainer width="100%" height="100%">
+							<div style={{ width: '100%', height: '100%', minWidth: 160, minHeight: 160 }}>
+								<ResponsiveContainer width="100%" height="100%">
 								<LineChart
 									data={trendData}
 									margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
@@ -653,7 +680,8 @@ function Dashboard() {
 										activeDot={{ r: 5, fill: '#201e1d' }}
 									/>
 								</LineChart>
-							</ResponsiveContainer>
+								</ResponsiveContainer>
+							</div>
 						</div>
 					)}
 					<div className="flex justify-between text-[10px] text-[#5c5755] mt-1.5">
@@ -703,47 +731,55 @@ function Dashboard() {
 								variant="outline"
 								size="xs"
 								onClick={() => setStatusMetric('value')}
-								className={cn(
-									{
-										'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white':
-											statusMetric === 'value',
-										'border-[#201e1d] bg-white text-[#201e1d] hover:bg-[#f0dcd8] hover:text-[#201e1d]':
-											statusMetric !== 'value',
-									},
-								)}
+								className={cn({
+									'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white':
+										statusMetric === 'value',
+									'border-[#201e1d] bg-white text-[#201e1d] hover:bg-[#f0dcd8] hover:text-[#201e1d]':
+										statusMetric !== 'value',
+								})}
 							>
 								Value
 							</Button>
 						</div>
 					</div>
-					<div className="grid grid-cols-[140px_1fr] gap-4 items-center">
-						<div className="relative h-35 w-35">
+					<div className="grid grid-cols-[140px_1fr] gap-6 items-center">
+						<div className="relative h-56 w-56">
 							<ResponsiveContainer width="100%" height="100%">
 								<PieChart>
 									<Pie
 										data={invoiceStatusData.statuses
 											.filter((item) =>
-												statusMetric === 'count' ? item.count > 0 : item.value > 0,
+												statusMetric === 'count'
+													? item.count > 0
+													: item.value > 0,
 											)
 											.map((item) => ({
+												key: item.key,
 												name: item.name,
-												value: statusMetric === 'count' ? item.count : item.value,
+												value:
+													statusMetric === 'count' ? item.count : item.value,
 												color: item.color,
 											}))}
 										dataKey="value"
 										nameKey="name"
-										innerRadius={42}
-										outerRadius={62}
+										innerRadius={50}
+										outerRadius={100}
 										paddingAngle={3}
 										stroke="#f5f3f1"
 										strokeWidth={2}
 										startAngle={90}
 										endAngle={-270}
 										isAnimationActive={false}
+										onClick={(data, index) => {
+											const key = (data && (data.payload as any)?.key) || (data && (data as any).key) || (invoiceStatusData.statuses[index]?.key);
+											handleSegmentClick(key);
+										}}
 									>
 										{invoiceStatusData.statuses
 											.filter((item) =>
-												statusMetric === 'count' ? item.count > 0 : item.value > 0,
+												statusMetric === 'count'
+													? item.count > 0
+													: item.value > 0,
 											)
 											.map((item) => (
 												<Cell key={item.name} fill={item.color} />
@@ -779,10 +815,9 @@ function Dashboard() {
 										className="flex items-center gap-2 py-1 px-1 hover:bg-[#f0dcd8]"
 									>
 										<span
-											className="w-3 h-3 border"
+											className="w-3 h-3"
 											style={{
-												background: d.color,
-												borderColor: d.border ? '#201e1d' : d.color,
+												background: d.color
 											}}
 										/>
 										<span>{d.name}</span>
@@ -1081,26 +1116,26 @@ function Dashboard() {
 					) : (
 						<div className="flex flex-col gap-0">
 							{outstandingCustomers.map(([name, val]) => (
-									<div
-										key={String(name)}
-										className="border-b border-[#d6d3d1] py-3"
-									>
-										<div className="flex justify-between items-baseline gap-3 mb-1.5">
-											<div className="text-[13px] font-semibold">
-												{String(name)}
-											</div>
-											<div className="text-[13px] tabular-nums whitespace-nowrap">
-												{fmt(Number(val))}
-											</div>
+								<div
+									key={String(name)}
+									className="border-b border-[#d6d3d1] py-3"
+								>
+									<div className="flex justify-between items-baseline gap-3 mb-1.5">
+										<div className="text-[13px] font-semibold">
+											{String(name)}
 										</div>
-										<div className="h-1.5 bg-[#e7e4e2] w-full">
-											<div
-												className="h-full bg-[#ec3013]"
-												style={{ width: '60%' }}
-											/>
+										<div className="text-[13px] tabular-nums whitespace-nowrap">
+											{fmt(Number(val))}
 										</div>
 									</div>
-								))}
+									<div className="h-1.5 bg-[#e7e4e2] w-full">
+										<div
+											className="h-full bg-[#ec3013]"
+											style={{ width: '60%' }}
+										/>
+									</div>
+								</div>
+							))}
 						</div>
 					)}
 				</div>

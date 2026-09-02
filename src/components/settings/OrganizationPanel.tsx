@@ -94,7 +94,7 @@ export function OrganizationPanel() {
 
 	if (isOrgPending) {
 		return (
-			<div className="border-2 border-[#201e1d] bg-white p-6 max-w-[860px] flex flex-col gap-4">
+			<div className="border-2 border-[#201e1d] bg-white p-6 max-w-215 flex flex-col gap-4">
 				<Skeleton className="h-3 w-40 rounded-none" />
 				<div className="grid gap-3 md:grid-cols-2">
 					<Skeleton className="h-10 w-full rounded-none" />
@@ -109,7 +109,7 @@ export function OrganizationPanel() {
 	}
 
 	return (
-		<div className="border-2 border-[#201e1d] bg-white p-6 max-w-[860px] flex flex-col gap-4">
+		<div className="border-2 border-[#201e1d] bg-white p-6 max-w-215 flex flex-col gap-4">
 			<div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">
 				ORGANIZATION —{' '}
 				{(orgData?.organization?.name ?? 'Spark Invoice System').toUpperCase()}

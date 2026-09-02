@@ -1,4 +1,4 @@
-/** biome-ignore-all lint/a11y/useSemanticElements: <explanation> */
+/** biome-ignore-all lint/a11y/useSemanticElements: allow non-semantic elements */
 'use client';
 
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -106,7 +106,7 @@ function FieldLabel({
 		<Label
 			data-slot="field-label"
 			className={cn(
-				'group/field-label peer/field-label flex w-fit gap-2 leading-relaxed text-[11px] font-semibold text-[#201e1d] group-data-[disabled=true]/field:opacity-50 has-data-checked:border-[#201e1d] has-data-checked:bg-[#f0dcd8] has-[>[data-slot=field]]:rounded-none has-[>[data-slot=field]]:border has-[>[data-slot=field]]:border-[#201e1d] has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:hover:bg-[#f0dcd8] has-[>[data-slot=field]]:has-[:focus-visible]:outline-2 has-[>[data-slot=field]]:has-[:focus-visible]:outline-[#ec3013] *:data-[slot=field]:p-4',
+				'group/field-label peer/field-label flex w-fit gap-2 leading-relaxed text-[11px] font-semibold text-[#201e1d] group-data-[disabled=true]/field:opacity-50 has-data-checked:border-[#201e1d] has-data-checked:bg-[#f0dcd8] has-[>[data-slot=field]]:rounded-none has-[>[data-slot=field]]:border has-[>[data-slot=field]]:border-[#201e1d] has-[>[data-slot=field]]:not-has-[:disabled,[data-disabled]]:hover:bg-[#f0dcd8] has-[>[data-slot=field]]:has-focus-visible:outline-2 has-[>[data-slot=field]]:has-focus-visible:outline-[#ec3013] *:data-[slot=field]:p-4',
 				'has-[>[data-slot=field]]:w-full has-[>[data-slot=field]]:flex-col',
 				className,
 			)}

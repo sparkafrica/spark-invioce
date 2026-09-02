@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography';
-
 @import 'tw-animate-css';
+
+@plugin '@tailwindcss/typography';
 
 :root {
   /* Modernist — source of truth from Spark Invoice.dc.html / _ds/styles.css */

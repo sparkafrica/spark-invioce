@@ -130,7 +130,7 @@ export async function seedDb(): Promise<{ organizationId: string }> {
 					body: { email: u.email, password: u.password },
 					headers: new Headers(),
 					asResponse: false,
-				} as any);
+				});
 				console.log(`Password for ${u.email} verified as '${u.password}'`);
 			} catch {
 				console.log(`Password for ${u.email} not '${u.password}', resetting…`);
@@ -163,10 +163,11 @@ export async function seedDb(): Promise<{ organizationId: string }> {
 		if (!existingMember) {
 			await db.insert(member).values({
 				id: createId(),
+				createdAt: new Date(),
 				organizationId: org.id,
 				userId: dbUser.id,
 				role: u.role,
-			} as any);
+			});
 			console.log(`Made ${u.email} member as ${u.role}`);
 		} else if (existingMember.role !== u.role) {
 			await db
@@ -947,7 +948,7 @@ export async function seedDb(): Promise<{ organizationId: string }> {
 					label: inv.number,
 					detail: 'Invoice created',
 					metadata: { changes: [] },
-					createdAt: new Date(inv.issueDate + 'T10:00:00'),
+					createdAt: new Date(`${inv.issueDate}T10:00:00`),
 				});
 			}
 			console.log('Created 5 ASF terms invoices');

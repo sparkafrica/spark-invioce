@@ -1,5 +1,5 @@
-/** biome-ignore-all lint/a11y/useSemanticElements: <explanation> */
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/a11y/useSemanticElements: allow un-semantic element */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: allow element cliek events */
 import { cva, type VariantProps } from 'class-variance-authority';
 import type * as React from 'react';
 import { Button } from '#/components/ui/button.tsx';
@@ -9,7 +9,7 @@ import { cn } from '#/lib/utils.ts';
 
 function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
-<div
+		<div
 			data-slot="input-group"
 			role="group"
 			className={cn(

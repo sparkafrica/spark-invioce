@@ -4,8 +4,8 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { customSession, organization } from 'better-auth/plugins';
 import { tanstackStartCookies } from 'better-auth/tanstack-start';
-import { db } from '#/db';
-import * as schema from '#/db/schema';
+import { db } from '../db';
+import * as schema from '../db/schema';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -34,7 +34,24 @@ export const auth = betterAuth({
 		// Configure social providers later if needed
 	},
 	plugins: [
-		organization(),
+		organization({
+			schema: {
+				invitation: {
+					additionalFields: {
+						name: {
+							type: 'string',
+							required: true,
+						}
+					}
+				}
+			},
+			sendInvitationEmail: async ({ email, organization }) => {
+				// Dev mock — log invitation link (replace with Resend in prod)
+				console.log(
+					`[Better Auth] Invitation for ${email} to join organization: ${organization.name}`,
+				);
+			}
+		}),
 		customSession(async ({ session, user }) => {
 			const orgId = process.env.ORGANIZATION_ID;
 			if (!orgId) {

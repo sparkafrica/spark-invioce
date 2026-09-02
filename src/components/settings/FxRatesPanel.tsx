@@ -80,7 +80,7 @@ export function FXRatesPanel({ canManage }: { canManage: boolean }) {
 	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies:  sync form when server data arrives (only when not editing to avoid clobbering draft)
-		useEffect(() => {
+	useEffect(() => {
 		if (raw && !isEditing) {
 			form.reset({ mode: raw.mode as 'manual' | 'api', rates: raw.rates });
 		}

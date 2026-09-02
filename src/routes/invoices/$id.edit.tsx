@@ -93,12 +93,8 @@ function EditInvoicePage() {
 		businessId: invoice.businessId,
 		companyId: invoice.companyId,
 		clientId: invoice.clientId,
-		issueDate: invoice.issueDate
-			? new Date(invoice.issueDate).toISOString().split('T')[0]
-			: '',
-		dueDate: invoice.dueDate
-			? new Date(invoice.dueDate).toISOString().split('T')[0]
-			: '',
+		issueDate: invoice.issueDate ? new Date(invoice.issueDate).toISOString().split('T')[0] : null,
+		dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : null,
 		currency: invoice.currency,
 		taxName: invoice.taxName,
 		taxRate: invoice.taxRate,
@@ -143,9 +139,7 @@ function EditInvoicePage() {
 			}) => ({
 				name: t.name,
 				deliverables: t.deliverables || '',
-				dueDate: t.dueDate
-					? new Date(t.dueDate).toISOString().split('T')[0]
-					: '',
+				dueDate: t.dueDate ? new Date(t.dueDate).toISOString().split('T')[0] : null,
 				amount: t.amount,
 				paid: t.paid,
 			}),
@@ -160,7 +154,7 @@ function EditInvoicePage() {
 			}) => ({
 				id: p.id,
 				amount: p.amount,
-				note: p.note,
+				note: p.note ?? undefined,
 				recordedBy: p.recordedBy,
 				recordedAt: p.recordedAt,
 			}),

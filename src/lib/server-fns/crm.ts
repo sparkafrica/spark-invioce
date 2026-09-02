@@ -151,7 +151,8 @@ export const updateProduct = createServerFn({ method: 'POST' })
 			.set({
 				...updates,
 				cost: updates.cost ?? undefined,
-				currency: updates.currency as (typeof products.$inferInsert)['currency'],
+				currency:
+					updates.currency as (typeof products.$inferInsert)['currency'],
 				updatedAt: new Date(),
 			})
 			.where(eq(products.id, id));

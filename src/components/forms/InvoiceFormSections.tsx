@@ -691,13 +691,13 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 			<form.Field name="items" mode="array">
 				{(field) => (
 					<div className="space-y-2">
-						{field.state.value.map((_: any, index: number) => (
+						{field.state.value.map((_, index: number) => (
 							<div
 								key={index}
 								className="grid grid-cols-[1fr_80px_90px_80px_40px] gap-2 items-start p-2 border border-[#d6d3d1] bg-white"
 							>
 								<form.Field name={`items[${index}].name`}>
-									{(sub: any) => (
+									{(sub) => (
 										<Field>
 											<Input
 												value={sub.state.value}
@@ -711,7 +711,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									)}
 								</form.Field>
 								<form.Field name={`items[${index}].qty`}>
-									{(sub: any) => (
+									{(sub) => (
 										<Field>
 											<NumberInput
 												value={sub.state.value ? Number(sub.state.value) : 0}
@@ -729,7 +729,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									)}
 								</form.Field>
 								<form.Field name={`items[${index}].cost`}>
-									{(sub: any) => (
+									{(sub) => (
 										<Field>
 											<NumberInput
 												value={sub.state.value ? Number(sub.state.value) : 0}
@@ -747,7 +747,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									)}
 								</form.Field>
 								<form.Field name={`items[${index}].discountPct`}>
-									{(sub: any) => (
+									{(sub) => (
 										<Field>
 											<NumberInput
 												value={sub.state.value ? Number(sub.state.value) : 0}
@@ -787,7 +787,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 	return (
 		<form.Field name="paymentType">
-			{(pTypeField: any) => (
+			{(pTypeField) => (
 				<div>
 					<div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-3">
 						PAYMENT TERMS
@@ -1085,7 +1085,10 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 							{(bankField) => (
 								<Field>
 									<FieldLabel>Bank account on the invoice</FieldLabel>
-									<BankSelect value={bankField.state.value || ''} onValueChange={bankField.handleChange} />
+									<BankSelect
+										value={bankField.state.value || ''}
+										onValueChange={bankField.handleChange}
+									/>
 									<FieldError errors={bankField.state.meta.errors} />
 								</Field>
 							)}
@@ -1187,7 +1190,12 @@ function BankSelect({
 			onValueChange={onValueChange}
 			disabled={disabled}
 		>
-			<SelectTrigger className={cn("w-full h-9 border border-[#201e1d] bg-white rounded-none", className)}>
+			<SelectTrigger
+				className={cn(
+					'w-full h-9 border border-[#201e1d] bg-white rounded-none',
+					className,
+				)}
+			>
 				<SelectValue placeholder={placeholder ?? 'Select bank account'} />
 			</SelectTrigger>
 			<SelectContent>

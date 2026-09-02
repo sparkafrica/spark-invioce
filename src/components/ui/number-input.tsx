@@ -30,7 +30,11 @@ type NumberInputProps = Omit<
 	showControls?: boolean;
 };
 
-function formatNumber(value: number | null | undefined, decimals: number, locale: string) {
+function formatNumber(
+	value: number | null | undefined,
+	decimals: number,
+	locale: string,
+) {
 	if (value === null || value === undefined || Number.isNaN(value)) {
 		return '';
 	}
@@ -48,7 +52,12 @@ function parseNumber(rawValue: string, decimals: number) {
 	}
 
 	const normalized = rawValue.replace(/,/g, '').replace(/[^\d.-]/g, '');
-	if (!normalized || normalized === '-' || normalized === '.' || normalized === '-.') {
+	if (
+		!normalized ||
+		normalized === '-' ||
+		normalized === '.' ||
+		normalized === '-.'
+	) {
 		return null;
 	}
 
@@ -81,14 +90,10 @@ export function NumberInput({
 	...props
 }: NumberInputProps) {
 	const isControlled = value !== undefined;
-	const initialValue =
-		value !== undefined ? value : defaultValue ?? null;
+	const initialValue = value !== undefined ? value : (defaultValue ?? null);
 
 	const resolvedValue = React.useMemo(
-		() =>
-			isControlled
-				? value ?? null
-				: initialValue,
+		() => (isControlled ? (value ?? null) : initialValue),
 		[isControlled, value, initialValue],
 	);
 
@@ -143,7 +148,10 @@ export function NumberInput({
 				</InputGroupAddon>
 			)}
 			{prefix && (
-				<InputGroupAddon align="inline-start" className="px-2.5 text-muted-foreground">
+				<InputGroupAddon
+					align="inline-start"
+					className="px-2.5 text-muted-foreground"
+				>
 					{prefix}
 				</InputGroupAddon>
 			)}
@@ -157,7 +165,10 @@ export function NumberInput({
 				className={cn('bg-white text-right', className)}
 			/>
 			{suffix && (
-				<InputGroupAddon align="inline-end" className="px-2.5 text-muted-foreground">
+				<InputGroupAddon
+					align="inline-end"
+					className="px-2.5 text-muted-foreground"
+				>
 					{suffix}
 				</InputGroupAddon>
 			)}

@@ -1,9 +1,9 @@
 import { config } from "dotenv"
 config({ path: ".env.local" })
 
-const { seedDb } = await import("#/lib/seed")
-const { writeFileSync } = await import("fs")
-const { join } = await import("path")
+const { seedDb } = await import("../src/lib/seed")
+const { writeFileSync } = await import("node:fs")
+const { join } = await import("node:path")
 
 async function main() {
 	console.log("Seeding database...")

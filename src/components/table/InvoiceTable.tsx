@@ -67,6 +67,8 @@ const features = tableFeatures({
 	sortFns: { alphanumeric: sortFn_alphanumeric, text: sortFn_text },
 });
 
+type Features = typeof features;
+
 export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -77,7 +79,8 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
 	});
 
 	const columns = useMemo(() => {
-		const h = createColumnHelper<typeof features, Invoice>();
+		const h = createColumnHelper<Features, Invoice>();
+
 		return [
 			h.accessor('number', {
 				header: 'NUMBER',
@@ -154,7 +157,7 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
 				id: 'actions',
 				header: '',
 				cell: (info) => {
-					const invoice = info.row.original as Invoice;
+					const invoice = info.row.original;
 					return (
 						<div className="flex items-center justify-end gap-1">
 							{onEdit && (
@@ -190,14 +193,15 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
 
 	const table = useTable({
 		features,
-		columns,
+		// biome-ignore lint/suspicious/noExplicitAny: cast column to any
+		columns: columns as unknown as any,
 		data,
 		state: { sorting, columnFilters, globalFilter, pagination },
 		onSortingChange: setSorting,
 		onColumnFiltersChange: setColumnFilters,
 		onGlobalFilterChange: setGlobalFilter,
 		onPaginationChange: setPagination,
-	});
+	} as const);
 
 	return (
 		<div className="flex flex-col gap-5">
@@ -265,11 +269,10 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
 							table.getRowModel().rows.map((row) => (
 								<TableRow
 									key={row.id}
-									onClick={() => onView(row.original as Invoice)}
+									onClick={() => onView(row.original)}
 									className={cn(
 										'border-b border-[#d6d3d1] bg-white hover:bg-[#f0dcd8] cursor-pointer',
-										(row.original as Invoice).status === 'voided' &&
-											'opacity-60',
+										row.original.status === 'voided' && 'opacity-60',
 									)}
 								>
 									{row.getAllCells().map((cell) => (

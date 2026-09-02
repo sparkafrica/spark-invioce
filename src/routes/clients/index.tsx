@@ -232,7 +232,7 @@ function ClientsPage() {
 								notes: editingClient.notes || '',
 							}}
 							isEditing={true}
-								clientId={editingClient.id}
+							clientId={editingClient.id}
 							onCancel={() => setEditingId(null)}
 							onSuccess={() => {
 								refetch();

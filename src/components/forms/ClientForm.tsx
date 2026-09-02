@@ -79,10 +79,7 @@ export function ClientForm({
 	};
 
 	return (
-		<form
-			onSubmit={handleSubmit}
-			className="flex w-full flex-col gap-4"
-		>
+		<form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
 			<div className="grid gap-3 md:grid-cols-2">
 				<form.Field name="name">
 					{(field) => (
