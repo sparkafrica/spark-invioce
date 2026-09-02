@@ -6,7 +6,7 @@ import { Skeleton } from '#/components/ui/skeleton';
 import { getSession } from '#/lib/auth.functions';
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail';
 
-export const Route = createFileRoute('/invoices/$id')({
+export const Route = createFileRoute('/_auth-layout/invoices/$id')({
 	beforeLoad: async ({ location }) => {
 		const session = await getSession();
 

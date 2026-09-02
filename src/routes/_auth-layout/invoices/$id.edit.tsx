@@ -6,7 +6,7 @@ import { Skeleton } from '#/components/ui/skeleton';
 import { getSession } from '#/lib/auth.functions';
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail';
 
-export const Route = createFileRoute('/invoices/$id/edit')({
+export const Route = createFileRoute('/_auth-layout/invoices/$id/edit')({
 	beforeLoad: async ({ params }) => {
 		const session = await getSession();
 		if (!session) {
@@ -14,6 +14,10 @@ export const Route = createFileRoute('/invoices/$id/edit')({
 				to: '/auth/login',
 				search: { redirect: `/invoices/${params.id}/edit` },
 			});
+		}
+		const role = (session.user as unknown as { role?: string | null })?.role;
+		if (role !== 'admin' && role !== 'owner') {
+			throw redirect({ to: '/invoices/$id', params: { id: params.id } });
 		}
 		return { user: session.user, session: session.session };
 	},
@@ -93,8 +97,12 @@ function EditInvoicePage() {
 		businessId: invoice.businessId,
 		companyId: invoice.companyId,
 		clientId: invoice.clientId,
-		issueDate: invoice.issueDate ? new Date(invoice.issueDate).toISOString().split('T')[0] : null,
-		dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : null,
+		issueDate: invoice.issueDate
+			? new Date(invoice.issueDate).toISOString().split('T')[0]
+			: null,
+		dueDate: invoice.dueDate
+			? new Date(invoice.dueDate).toISOString().split('T')[0]
+			: null,
 		currency: invoice.currency,
 		taxName: invoice.taxName,
 		taxRate: invoice.taxRate,
@@ -105,7 +113,17 @@ function EditInvoicePage() {
 		paymentMethod: invoice.paymentMethod,
 		payLink: invoice.payLink,
 		payLinkLabel: invoice.payLinkLabel,
-		status: invoice.status,
+		payLinkCurrency:
+			(invoice as unknown as { payLinkCurrency?: string | null })
+				.payLinkCurrency ?? undefined,
+		status: invoice.status as
+			| 'draft'
+			| 'sent'
+			| 'paid'
+			| 'part_paid'
+			| 'overdue'
+			| 'voided',
+		voidReason: invoice.voidReason,
 		items: invoice.items.map(
 			(item: {
 				id: string;
@@ -139,7 +157,9 @@ function EditInvoicePage() {
 			}) => ({
 				name: t.name,
 				deliverables: t.deliverables || '',
-				dueDate: t.dueDate ? new Date(t.dueDate).toISOString().split('T')[0] : null,
+				dueDate: t.dueDate
+					? new Date(t.dueDate).toISOString().split('T')[0]
+					: null,
 				amount: t.amount,
 				paid: t.paid,
 			}),

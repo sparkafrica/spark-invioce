@@ -30,7 +30,7 @@ import { authClient } from '#/lib/auth-client';
 import { getOrgMembers } from '#/lib/server-fns/references';
 import { inviteMember } from '#/lib/server-fns/team';
 
-export const Route = createFileRoute('/team')({
+export const Route = createFileRoute('/_auth-layout/team')({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (!session)

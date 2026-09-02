@@ -1,11 +1,28 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { Loader2Icon } from 'lucide-react';
 import React from 'react';
+import * as v from 'valibot';
 import { PaymentModal } from '#/components/invoice/PaymentModal';
 import { Button } from '#/components/ui/button';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '#/components/ui/dialog';
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '#/components/ui/select';
 import {
 	Table,
 	TableBody,
@@ -14,8 +31,11 @@ import {
 	TableHeader,
 	TableRow,
 } from '#/components/ui/table';
+import { Textarea } from '#/components/ui/textarea';
 import { toast } from '#/components/ui/toast';
+import { getErrorMessage } from '#/lib/errors';
 import { generateInvoicePDF } from '#/lib/server-fns/generate-invoice-pdf';
+import { updateInvoice } from '#/lib/server-fns/invoice-create';
 import { recordPayment } from '#/lib/server-fns/payments';
 
 export interface InvoiceDetail {
@@ -41,7 +61,9 @@ export interface InvoiceDetail {
 	companyTin: string | null;
 	companyDefaultCurrency: string;
 	issueDate: string;
+	issueDateRaw?: string | null;
 	dueDate: string;
+	dueDateRaw?: string | null;
 	currency: string;
 	taxName: string;
 	taxRate: string;
@@ -54,6 +76,7 @@ export interface InvoiceDetail {
 	paymentMethod: 'bank' | 'link';
 	payLink: string | null;
 	payLinkLabel: string | null;
+	payLinkCurrency?: string | null;
 	status: string;
 	voided: boolean;
 	voidedAt: string | null;
@@ -131,6 +154,118 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
 			toast.add({ description: (error as Error).message, type: 'error' });
 		},
 	});
+
+	const qc = useQueryClient();
+	const [pendingStatus, setPendingStatus] = React.useState<string | null>(null);
+	const [voidReason, setVoidReason] = React.useState(invoice.voidReason ?? '');
+	const [showVoidDialog, setShowVoidDialog] = React.useState(false);
+	const statusPicklist = v.picklist([
+		'draft',
+		'sent',
+		'paid',
+		'part_paid',
+		'overdue',
+		'voided',
+	]);
+
+	const statusMutation = useMutation({
+		mutationFn: async (nextStatus: string) => {
+			v.parse(statusPicklist, nextStatus);
+			const isVoided = nextStatus === 'voided';
+			const vr = isVoided ? voidReason : undefined;
+			// Build full payload reusing updateInvoice (valibot picklist on status)
+			const payload = {
+				id: invoice.id,
+				businessId: invoice.businessId,
+				companyId: invoice.companyId,
+				clientId: invoice.clientId,
+				issueDate:
+					invoice.issueDateRaw ??
+					(invoice.issueDate
+						? new Date(invoice.issueDate).toISOString().split('T')[0]
+						: new Date().toISOString().split('T')[0]),
+				dueDate:
+					invoice.dueDateRaw ??
+					(invoice.dueDate
+						? new Date(invoice.dueDate).toISOString().split('T')[0]
+						: new Date().toISOString().split('T')[0]),
+				currency: invoice.currency,
+				taxName: invoice.taxName,
+				taxRate: invoice.taxRate,
+				description: invoice.description,
+				memo: invoice.memo,
+				bankId: invoice.bankId,
+				paymentType: invoice.paymentType,
+				paymentMethod: invoice.paymentMethod,
+				payLink: invoice.payLink,
+				payLinkLabel: invoice.payLinkLabel,
+				payLinkCurrency: invoice.payLinkCurrency ?? undefined,
+				status: nextStatus as
+					| 'draft'
+					| 'sent'
+					| 'paid'
+					| 'part_paid'
+					| 'overdue'
+					| 'voided',
+				voidReason: vr,
+				items: invoice.items.map((it) => ({
+					name: it.name,
+					description: it.description,
+					qty: it.qty,
+					cost: it.cost,
+					discountName: it.discountName,
+					discountPct: it.discountPct,
+					discountAmt: it.discountAmt,
+					sortOrder: it.sortOrder,
+				})),
+				tranches: invoice.tranches.map((t) => ({
+					name: t.name,
+					deliverables: t.deliverables,
+					dueDate: (t as unknown as { dueDateRaw?: string | null }).dueDateRaw
+						? (t as unknown as { dueDateRaw: string }).dueDateRaw
+						: t.dueDate
+							? new Date(t.dueDate).toISOString().split('T')[0]
+							: null,
+					amount: t.amount,
+					paid: t.paid,
+					sortOrder: t.sortOrder,
+				})),
+				saveNote: `Status: ${invoice.status} → ${nextStatus}${isVoided && vr ? ` — ${vr}` : ''}`,
+			};
+			return updateInvoice({ data: payload as unknown as never });
+		},
+		onSuccess: () => {
+			toast.add({ title: 'Status updated', type: 'success' });
+			qc.invalidateQueries({ queryKey: ['invoice', { id: invoice.id }] });
+			setPendingStatus(null);
+			setShowVoidDialog(false);
+		},
+		onError: (error) => {
+			toast.add({
+				description: getErrorMessage(error, 'Failed to update status'),
+				type: 'error',
+			});
+			setPendingStatus(null);
+		},
+	});
+
+  const handleStatusChange = (next: string | null) => {
+    if (!next) return;
+    try {
+      v.parse(statusPicklist, next);
+    } catch {
+      toast.add({ description: 'Invalid status', type: 'error' });
+      return;
+    }
+    if (next === invoice.status) return;
+		if (next === 'voided') {
+			setPendingStatus(next);
+			setShowVoidDialog(true);
+			return;
+		}
+		setPendingStatus(next);
+		statusMutation.mutate(next);
+	};
 
 	const [isGenerating, setIsGenerating] = React.useState(false);
 
@@ -278,7 +413,46 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
 				>
 					Back
 				</Button>
-				<div className="flex gap-2">
+				<div className="flex items-center gap-2">
+					<div className="flex items-center gap-2">
+						<span className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] hidden sm:inline">
+							STATUS
+						</span>
+						<Select
+							value={invoice.status}
+							onValueChange={handleStatusChange}
+							disabled={statusMutation.isPending}
+						>
+							<SelectTrigger className="h-8 min-w-32 rounded-none border-[#201e1d] bg-white text-xs font-semibold">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent className="rounded-none border-[#201e1d]">
+								<SelectGroup>
+									<SelectItem value="draft" className="text-xs">
+										Draft
+									</SelectItem>
+									<SelectItem value="sent" className="text-xs">
+										Sent
+									</SelectItem>
+									<SelectItem value="paid" className="text-xs">
+										Paid
+									</SelectItem>
+									<SelectItem value="part_paid" className="text-xs">
+										Partially paid
+									</SelectItem>
+									<SelectItem value="overdue" className="text-xs">
+										Overdue
+									</SelectItem>
+									<SelectItem value="voided" className="text-xs">
+										Voided
+									</SelectItem>
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+						{statusMutation.isPending && pendingStatus && (
+							<Loader2Icon className="h-4 w-4 animate-spin text-[#c02a10]" />
+						)}
+					</div>
 					<Button
 						type="button"
 						variant="outline"
@@ -317,18 +491,18 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
 							src={invoice.businessLogo}
 							alt={invoice.businessName}
 							width={210}
-							height={40}
-							className="h-10 w-auto"
-							style={{ width: 210 }}
+							height={50}
+							className="h-12.5 w-auto object-left object-contain"
+							style={{ maxWidth: 210, maxHeight: 50 }}
 						/>
 					) : (
 						<img
 							src="/assets/spark-logo.png"
 							alt="Spark"
 							width={210}
-							height={40}
-							className="h-10 w-auto"
-							style={{ width: 210 }}
+							height={50}
+							className="h-12.5 w-auto object-left object-contain"
+							style={{ maxWidth: 210, maxHeight: 50 }}
 						/>
 					)}
 					<div>
@@ -537,6 +711,50 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
 					})),
 				}}
 			/>
+
+			<Dialog open={showVoidDialog} onOpenChange={setShowVoidDialog}>
+				<DialogContent className="rounded-none border-2 border-[#201e1d] max-w-md">
+					<DialogHeader>
+						<DialogTitle className="text-sm font-semibold">
+							Void invoice?
+						</DialogTitle>
+						<DialogDescription className="text-xs text-[#5c5755]">
+							This will set status to voided. Add a reason (optional, shown on
+							record).
+						</DialogDescription>
+					</DialogHeader>
+					<Textarea
+						value={voidReason}
+						onChange={(e) => setVoidReason(e.target.value)}
+						placeholder="Why voided…"
+						rows={3}
+						className="rounded-none border-[#201e1d]"
+					/>
+					<DialogFooter className="gap-2">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => {
+								setShowVoidDialog(false);
+								setPendingStatus(null);
+							}}
+							className="rounded-none border-[#201e1d]"
+						>
+							Cancel
+						</Button>
+						<Button
+							type="button"
+							disabled={statusMutation.isPending}
+							onClick={() => {
+								if (pendingStatus) statusMutation.mutate(pendingStatus);
+							}}
+							className="rounded-none bg-[#ec3013] text-white border-[#ec3013] hover:bg-[#c02a10]"
+						>
+							{statusMutation.isPending ? 'Voiding…' : 'Void invoice'}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

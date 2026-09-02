@@ -10,140 +10,156 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ActivityRouteImport } from './routes/activity'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as SettingRouteImport } from './routes/setting'
-import { Route as TeamRouteImport } from './routes/team'
-import { Route as AuthAcceptInvitationRouteImport } from './routes/auth/accept-invitation'
-import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AuthResetPasswordRouteImport } from './routes/auth/reset-password'
-import { Route as ClientsIndexRouteImport } from './routes/clients/index'
-import { Route as InvoicesIndexRouteImport } from './routes/invoices/index'
-import { Route as InvoicesIdRouteImport } from './routes/invoices/$id'
-import { Route as InvoicesNewRouteImport } from './routes/invoices/new'
-import { Route as MemosIndexRouteImport } from './routes/memos/index'
-import { Route as ProductsIndexRouteImport } from './routes/products/index'
-import { Route as SettingsIndexRouteImport } from './routes/settings/index'
-import { Route as SettingsBanksRouteImport } from './routes/settings/banks'
-import { Route as SettingsBusinessesRouteImport } from './routes/settings/businesses'
-import { Route as SettingsCompaniesRouteImport } from './routes/settings/companies'
-import { Route as SettingsFxRatesRouteImport } from './routes/settings/fx-rates'
-import { Route as SettingsOrganizationRouteImport } from './routes/settings/organization'
-import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
+import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as AuthLayoutRouteImport } from './routes/_auth-layout'
+import { Route as AuthLayoutActivityRouteImport } from './routes/_auth-layout/activity'
+import { Route as AuthLayoutDashboardRouteImport } from './routes/_auth-layout/dashboard'
+import { Route as AuthLayoutSettingRouteImport } from './routes/_auth-layout/setting'
+import { Route as AuthLayoutTeamRouteImport } from './routes/_auth-layout/team'
+import { Route as AuthLayoutClientsIndexRouteImport } from './routes/_auth-layout/clients/index'
+import { Route as AuthLayoutInvoicesIndexRouteImport } from './routes/_auth-layout/invoices/index'
+import { Route as AuthLayoutInvoicesIdRouteImport } from './routes/_auth-layout/invoices/$id'
+import { Route as AuthLayoutInvoicesNewRouteImport } from './routes/_auth-layout/invoices/new'
+import { Route as AuthLayoutMemosIndexRouteImport } from './routes/_auth-layout/memos/index'
+import { Route as AuthLayoutProductsIndexRouteImport } from './routes/_auth-layout/products/index'
+import { Route as AuthLayoutSettingsIndexRouteImport } from './routes/_auth-layout/settings/index'
+import { Route as AuthLayoutSettingsBanksRouteImport } from './routes/_auth-layout/settings/banks'
+import { Route as AuthLayoutSettingsBusinessesRouteImport } from './routes/_auth-layout/settings/businesses'
+import { Route as AuthLayoutSettingsCompaniesRouteImport } from './routes/_auth-layout/settings/companies'
+import { Route as AuthLayoutSettingsFxRatesRouteImport } from './routes/_auth-layout/settings/fx-rates'
+import { Route as AuthLayoutSettingsOrganizationRouteImport } from './routes/_auth-layout/settings/organization'
+import { Route as AuthLayoutSettingsProfileRouteImport } from './routes/_auth-layout/settings/profile'
+import { Route as AuthAuthAcceptInvitationRouteImport } from './routes/_auth/auth/accept-invitation'
+import { Route as AuthAuthForgotPasswordRouteImport } from './routes/_auth/auth/forgot-password'
+import { Route as AuthAuthLoginRouteImport } from './routes/_auth/auth/login'
+import { Route as AuthAuthResetPasswordRouteImport } from './routes/_auth/auth/reset-password'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiCronFxRatesRouteImport } from './routes/api/cron/fx-rates'
-import { Route as InvoicesIdEditRouteImport } from './routes/invoices/$id.edit'
+import { Route as AuthLayoutInvoicesIdEditRouteImport } from './routes/_auth-layout/invoices/$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ActivityRoute = ActivityRouteImport.update({
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLayoutRoute = AuthLayoutRouteImport.update({
+  id: '/_auth-layout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLayoutActivityRoute = AuthLayoutActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
+const AuthLayoutDashboardRoute = AuthLayoutDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const SettingRoute = SettingRouteImport.update({
+const AuthLayoutSettingRoute = AuthLayoutSettingRouteImport.update({
   id: '/setting',
   path: '/setting',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const TeamRoute = TeamRouteImport.update({
+const AuthLayoutTeamRoute = AuthLayoutTeamRouteImport.update({
   id: '/team',
   path: '/team',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const AuthAcceptInvitationRoute = AuthAcceptInvitationRouteImport.update({
-  id: '/auth/accept-invitation',
-  path: '/auth/accept-invitation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
-  id: '/auth/forgot-password',
-  path: '/auth/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/auth/login',
-  path: '/auth/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
-  id: '/auth/reset-password',
-  path: '/auth/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientsIndexRoute = ClientsIndexRouteImport.update({
+const AuthLayoutClientsIndexRoute = AuthLayoutClientsIndexRouteImport.update({
   id: '/clients/',
   path: '/clients/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const InvoicesIndexRoute = InvoicesIndexRouteImport.update({
+const AuthLayoutInvoicesIndexRoute = AuthLayoutInvoicesIndexRouteImport.update({
   id: '/invoices/',
   path: '/invoices/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const InvoicesIdRoute = InvoicesIdRouteImport.update({
+const AuthLayoutInvoicesIdRoute = AuthLayoutInvoicesIdRouteImport.update({
   id: '/invoices/$id',
   path: '/invoices/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const InvoicesNewRoute = InvoicesNewRouteImport.update({
+const AuthLayoutInvoicesNewRoute = AuthLayoutInvoicesNewRouteImport.update({
   id: '/invoices/new',
   path: '/invoices/new',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const MemosIndexRoute = MemosIndexRouteImport.update({
+const AuthLayoutMemosIndexRoute = AuthLayoutMemosIndexRouteImport.update({
   id: '/memos/',
   path: '/memos/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const ProductsIndexRoute = ProductsIndexRouteImport.update({
+const AuthLayoutProductsIndexRoute = AuthLayoutProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const SettingsIndexRoute = SettingsIndexRouteImport.update({
+const AuthLayoutSettingsIndexRoute = AuthLayoutSettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const SettingsBanksRoute = SettingsBanksRouteImport.update({
+const AuthLayoutSettingsBanksRoute = AuthLayoutSettingsBanksRouteImport.update({
   id: '/settings/banks',
   path: '/settings/banks',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthLayoutRoute,
 } as any)
-const SettingsBusinessesRoute = SettingsBusinessesRouteImport.update({
-  id: '/settings/businesses',
-  path: '/settings/businesses',
-  getParentRoute: () => rootRouteImport,
+const AuthLayoutSettingsBusinessesRoute =
+  AuthLayoutSettingsBusinessesRouteImport.update({
+    id: '/settings/businesses',
+    path: '/settings/businesses',
+    getParentRoute: () => AuthLayoutRoute,
+  } as any)
+const AuthLayoutSettingsCompaniesRoute =
+  AuthLayoutSettingsCompaniesRouteImport.update({
+    id: '/settings/companies',
+    path: '/settings/companies',
+    getParentRoute: () => AuthLayoutRoute,
+  } as any)
+const AuthLayoutSettingsFxRatesRoute =
+  AuthLayoutSettingsFxRatesRouteImport.update({
+    id: '/settings/fx-rates',
+    path: '/settings/fx-rates',
+    getParentRoute: () => AuthLayoutRoute,
+  } as any)
+const AuthLayoutSettingsOrganizationRoute =
+  AuthLayoutSettingsOrganizationRouteImport.update({
+    id: '/settings/organization',
+    path: '/settings/organization',
+    getParentRoute: () => AuthLayoutRoute,
+  } as any)
+const AuthLayoutSettingsProfileRoute =
+  AuthLayoutSettingsProfileRouteImport.update({
+    id: '/settings/profile',
+    path: '/settings/profile',
+    getParentRoute: () => AuthLayoutRoute,
+  } as any)
+const AuthAuthAcceptInvitationRoute =
+  AuthAuthAcceptInvitationRouteImport.update({
+    id: '/auth/accept-invitation',
+    path: '/auth/accept-invitation',
+    getParentRoute: () => AuthRoute,
+  } as any)
+const AuthAuthForgotPasswordRoute = AuthAuthForgotPasswordRouteImport.update({
+  id: '/auth/forgot-password',
+  path: '/auth/forgot-password',
+  getParentRoute: () => AuthRoute,
 } as any)
-const SettingsCompaniesRoute = SettingsCompaniesRouteImport.update({
-  id: '/settings/companies',
-  path: '/settings/companies',
-  getParentRoute: () => rootRouteImport,
+const AuthAuthLoginRoute = AuthAuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => AuthRoute,
 } as any)
-const SettingsFxRatesRoute = SettingsFxRatesRouteImport.update({
-  id: '/settings/fx-rates',
-  path: '/settings/fx-rates',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsOrganizationRoute = SettingsOrganizationRouteImport.update({
-  id: '/settings/organization',
-  path: '/settings/organization',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsProfileRoute = SettingsProfileRouteImport.update({
-  id: '/settings/profile',
-  path: '/settings/profile',
-  getParentRoute: () => rootRouteImport,
+const AuthAuthResetPasswordRoute = AuthAuthResetPasswordRouteImport.update({
+  id: '/auth/reset-password',
+  path: '/auth/reset-password',
+  getParentRoute: () => AuthRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -155,93 +171,96 @@ const ApiCronFxRatesRoute = ApiCronFxRatesRouteImport.update({
   path: '/api/cron/fx-rates',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InvoicesIdEditRoute = InvoicesIdEditRouteImport.update({
-  id: '/edit',
-  path: '/edit',
-  getParentRoute: () => InvoicesIdRoute,
-} as any)
+const AuthLayoutInvoicesIdEditRoute =
+  AuthLayoutInvoicesIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthLayoutInvoicesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/activity': typeof ActivityRoute
-  '/dashboard': typeof DashboardRoute
-  '/setting': typeof SettingRoute
-  '/team': typeof TeamRoute
-  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
-  '/auth/forgot-password': typeof AuthForgotPasswordRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/invoices/$id': typeof InvoicesIdRouteWithChildren
-  '/invoices/new': typeof InvoicesNewRoute
-  '/settings/banks': typeof SettingsBanksRoute
-  '/settings/businesses': typeof SettingsBusinessesRoute
-  '/settings/companies': typeof SettingsCompaniesRoute
-  '/settings/fx-rates': typeof SettingsFxRatesRoute
-  '/settings/organization': typeof SettingsOrganizationRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/clients/': typeof ClientsIndexRoute
-  '/invoices/': typeof InvoicesIndexRoute
-  '/memos/': typeof MemosIndexRoute
-  '/products/': typeof ProductsIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/activity': typeof AuthLayoutActivityRoute
+  '/dashboard': typeof AuthLayoutDashboardRoute
+  '/setting': typeof AuthLayoutSettingRoute
+  '/team': typeof AuthLayoutTeamRoute
+  '/invoices/$id': typeof AuthLayoutInvoicesIdRouteWithChildren
+  '/invoices/new': typeof AuthLayoutInvoicesNewRoute
+  '/settings/banks': typeof AuthLayoutSettingsBanksRoute
+  '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
+  '/settings/companies': typeof AuthLayoutSettingsCompaniesRoute
+  '/settings/fx-rates': typeof AuthLayoutSettingsFxRatesRoute
+  '/settings/organization': typeof AuthLayoutSettingsOrganizationRoute
+  '/settings/profile': typeof AuthLayoutSettingsProfileRoute
+  '/auth/accept-invitation': typeof AuthAuthAcceptInvitationRoute
+  '/auth/forgot-password': typeof AuthAuthForgotPasswordRoute
+  '/auth/login': typeof AuthAuthLoginRoute
+  '/auth/reset-password': typeof AuthAuthResetPasswordRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
-  '/invoices/$id/edit': typeof InvoicesIdEditRoute
+  '/clients/': typeof AuthLayoutClientsIndexRoute
+  '/invoices/': typeof AuthLayoutInvoicesIndexRoute
+  '/memos/': typeof AuthLayoutMemosIndexRoute
+  '/products/': typeof AuthLayoutProductsIndexRoute
+  '/settings/': typeof AuthLayoutSettingsIndexRoute
+  '/invoices/$id/edit': typeof AuthLayoutInvoicesIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/activity': typeof ActivityRoute
-  '/dashboard': typeof DashboardRoute
-  '/setting': typeof SettingRoute
-  '/team': typeof TeamRoute
-  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
-  '/auth/forgot-password': typeof AuthForgotPasswordRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/invoices/$id': typeof InvoicesIdRouteWithChildren
-  '/invoices/new': typeof InvoicesNewRoute
-  '/settings/banks': typeof SettingsBanksRoute
-  '/settings/businesses': typeof SettingsBusinessesRoute
-  '/settings/companies': typeof SettingsCompaniesRoute
-  '/settings/fx-rates': typeof SettingsFxRatesRoute
-  '/settings/organization': typeof SettingsOrganizationRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/clients': typeof ClientsIndexRoute
-  '/invoices': typeof InvoicesIndexRoute
-  '/memos': typeof MemosIndexRoute
-  '/products': typeof ProductsIndexRoute
-  '/settings': typeof SettingsIndexRoute
+  '/activity': typeof AuthLayoutActivityRoute
+  '/dashboard': typeof AuthLayoutDashboardRoute
+  '/setting': typeof AuthLayoutSettingRoute
+  '/team': typeof AuthLayoutTeamRoute
+  '/invoices/$id': typeof AuthLayoutInvoicesIdRouteWithChildren
+  '/invoices/new': typeof AuthLayoutInvoicesNewRoute
+  '/settings/banks': typeof AuthLayoutSettingsBanksRoute
+  '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
+  '/settings/companies': typeof AuthLayoutSettingsCompaniesRoute
+  '/settings/fx-rates': typeof AuthLayoutSettingsFxRatesRoute
+  '/settings/organization': typeof AuthLayoutSettingsOrganizationRoute
+  '/settings/profile': typeof AuthLayoutSettingsProfileRoute
+  '/auth/accept-invitation': typeof AuthAuthAcceptInvitationRoute
+  '/auth/forgot-password': typeof AuthAuthForgotPasswordRoute
+  '/auth/login': typeof AuthAuthLoginRoute
+  '/auth/reset-password': typeof AuthAuthResetPasswordRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
-  '/invoices/$id/edit': typeof InvoicesIdEditRoute
+  '/clients': typeof AuthLayoutClientsIndexRoute
+  '/invoices': typeof AuthLayoutInvoicesIndexRoute
+  '/memos': typeof AuthLayoutMemosIndexRoute
+  '/products': typeof AuthLayoutProductsIndexRoute
+  '/settings': typeof AuthLayoutSettingsIndexRoute
+  '/invoices/$id/edit': typeof AuthLayoutInvoicesIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/activity': typeof ActivityRoute
-  '/dashboard': typeof DashboardRoute
-  '/setting': typeof SettingRoute
-  '/team': typeof TeamRoute
-  '/auth/accept-invitation': typeof AuthAcceptInvitationRoute
-  '/auth/forgot-password': typeof AuthForgotPasswordRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/reset-password': typeof AuthResetPasswordRoute
-  '/invoices/$id': typeof InvoicesIdRouteWithChildren
-  '/invoices/new': typeof InvoicesNewRoute
-  '/settings/banks': typeof SettingsBanksRoute
-  '/settings/businesses': typeof SettingsBusinessesRoute
-  '/settings/companies': typeof SettingsCompaniesRoute
-  '/settings/fx-rates': typeof SettingsFxRatesRoute
-  '/settings/organization': typeof SettingsOrganizationRoute
-  '/settings/profile': typeof SettingsProfileRoute
-  '/clients/': typeof ClientsIndexRoute
-  '/invoices/': typeof InvoicesIndexRoute
-  '/memos/': typeof MemosIndexRoute
-  '/products/': typeof ProductsIndexRoute
-  '/settings/': typeof SettingsIndexRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/_auth-layout': typeof AuthLayoutRouteWithChildren
+  '/_auth-layout/activity': typeof AuthLayoutActivityRoute
+  '/_auth-layout/dashboard': typeof AuthLayoutDashboardRoute
+  '/_auth-layout/setting': typeof AuthLayoutSettingRoute
+  '/_auth-layout/team': typeof AuthLayoutTeamRoute
+  '/_auth-layout/invoices/$id': typeof AuthLayoutInvoicesIdRouteWithChildren
+  '/_auth-layout/invoices/new': typeof AuthLayoutInvoicesNewRoute
+  '/_auth-layout/settings/banks': typeof AuthLayoutSettingsBanksRoute
+  '/_auth-layout/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
+  '/_auth-layout/settings/companies': typeof AuthLayoutSettingsCompaniesRoute
+  '/_auth-layout/settings/fx-rates': typeof AuthLayoutSettingsFxRatesRoute
+  '/_auth-layout/settings/organization': typeof AuthLayoutSettingsOrganizationRoute
+  '/_auth-layout/settings/profile': typeof AuthLayoutSettingsProfileRoute
+  '/_auth/auth/accept-invitation': typeof AuthAuthAcceptInvitationRoute
+  '/_auth/auth/forgot-password': typeof AuthAuthForgotPasswordRoute
+  '/_auth/auth/login': typeof AuthAuthLoginRoute
+  '/_auth/auth/reset-password': typeof AuthAuthResetPasswordRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
-  '/invoices/$id/edit': typeof InvoicesIdEditRoute
+  '/_auth-layout/clients/': typeof AuthLayoutClientsIndexRoute
+  '/_auth-layout/invoices/': typeof AuthLayoutInvoicesIndexRoute
+  '/_auth-layout/memos/': typeof AuthLayoutMemosIndexRoute
+  '/_auth-layout/products/': typeof AuthLayoutProductsIndexRoute
+  '/_auth-layout/settings/': typeof AuthLayoutSettingsIndexRoute
+  '/_auth-layout/invoices/$id/edit': typeof AuthLayoutInvoicesIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -251,10 +270,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
-    | '/auth/accept-invitation'
-    | '/auth/forgot-password'
-    | '/auth/login'
-    | '/auth/reset-password'
     | '/invoices/$id'
     | '/invoices/new'
     | '/settings/banks'
@@ -263,13 +278,17 @@ export interface FileRouteTypes {
     | '/settings/fx-rates'
     | '/settings/organization'
     | '/settings/profile'
+    | '/auth/accept-invitation'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/api/auth/$'
+    | '/api/cron/fx-rates'
     | '/clients/'
     | '/invoices/'
     | '/memos/'
     | '/products/'
     | '/settings/'
-    | '/api/auth/$'
-    | '/api/cron/fx-rates'
     | '/invoices/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -278,10 +297,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
-    | '/auth/accept-invitation'
-    | '/auth/forgot-password'
-    | '/auth/login'
-    | '/auth/reset-password'
     | '/invoices/$id'
     | '/invoices/new'
     | '/settings/banks'
@@ -290,66 +305,53 @@ export interface FileRouteTypes {
     | '/settings/fx-rates'
     | '/settings/organization'
     | '/settings/profile'
+    | '/auth/accept-invitation'
+    | '/auth/forgot-password'
+    | '/auth/login'
+    | '/auth/reset-password'
+    | '/api/auth/$'
+    | '/api/cron/fx-rates'
     | '/clients'
     | '/invoices'
     | '/memos'
     | '/products'
     | '/settings'
-    | '/api/auth/$'
-    | '/api/cron/fx-rates'
     | '/invoices/$id/edit'
   id:
     | '__root__'
     | '/'
-    | '/activity'
-    | '/dashboard'
-    | '/setting'
-    | '/team'
-    | '/auth/accept-invitation'
-    | '/auth/forgot-password'
-    | '/auth/login'
-    | '/auth/reset-password'
-    | '/invoices/$id'
-    | '/invoices/new'
-    | '/settings/banks'
-    | '/settings/businesses'
-    | '/settings/companies'
-    | '/settings/fx-rates'
-    | '/settings/organization'
-    | '/settings/profile'
-    | '/clients/'
-    | '/invoices/'
-    | '/memos/'
-    | '/products/'
-    | '/settings/'
+    | '/_auth'
+    | '/_auth-layout'
+    | '/_auth-layout/activity'
+    | '/_auth-layout/dashboard'
+    | '/_auth-layout/setting'
+    | '/_auth-layout/team'
+    | '/_auth-layout/invoices/$id'
+    | '/_auth-layout/invoices/new'
+    | '/_auth-layout/settings/banks'
+    | '/_auth-layout/settings/businesses'
+    | '/_auth-layout/settings/companies'
+    | '/_auth-layout/settings/fx-rates'
+    | '/_auth-layout/settings/organization'
+    | '/_auth-layout/settings/profile'
+    | '/_auth/auth/accept-invitation'
+    | '/_auth/auth/forgot-password'
+    | '/_auth/auth/login'
+    | '/_auth/auth/reset-password'
     | '/api/auth/$'
     | '/api/cron/fx-rates'
-    | '/invoices/$id/edit'
+    | '/_auth-layout/clients/'
+    | '/_auth-layout/invoices/'
+    | '/_auth-layout/memos/'
+    | '/_auth-layout/products/'
+    | '/_auth-layout/settings/'
+    | '/_auth-layout/invoices/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ActivityRoute: typeof ActivityRoute
-  DashboardRoute: typeof DashboardRoute
-  SettingRoute: typeof SettingRoute
-  TeamRoute: typeof TeamRoute
-  AuthAcceptInvitationRoute: typeof AuthAcceptInvitationRoute
-  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
-  AuthLoginRoute: typeof AuthLoginRoute
-  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
-  InvoicesIdRoute: typeof InvoicesIdRouteWithChildren
-  InvoicesNewRoute: typeof InvoicesNewRoute
-  SettingsBanksRoute: typeof SettingsBanksRoute
-  SettingsBusinessesRoute: typeof SettingsBusinessesRoute
-  SettingsCompaniesRoute: typeof SettingsCompaniesRoute
-  SettingsFxRatesRoute: typeof SettingsFxRatesRoute
-  SettingsOrganizationRoute: typeof SettingsOrganizationRoute
-  SettingsProfileRoute: typeof SettingsProfileRoute
-  ClientsIndexRoute: typeof ClientsIndexRoute
-  InvoicesIndexRoute: typeof InvoicesIndexRoute
-  MemosIndexRoute: typeof MemosIndexRoute
-  ProductsIndexRoute: typeof ProductsIndexRoute
-  SettingsIndexRoute: typeof SettingsIndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  AuthLayoutRoute: typeof AuthLayoutRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCronFxRatesRoute: typeof ApiCronFxRatesRoute
 }
@@ -363,152 +365,166 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/activity': {
-      id: '/activity'
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth-layout': {
+      id: '/_auth-layout'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth-layout/activity': {
+      id: '/_auth-layout/activity'
       path: '/activity'
       fullPath: '/activity'
-      preLoaderRoute: typeof ActivityRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutActivityRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/dashboard': {
-      id: '/dashboard'
+    '/_auth-layout/dashboard': {
+      id: '/_auth-layout/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutDashboardRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/setting': {
-      id: '/setting'
+    '/_auth-layout/setting': {
+      id: '/_auth-layout/setting'
       path: '/setting'
       fullPath: '/setting'
-      preLoaderRoute: typeof SettingRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/team': {
-      id: '/team'
+    '/_auth-layout/team': {
+      id: '/_auth-layout/team'
       path: '/team'
       fullPath: '/team'
-      preLoaderRoute: typeof TeamRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutTeamRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/auth/accept-invitation': {
-      id: '/auth/accept-invitation'
-      path: '/auth/accept-invitation'
-      fullPath: '/auth/accept-invitation'
-      preLoaderRoute: typeof AuthAcceptInvitationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/forgot-password': {
-      id: '/auth/forgot-password'
-      path: '/auth/forgot-password'
-      fullPath: '/auth/forgot-password'
-      preLoaderRoute: typeof AuthForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/auth/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth/reset-password': {
-      id: '/auth/reset-password'
-      path: '/auth/reset-password'
-      fullPath: '/auth/reset-password'
-      preLoaderRoute: typeof AuthResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clients/': {
-      id: '/clients/'
+    '/_auth-layout/clients/': {
+      id: '/_auth-layout/clients/'
       path: '/clients'
       fullPath: '/clients/'
-      preLoaderRoute: typeof ClientsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutClientsIndexRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/invoices/': {
-      id: '/invoices/'
+    '/_auth-layout/invoices/': {
+      id: '/_auth-layout/invoices/'
       path: '/invoices'
       fullPath: '/invoices/'
-      preLoaderRoute: typeof InvoicesIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutInvoicesIndexRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/invoices/$id': {
-      id: '/invoices/$id'
+    '/_auth-layout/invoices/$id': {
+      id: '/_auth-layout/invoices/$id'
       path: '/invoices/$id'
       fullPath: '/invoices/$id'
-      preLoaderRoute: typeof InvoicesIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutInvoicesIdRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/invoices/new': {
-      id: '/invoices/new'
+    '/_auth-layout/invoices/new': {
+      id: '/_auth-layout/invoices/new'
       path: '/invoices/new'
       fullPath: '/invoices/new'
-      preLoaderRoute: typeof InvoicesNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutInvoicesNewRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/memos/': {
-      id: '/memos/'
+    '/_auth-layout/memos/': {
+      id: '/_auth-layout/memos/'
       path: '/memos'
       fullPath: '/memos/'
-      preLoaderRoute: typeof MemosIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutMemosIndexRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/products/': {
-      id: '/products/'
+    '/_auth-layout/products/': {
+      id: '/_auth-layout/products/'
       path: '/products'
       fullPath: '/products/'
-      preLoaderRoute: typeof ProductsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutProductsIndexRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/settings/': {
-      id: '/settings/'
+    '/_auth-layout/settings/': {
+      id: '/_auth-layout/settings/'
       path: '/settings'
       fullPath: '/settings/'
-      preLoaderRoute: typeof SettingsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingsIndexRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/settings/banks': {
-      id: '/settings/banks'
+    '/_auth-layout/settings/banks': {
+      id: '/_auth-layout/settings/banks'
       path: '/settings/banks'
       fullPath: '/settings/banks'
-      preLoaderRoute: typeof SettingsBanksRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingsBanksRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/settings/businesses': {
-      id: '/settings/businesses'
+    '/_auth-layout/settings/businesses': {
+      id: '/_auth-layout/settings/businesses'
       path: '/settings/businesses'
       fullPath: '/settings/businesses'
-      preLoaderRoute: typeof SettingsBusinessesRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingsBusinessesRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/settings/companies': {
-      id: '/settings/companies'
+    '/_auth-layout/settings/companies': {
+      id: '/_auth-layout/settings/companies'
       path: '/settings/companies'
       fullPath: '/settings/companies'
-      preLoaderRoute: typeof SettingsCompaniesRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingsCompaniesRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/settings/fx-rates': {
-      id: '/settings/fx-rates'
+    '/_auth-layout/settings/fx-rates': {
+      id: '/_auth-layout/settings/fx-rates'
       path: '/settings/fx-rates'
       fullPath: '/settings/fx-rates'
-      preLoaderRoute: typeof SettingsFxRatesRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingsFxRatesRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/settings/organization': {
-      id: '/settings/organization'
+    '/_auth-layout/settings/organization': {
+      id: '/_auth-layout/settings/organization'
       path: '/settings/organization'
       fullPath: '/settings/organization'
-      preLoaderRoute: typeof SettingsOrganizationRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingsOrganizationRouteImport
+      parentRoute: typeof AuthLayoutRoute
     }
-    '/settings/profile': {
-      id: '/settings/profile'
+    '/_auth-layout/settings/profile': {
+      id: '/_auth-layout/settings/profile'
       path: '/settings/profile'
       fullPath: '/settings/profile'
-      preLoaderRoute: typeof SettingsProfileRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthLayoutSettingsProfileRouteImport
+      parentRoute: typeof AuthLayoutRoute
+    }
+    '/_auth/auth/accept-invitation': {
+      id: '/_auth/auth/accept-invitation'
+      path: '/auth/accept-invitation'
+      fullPath: '/auth/accept-invitation'
+      preLoaderRoute: typeof AuthAuthAcceptInvitationRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/forgot-password': {
+      id: '/_auth/auth/forgot-password'
+      path: '/auth/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthAuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/login': {
+      id: '/_auth/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthAuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/auth/reset-password': {
+      id: '/_auth/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthAuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -524,51 +540,91 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronFxRatesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/invoices/$id/edit': {
-      id: '/invoices/$id/edit'
+    '/_auth-layout/invoices/$id/edit': {
+      id: '/_auth-layout/invoices/$id/edit'
       path: '/edit'
       fullPath: '/invoices/$id/edit'
-      preLoaderRoute: typeof InvoicesIdEditRouteImport
-      parentRoute: typeof InvoicesIdRoute
+      preLoaderRoute: typeof AuthLayoutInvoicesIdEditRouteImport
+      parentRoute: typeof AuthLayoutInvoicesIdRoute
     }
   }
 }
 
-interface InvoicesIdRouteChildren {
-  InvoicesIdEditRoute: typeof InvoicesIdEditRoute
+interface AuthRouteChildren {
+  AuthAuthAcceptInvitationRoute: typeof AuthAuthAcceptInvitationRoute
+  AuthAuthForgotPasswordRoute: typeof AuthAuthForgotPasswordRoute
+  AuthAuthLoginRoute: typeof AuthAuthLoginRoute
+  AuthAuthResetPasswordRoute: typeof AuthAuthResetPasswordRoute
 }
 
-const InvoicesIdRouteChildren: InvoicesIdRouteChildren = {
-  InvoicesIdEditRoute: InvoicesIdEditRoute,
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthAuthAcceptInvitationRoute: AuthAuthAcceptInvitationRoute,
+  AuthAuthForgotPasswordRoute: AuthAuthForgotPasswordRoute,
+  AuthAuthLoginRoute: AuthAuthLoginRoute,
+  AuthAuthResetPasswordRoute: AuthAuthResetPasswordRoute,
 }
 
-const InvoicesIdRouteWithChildren = InvoicesIdRoute._addFileChildren(
-  InvoicesIdRouteChildren,
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
+interface AuthLayoutInvoicesIdRouteChildren {
+  AuthLayoutInvoicesIdEditRoute: typeof AuthLayoutInvoicesIdEditRoute
+}
+
+const AuthLayoutInvoicesIdRouteChildren: AuthLayoutInvoicesIdRouteChildren = {
+  AuthLayoutInvoicesIdEditRoute: AuthLayoutInvoicesIdEditRoute,
+}
+
+const AuthLayoutInvoicesIdRouteWithChildren =
+  AuthLayoutInvoicesIdRoute._addFileChildren(AuthLayoutInvoicesIdRouteChildren)
+
+interface AuthLayoutRouteChildren {
+  AuthLayoutActivityRoute: typeof AuthLayoutActivityRoute
+  AuthLayoutDashboardRoute: typeof AuthLayoutDashboardRoute
+  AuthLayoutSettingRoute: typeof AuthLayoutSettingRoute
+  AuthLayoutTeamRoute: typeof AuthLayoutTeamRoute
+  AuthLayoutInvoicesIdRoute: typeof AuthLayoutInvoicesIdRouteWithChildren
+  AuthLayoutInvoicesNewRoute: typeof AuthLayoutInvoicesNewRoute
+  AuthLayoutSettingsBanksRoute: typeof AuthLayoutSettingsBanksRoute
+  AuthLayoutSettingsBusinessesRoute: typeof AuthLayoutSettingsBusinessesRoute
+  AuthLayoutSettingsCompaniesRoute: typeof AuthLayoutSettingsCompaniesRoute
+  AuthLayoutSettingsFxRatesRoute: typeof AuthLayoutSettingsFxRatesRoute
+  AuthLayoutSettingsOrganizationRoute: typeof AuthLayoutSettingsOrganizationRoute
+  AuthLayoutSettingsProfileRoute: typeof AuthLayoutSettingsProfileRoute
+  AuthLayoutClientsIndexRoute: typeof AuthLayoutClientsIndexRoute
+  AuthLayoutInvoicesIndexRoute: typeof AuthLayoutInvoicesIndexRoute
+  AuthLayoutMemosIndexRoute: typeof AuthLayoutMemosIndexRoute
+  AuthLayoutProductsIndexRoute: typeof AuthLayoutProductsIndexRoute
+  AuthLayoutSettingsIndexRoute: typeof AuthLayoutSettingsIndexRoute
+}
+
+const AuthLayoutRouteChildren: AuthLayoutRouteChildren = {
+  AuthLayoutActivityRoute: AuthLayoutActivityRoute,
+  AuthLayoutDashboardRoute: AuthLayoutDashboardRoute,
+  AuthLayoutSettingRoute: AuthLayoutSettingRoute,
+  AuthLayoutTeamRoute: AuthLayoutTeamRoute,
+  AuthLayoutInvoicesIdRoute: AuthLayoutInvoicesIdRouteWithChildren,
+  AuthLayoutInvoicesNewRoute: AuthLayoutInvoicesNewRoute,
+  AuthLayoutSettingsBanksRoute: AuthLayoutSettingsBanksRoute,
+  AuthLayoutSettingsBusinessesRoute: AuthLayoutSettingsBusinessesRoute,
+  AuthLayoutSettingsCompaniesRoute: AuthLayoutSettingsCompaniesRoute,
+  AuthLayoutSettingsFxRatesRoute: AuthLayoutSettingsFxRatesRoute,
+  AuthLayoutSettingsOrganizationRoute: AuthLayoutSettingsOrganizationRoute,
+  AuthLayoutSettingsProfileRoute: AuthLayoutSettingsProfileRoute,
+  AuthLayoutClientsIndexRoute: AuthLayoutClientsIndexRoute,
+  AuthLayoutInvoicesIndexRoute: AuthLayoutInvoicesIndexRoute,
+  AuthLayoutMemosIndexRoute: AuthLayoutMemosIndexRoute,
+  AuthLayoutProductsIndexRoute: AuthLayoutProductsIndexRoute,
+  AuthLayoutSettingsIndexRoute: AuthLayoutSettingsIndexRoute,
+}
+
+const AuthLayoutRouteWithChildren = AuthLayoutRoute._addFileChildren(
+  AuthLayoutRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ActivityRoute: ActivityRoute,
-  DashboardRoute: DashboardRoute,
-  SettingRoute: SettingRoute,
-  TeamRoute: TeamRoute,
-  AuthAcceptInvitationRoute: AuthAcceptInvitationRoute,
-  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
-  AuthLoginRoute: AuthLoginRoute,
-  AuthResetPasswordRoute: AuthResetPasswordRoute,
-  InvoicesIdRoute: InvoicesIdRouteWithChildren,
-  InvoicesNewRoute: InvoicesNewRoute,
-  SettingsBanksRoute: SettingsBanksRoute,
-  SettingsBusinessesRoute: SettingsBusinessesRoute,
-  SettingsCompaniesRoute: SettingsCompaniesRoute,
-  SettingsFxRatesRoute: SettingsFxRatesRoute,
-  SettingsOrganizationRoute: SettingsOrganizationRoute,
-  SettingsProfileRoute: SettingsProfileRoute,
-  ClientsIndexRoute: ClientsIndexRoute,
-  InvoicesIndexRoute: InvoicesIndexRoute,
-  MemosIndexRoute: MemosIndexRoute,
-  ProductsIndexRoute: ProductsIndexRoute,
-  SettingsIndexRoute: SettingsIndexRoute,
+  AuthRoute: AuthRouteWithChildren,
+  AuthLayoutRoute: AuthLayoutRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCronFxRatesRoute: ApiCronFxRatesRoute,
 }

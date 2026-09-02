@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { InvoiceForm } from '#/components/forms/InvoiceForm';
 import { getSession } from '#/lib/auth.functions';
 
-export const Route = createFileRoute('/invoices/new')({
+export const Route = createFileRoute('/_auth-layout/invoices/new')({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (!session) {

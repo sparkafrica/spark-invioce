@@ -45,6 +45,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 				paymentMethod: invoices.paymentMethod,
 				payLink: invoices.payLink,
 				payLinkLabel: invoices.payLinkLabel,
+				payLinkCurrency: invoices.payLinkCurrency,
 				status: invoices.status,
 				voided: invoices.voided,
 				voidedAt: invoices.voidedAt,
@@ -227,9 +228,15 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 			issueDate: invoice.issueDate
 				? new Date(invoice.issueDate).toLocaleDateString()
 				: '',
+			issueDateRaw: invoice.issueDate
+				? new Date(invoice.issueDate).toISOString().split('T')[0]
+				: null,
 			dueDate: invoice.dueDate
 				? new Date(invoice.dueDate).toLocaleDateString()
 				: '',
+			dueDateRaw: invoice.dueDate
+				? new Date(invoice.dueDate).toISOString().split('T')[0]
+				: null,
 			currency: invoice.currency,
 			taxName: invoice.taxName || 'VAT',
 			taxRate: invoice.taxRate || '7.50',
@@ -242,6 +249,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 			paymentMethod: invoice.paymentMethod,
 			payLink: invoice.payLink,
 			payLinkLabel: invoice.payLinkLabel,
+			payLinkCurrency: invoice.payLinkCurrency,
 			status: invoice.status,
 			voided: invoice.voided,
 			voidedAt: invoice.voidedAt

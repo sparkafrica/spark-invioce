@@ -41,7 +41,7 @@ const acceptInvitationSchema = v.pipe(
 
 type AcceptInvitationFormValues = v.InferOutput<typeof acceptInvitationSchema>;
 
-export const Route = createFileRoute('/auth/accept-invitation')({
+export const Route = createFileRoute('/_auth/auth/accept-invitation')({
 	validateSearch: v.object({
 		token: v.pipe(v.string(), v.minLength(1)),
 	}),

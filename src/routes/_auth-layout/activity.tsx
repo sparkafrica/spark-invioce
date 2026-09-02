@@ -20,7 +20,7 @@ import {
 import { getSession } from '#/lib/auth.functions';
 import { getActivityLog } from '#/lib/server-fns/references';
 
-export const Route = createFileRoute('/activity')({
+export const Route = createFileRoute('/_auth-layout/activity')({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (!session)

@@ -410,6 +410,7 @@ const updateInvoiceSchema = z.object({
 	status: z
 		.enum(['draft', 'sent', 'paid', 'part_paid', 'overdue', 'voided'])
 		.optional(),
+	voidReason: z.string().optional().nullable(),
 	items: z.array(invoiceItemSchema).min(1),
 	tranches: z.array(invoiceTrancheSchema).optional(),
 	saveNote: z.string().optional().nullable(),
@@ -450,6 +451,10 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 						id: invoices.id,
 						number: invoices.number,
 						organizationId: invoices.organizationId,
+						status: invoices.status,
+						voided: invoices.voided,
+						voidedAt: invoices.voidedAt,
+						voidReason: invoices.voidReason,
 					})
 					.from(invoices)
 					.where(
@@ -457,6 +462,19 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 					)
 					.limit(1);
 				if (!existing[0]) throw new Error('Invoice not found');
+
+				const statusToSet =
+					(data.status as (typeof existing)[0]['status'] | undefined) ??
+					existing[0].status;
+				const willBeVoided = statusToSet === 'voided';
+				const voidReasonToSet = willBeVoided
+					? data.voidReason?.trim()
+						? data.voidReason.trim()
+						: data.saveNote?.trim() || existing[0].voidReason || null
+					: null;
+				const voidedAtToSet = willBeVoided
+					? (existing[0].voidedAt ?? now)
+					: null;
 
 				// If number is being changed, check collision proactively and handle
 				let numberToSet: string | undefined;
@@ -524,7 +542,10 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							payLinkLabel: data.payLinkLabel || 'Pay online',
 							payLinkCurrency:
 								finalPayLinkCurrency as unknown as typeof invoices.$inferInsert.payLinkCurrency,
-							status: data.status ?? 'draft',
+							status: statusToSet as typeof invoices.$inferInsert.status,
+							voided: willBeVoided,
+							voidedAt: voidedAtToSet,
+							voidReason: voidReasonToSet,
 							updatedAt: now,
 						})
 						.where(
@@ -651,6 +672,9 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							taxName: data.taxName,
 							taxRate: Number(data.taxRate),
 							dueDate: data.dueDate,
+							status: statusToSet,
+							voided: willBeVoided,
+							voidReason: voidReasonToSet,
 						} as unknown as typeof invoiceHistory.$inferInsert.snapshot,
 						createdAt: now,
 					});

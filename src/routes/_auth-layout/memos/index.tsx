@@ -18,7 +18,7 @@ import { toast } from '#/components/ui/toast';
 import { getSession } from '#/lib/auth.functions';
 import { deleteMemo, getMemos } from '#/lib/server-fns/memos';
 
-export const Route = createFileRoute('/memos/')({
+export const Route = createFileRoute('/_auth-layout/memos/')({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (!session) {

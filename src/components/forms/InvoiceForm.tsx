@@ -33,6 +33,7 @@ import {
 	InvoiceSection,
 	LineItemsSection,
 	PaymentDestinationSection,
+	StatusSection,
 	TranchesSection,
 } from './InvoiceFormSections';
 
@@ -86,15 +87,9 @@ export const invoiceSchema = v.object({
 	payLinkLabel: v.optional(v.string()),
 	payLinkCurrency: v.optional(v.string()),
 	status: v.optional(
-		v.union([
-			v.literal('draft'),
-			v.literal('sent'),
-			v.literal('paid'),
-			v.literal('part_paid'),
-			v.literal('overdue'),
-			v.literal('voided'),
-		]),
+		v.picklist(['draft', 'sent', 'paid', 'part_paid', 'overdue', 'voided']),
 	),
+	voidReason: v.optional(v.string()),
 	items: v.pipe(
 		v.array(itemSchema),
 		v.minLength(1, 'At least one item is required'),
@@ -147,13 +142,14 @@ interface InvoiceFormProps {
 		description?: string | null;
 		memo?: string | null;
 		bankId?: string | null;
-		
+
 		paymentType?: 'full' | 'tranche';
 		paymentMethod?: 'bank' | 'link';
 		payLink?: string | null;
 		payLinkLabel?: string | null;
 		payLinkCurrency?: string;
 		status?: 'draft' | 'sent' | 'paid' | 'part_paid' | 'overdue' | 'voided';
+		voidReason?: string | null;
 		items?: ItemValue[];
 		tranches?: TrancheValue[];
 		payments?: PaymentValue[];
@@ -277,6 +273,7 @@ export function InvoiceForm({
 			| 'part_paid'
 			| 'overdue'
 			| 'voided',
+		voidReason: initialData?.voidReason ?? '',
 		items: (initialData?.items?.length ? initialData.items : defaultItems).map(
 			normalizeItem,
 		),
@@ -395,6 +392,8 @@ export function InvoiceForm({
 			currency: initialData.currency ?? defaultValues.currency,
 			payLinkCurrency:
 				initialData.payLinkCurrency ?? defaultValues.payLinkCurrency,
+			voidReason: initialData.voidReason ?? defaultValues.voidReason,
+			status: initialData.status ?? defaultValues.status,
 			items: (initialData.items?.length ? initialData.items : defaultItems).map(
 				normalizeItem,
 			),
@@ -488,6 +487,7 @@ export function InvoiceForm({
 				<LineItemsSection form={form} />
 				<TranchesSection form={form} />
 				<PaymentDestinationSection form={form} />
+				{isEditing && <StatusSection form={form} />}
 			</div>
 
 			{/* Right sidebar — SAVE NOTE + COMMENTARY + HISTORY like template */}
@@ -688,7 +688,20 @@ export function InvoiceForm({
 				invoice={{
 					id: invoiceId!,
 					number: form.getFieldValue('number') as string,
-					total: 0, // Will be calculated from form values
+					total: (() => {
+						const items = (form.getFieldValue('items') as ItemValue[]) || [];
+						const subtotal = items.reduce((s: number, it) => {
+							const qty = Number(it.qty || 0);
+							const cost = Number(it.cost || 0);
+							const amt = qty * cost;
+							const disc =
+								Number(it.discountAmt || 0) +
+								(amt * Number(it.discountPct || 0)) / 100;
+							return s + amt - disc;
+						}, 0);
+						const rate = Number((form.getFieldValue('taxRate') as string) || 0);
+						return subtotal * (1 + rate / 100);
+					})(),
 					currency: form.getFieldValue('currency') as string,
 					status: form.getFieldValue('status') as string,
 					paymentType: form.getFieldValue('paymentType') as 'full' | 'tranche',

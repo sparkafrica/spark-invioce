@@ -2,13 +2,13 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { SettingsLayout } from '#/components/settings/SettingsLayout';
 import { getSession } from '#/lib/auth.functions';
 
-export const Route = createFileRoute('/settings/businesses')({
+export const Route = createFileRoute('/_auth-layout/settings/organization')({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (!session)
 			throw redirect({
 				to: '/auth/login',
-				search: { redirect: '/settings/businesses' },
+				search: { redirect: '/settings/organization' },
 			});
 		return { user: session.user };
 	},

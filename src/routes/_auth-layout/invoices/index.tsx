@@ -13,7 +13,7 @@ import { useBusinesses } from '#/hooks/useReferences';
 import { getSession } from '#/lib/auth.functions';
 import { getInvoices } from '#/lib/server-fns/invoices';
 
-export const Route = createFileRoute('/invoices/')({
+export const Route = createFileRoute('/_auth-layout/invoices/')({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (!session) {

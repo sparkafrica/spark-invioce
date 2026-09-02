@@ -1165,6 +1165,85 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 	);
 }
 
+export function StatusSection({ form }: { form: InvoiceFormApi }) {
+	const statusOptions = [
+		{ value: 'draft', label: 'Draft' },
+		{ value: 'sent', label: 'Sent' },
+		{ value: 'paid', label: 'Paid' },
+		{ value: 'part_paid', label: 'Partially paid' },
+		{ value: 'overdue', label: 'Overdue' },
+		{ value: 'voided', label: 'Voided' },
+	] as const;
+
+	return (
+		<div>
+			<div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-3">
+				STATUS
+			</div>
+			<div className="grid gap-3">
+				<form.Field name="status">
+					{(field) => (
+						<Field>
+							<FieldLabel>Invoice status</FieldLabel>
+							<Select
+								value={field.state.value ?? 'draft'}
+								onValueChange={(v) =>
+									field.handleChange(v as typeof field.state.value)
+								}
+							>
+								<SelectTrigger className="w-full h-9 border border-[#201e1d] bg-white rounded-none">
+									<SelectValue placeholder="Select status" />
+								</SelectTrigger>
+								<SelectContent className="rounded-none border-[#201e1d]">
+									<SelectGroup>
+										{statusOptions.map((opt) => (
+											<SelectItem
+												key={opt.value}
+												value={opt.value}
+												className="text-[13px]"
+											>
+												{opt.label}
+											</SelectItem>
+										))}
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+							<FieldError errors={field.state.meta.errors} />
+							<p className="text-[11px] text-[#5c5755] mt-1">
+								Changing status on edit is saved with the invoice. Paid is
+								normally set by payments, but you can override here.
+							</p>
+						</Field>
+					)}
+				</form.Field>
+
+				<form.Field name="status">
+					{(statusField) =>
+						statusField.state.value === 'voided' ? (
+							<form.Field name="voidReason">
+								{(field) => (
+									<Field>
+										<FieldLabel>Void reason</FieldLabel>
+										<Textarea
+											value={field.state.value ?? ''}
+											onChange={(e) => field.handleChange(e.target.value)}
+											onBlur={field.handleBlur}
+											placeholder="Why voided — shown on record"
+											rows={2}
+											className="rounded-none border-[#201e1d] bg-white"
+										/>
+										<FieldError errors={field.state.meta.errors} />
+									</Field>
+								)}
+							</form.Field>
+						) : null
+					}
+				</form.Field>
+			</div>
+		</div>
+	);
+}
+
 type BankSelectProps = {
 	value?: string;
 	onValueChange: (v: Currency) => void;

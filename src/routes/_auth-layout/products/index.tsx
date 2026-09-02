@@ -2,7 +2,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { EditIcon, SearchIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
-import { ClientForm } from '#/components/forms/ClientForm';
+import { ProductForm } from '#/components/forms/ProductForm';
+import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
 import { Card, CardContent } from '#/components/ui/card';
 import { Dialog, DialogContent } from '#/components/ui/dialog';
@@ -17,52 +18,50 @@ import {
 	TableRow,
 } from '#/components/ui/table';
 import { toast } from '#/components/ui/toast';
-import { qk } from '#/hooks/useReferences';
 import { getSession } from '#/lib/auth.functions';
-import { deleteClient, getClients } from '#/lib/server-fns/references';
+import { deleteProduct, getProducts } from '#/lib/server-fns/crm';
 
-export const Route = createFileRoute('/clients/')({
+export const Route = createFileRoute('/_auth-layout/products/')({
 	beforeLoad: async () => {
 		const session = await getSession();
 		if (!session) {
-			throw redirect({ to: '/auth/login', search: { redirect: '/clients' } });
+			throw redirect({ to: '/auth/login', search: { redirect: '/products' } });
 		}
 		return { user: session.user, session: session.session };
 	},
-	component: ClientsPage,
+	component: ProductsPage,
 });
 
-function ClientsPage() {
+function ProductsPage() {
 	const [search, setSearch] = useState('');
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [addFormKey, setAddFormKey] = useState(0);
 	const { data, isLoading, refetch } = useQuery({
-		queryKey: qk.clients,
-		queryFn: () => getClients({ data: {} }),
+		queryKey: ['products'],
+		queryFn: () => getProducts({ data: {} }),
 	});
 
 	const deleteMutation = useMutation({
-		mutationFn: (id: string) => deleteClient({ data: { id } }),
+		mutationFn: (id: string) => deleteProduct({ data: { id } }),
 		onSuccess: () => {
 			refetch();
-			toast.add({ title: 'Client deleted', type: 'success' });
+			toast.add({ title: 'Product deleted', type: 'success' });
 		},
 		onError: (err) => {
 			toast.add({ description: (err as Error).message, type: 'error' });
 		},
 	});
 
-	const clients = data?.clients || [];
+	const products = data?.products || [];
 
-	const editingClient = editingId
-		? clients.find((c) => c.id === editingId)
+	const editingProduct = editingId
+		? products.find((p) => p.id === editingId)
 		: null;
 
-	const filteredClients = clients.filter(
+	const filteredProducts = products.filter(
 		(p) =>
 			p.name.toLowerCase().includes(search.toLowerCase()) ||
-			p.email?.toLowerCase().includes(search.toLowerCase()) ||
-			p.contact?.toLowerCase().includes(search.toLowerCase()),
+			p.description?.toLowerCase().includes(search.toLowerCase()),
 	);
 
 	if (isLoading) {
@@ -72,7 +71,7 @@ function ClientsPage() {
 					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
 						<div>
 							<h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">
-								Clients
+								Products & Services
 							</h1>
 							<Skeleton className="h-4 w-24 rounded-none mt-2" />
 						</div>
@@ -85,7 +84,7 @@ function ClientsPage() {
 				</div>
 				<div className="border-l-2 border-[#201e1d] pl-7">
 					<div className="text-[10px] tracking-[0.12em] font-semibold mb-3">
-						ADD A CLIENT
+						ADD A PRODUCT OR SERVICE
 					</div>
 					<div className="border-2 border-[#201e1d] bg-white p-4 space-y-3">
 						<Skeleton className="h-9 w-full rounded-none" />
@@ -103,9 +102,9 @@ function ClientsPage() {
 				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
 					<div>
 						<h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">
-							Clients
+							Products & Services
 						</h1>
-						<p className="text-[#5c5755]">{clients.length} client(s)</p>
+						<p className="text-[#5c5755]">{products.length} product(s)</p>
 					</div>
 				</div>
 
@@ -116,7 +115,7 @@ function ClientsPage() {
 								<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#5c5755]" />
 								<Input
 									type="text"
-									placeholder="Search clients..."
+									placeholder="Search products..."
 									value={search}
 									onChange={(e) => setSearch(e.target.value)}
 									className="w-full pl-10 pr-4 py-2 border border-[#201e1d] bg-white rounded-none"
@@ -124,10 +123,10 @@ function ClientsPage() {
 							</div>
 						</div>
 
-						{clients.length === 0 ? (
+						{products.length === 0 ? (
 							<div className="p-12 text-center">
 								<p className="text-[#5c5755]">
-									No clients found. Create your first client to get started.
+									No products found. Create your first product to get started.
 								</p>
 							</div>
 						) : (
@@ -138,13 +137,13 @@ function ClientsPage() {
 											NAME
 										</TableHead>
 										<TableHead className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#c02a10] h-auto">
-											CONTACT
+											DESCRIPTION
+										</TableHead>
+										<TableHead className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[#c02a10] h-auto">
+											COST
 										</TableHead>
 										<TableHead className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#c02a10] h-auto">
-											EMAIL
-										</TableHead>
-										<TableHead className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#c02a10] h-auto">
-											REGISTRATION
+											CURRENCY
 										</TableHead>
 										<TableHead className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[#c02a10] h-auto">
 											ACTIONS
@@ -152,26 +151,29 @@ function ClientsPage() {
 									</TableRow>
 								</TableHeader>
 								<TableBody className="divide-y divide-[#d6d3d1]">
-									{filteredClients.map((client) => (
-										<TableRow key={client.id} className="hover:bg-[#f0dcd8]">
+									{filteredProducts.map((product) => (
+										<TableRow key={product.id} className="hover:bg-[#f0dcd8]">
 											<TableCell className="px-4 py-3 font-medium">
-												{client.name}
+												{product.name}
 											</TableCell>
 											<TableCell className="px-4 py-3 text-[#5c5755]">
-												{client.contact || '-'}
+												{product.description || '-'}
 											</TableCell>
-											<TableCell className="px-4 py-3 text-[#5c5755]">
-												{client.email || '-'}
+											<TableCell className="px-4 py-3 text-right font-mono">
+												{new Intl.NumberFormat('en-US', {
+													minimumFractionDigits: 2,
+													maximumFractionDigits: 2,
+												}).format(Number(product.cost))}
 											</TableCell>
-											<TableCell className="px-4 py-3 text-[#5c5755]">
-												{client.reg || '-'}
+											<TableCell className="px-4 py-3">
+												<Badge variant="secondary">{product.currency}</Badge>
 											</TableCell>
 											<TableCell className="px-4 py-3 text-right">
 												<div className="flex items-center justify-end gap-2">
 													<Button
 														variant="ghost"
 														size="icon"
-														onClick={() => setEditingId(client.id)}
+														onClick={() => setEditingId(product.id)}
 													>
 														<EditIcon className="h-4 w-4" />
 													</Button>
@@ -179,7 +181,7 @@ function ClientsPage() {
 														variant="ghost"
 														size="icon"
 														className="text-[#c02a10]"
-														onClick={() => deleteMutation.mutate(client.id)}
+														onClick={() => deleteMutation.mutate(product.id)}
 														disabled={deleteMutation.isPending}
 													>
 														<Trash2Icon className="h-4 w-4" />
@@ -197,9 +199,9 @@ function ClientsPage() {
 
 			<div className="border-l-2 border-[#201e1d] pl-7">
 				<div className="text-[10px] tracking-[0.12em] font-semibold mb-3">
-					ADD A CLIENT
+					ADD A PRODUCT OR SERVICE
 				</div>
-				<ClientForm
+				<ProductForm
 					key={addFormKey}
 					isEditing={false}
 					onCancel={() => setAddFormKey((k) => k + 1)}
@@ -218,21 +220,19 @@ function ClientsPage() {
 			>
 				<DialogContent className="rounded-none max-w-xl max-h-[90vh] overflow-y-auto">
 					<p className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">
-						EDIT CLIENT
+						EDIT PRODUCT OR SERVICE
 					</p>
-					{editingClient && (
-						<ClientForm
-							key={editingClient.id}
+					{editingProduct && (
+						<ProductForm
+							key={editingProduct.id}
 							initialData={{
-								name: editingClient.name,
-								reg: editingClient.reg || '',
-								address: editingClient.address || '',
-								email: editingClient.email || '',
-								contact: editingClient.contact || '',
-								notes: editingClient.notes || '',
+								name: editingProduct.name,
+								description: editingProduct.description || '',
+								cost: editingProduct.cost,
+								currency: editingProduct.currency,
 							}}
 							isEditing={true}
-							clientId={editingClient.id}
+							productId={editingId!}
 							onCancel={() => setEditingId(null)}
 							onSuccess={() => {
 								refetch();
