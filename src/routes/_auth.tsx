@@ -1,11 +1,9 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
-import { getRequest } from '@tanstack/react-start/server';
-import { auth } from '#/lib/auth';
+import { getSession } from '#/lib/auth.functions';
 
 export const Route = createFileRoute('/_auth')({
   loader: async () => {
-    const req = getRequest();
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await getSession();
 
     if (session?.session && session?.user) {
       // Already signed in → send away from login/signup/invite
