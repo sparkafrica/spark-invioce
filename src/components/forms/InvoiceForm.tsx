@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import * as v from 'valibot';
+import { InvoiceLivePreview } from '#/components/invoice/InvoiceLivePreview';
 import { PaymentModal } from '#/components/invoice/PaymentModal';
 import { Button } from '#/components/ui/button';
 import {
@@ -492,6 +493,9 @@ export function InvoiceForm({
 
 			{/* Right sidebar — SAVE NOTE + COMMENTARY + HISTORY like template */}
 			<div className="border-l-2 border-[#201e1d] pl-6.5 flex flex-col gap-20 lg:sticky lg:top-18 self-start">
+				{/* Live preview — Teams-like right pane, read-only, no duplicate status/payment */}
+				<InvoiceLivePreview form={form} />
+
 				{/* Warning banner for paid/partially paid/voided invoices */}
 				{isEditing &&
 					initialData?.status &&

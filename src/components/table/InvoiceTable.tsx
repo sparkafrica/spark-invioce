@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { cn } from '#/lib/utils';
+import { Link } from '@tanstack/react-router';
 
 export interface Invoice {
   id: string;
@@ -44,16 +45,15 @@ export interface Invoice {
   total: string;
   status: 'draft' | 'sent' | 'paid' | 'part_paid' | 'overdue' | 'voided';
   commentCount: number;
-  onEdit?: (invoice: Invoice) => void;
-  onView?: (invoice: Invoice) => void;
+  onEdit?: boolean;
+  onView?: boolean;
 }
 
 interface InvoiceTableProps {
   data: Invoice[];
-  onView: (invoice: Invoice) => void;
-  onEdit?: (invoice: Invoice) => void;
   onDelete?: (invoice: Invoice) => void;
   onDuplicate?: (invoice: Invoice) => void;
+  allowEdit?: boolean;
 }
 
 const features = tableFeatures({
@@ -83,7 +83,7 @@ function formatMoney(value: string | number, currency?: string) {
   }).format(num);
 }
 
-export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
+export function InvoiceTable({ data, allowEdit }: InvoiceTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -177,14 +177,11 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
           const invoice = info.row.original;
           return (
             <div className="flex items-center justify-end gap-1">
-              {onEdit && (
+              {allowEdit && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(invoice);
-                  }}
+                  render={<Link to="/invoices/$id/edit" params={{ id: invoice.id }} />}
                   className="border border-[#201e1d] bg-white px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
                 >
                   Edit
@@ -193,10 +190,7 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
               <Button
                 variant="default"
                 size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onView(invoice);
-                }}
+                render={<Link to="/invoices/$id" params={{ id: invoice.id }} />}
                 className="bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#c02a10] hover:border-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
               >
                 Open
@@ -206,7 +200,7 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
         },
       }),
     ];
-  }, [onView, onEdit]);
+  }, [allowEdit]);
 
   const table = useTable({
     features,
@@ -250,7 +244,7 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
                   <TableHead
                     key={header.id}
                     className={cn(
-                      'px-2.5 py-2.5 text-left text-[10px] tracking-[0.1em] font-semibold text-[#201e1d] whitespace-nowrap h-auto',
+                      'px-2.5 py-2.5 text-left text-[10px] tracking-widest font-semibold text-[#201e1d] whitespace-nowrap h-auto',
                       header.column.getCanSort() &&
                       'cursor-pointer select-none hover:bg-[#f0dcd8]',
                     )}
@@ -286,7 +280,6 @@ export function InvoiceTable({ data, onView, onEdit }: InvoiceTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  onClick={() => onView(row.original)}
                   className={cn(
                     'border-b border-[#d6d3d1] bg-white hover:bg-[#f0dcd8] cursor-pointer',
                     row.original.status === 'voided' && 'opacity-60',

@@ -24,8 +24,6 @@ export const signInEmail = createServerFn({ method: 'POST' })
 				// asResponse: false,
 			});
 
-			console.log('[login]:', res);
-
 			return { success: true as const, res };
 		} catch (error) {
 			const err =

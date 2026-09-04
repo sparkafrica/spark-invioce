@@ -329,8 +329,6 @@ function Dashboard() {
     };
   }, [filtered, statusMetric]);
 
-  console.log('[invoice status]:', invoiceStatusData)
-
   const trendData = useMemo(() => {
     const monthNames = [
       'Jan',

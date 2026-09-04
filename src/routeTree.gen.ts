@@ -18,7 +18,6 @@ import { Route as AuthLayoutSettingRouteImport } from './routes/_auth-layout/set
 import { Route as AuthLayoutTeamRouteImport } from './routes/_auth-layout/team'
 import { Route as AuthLayoutClientsIndexRouteImport } from './routes/_auth-layout/clients/index'
 import { Route as AuthLayoutInvoicesIndexRouteImport } from './routes/_auth-layout/invoices/index'
-import { Route as AuthLayoutInvoicesIdRouteImport } from './routes/_auth-layout/invoices/$id'
 import { Route as AuthLayoutInvoicesNewRouteImport } from './routes/_auth-layout/invoices/new'
 import { Route as AuthLayoutMemosIndexRouteImport } from './routes/_auth-layout/memos/index'
 import { Route as AuthLayoutProductsIndexRouteImport } from './routes/_auth-layout/products/index'
@@ -35,7 +34,8 @@ import { Route as AuthAuthLoginRouteImport } from './routes/_auth/auth/login'
 import { Route as AuthAuthResetPasswordRouteImport } from './routes/_auth/auth/reset-password'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiCronFxRatesRouteImport } from './routes/api/cron/fx-rates'
-import { Route as AuthLayoutInvoicesIdEditRouteImport } from './routes/_auth-layout/invoices/$id.edit'
+import { Route as AuthLayoutInvoicesIdIndexRouteImport } from './routes/_auth-layout/invoices/$id/index'
+import { Route as AuthLayoutInvoicesIdEditRouteImport } from './routes/_auth-layout/invoices/$id/edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -78,11 +78,6 @@ const AuthLayoutClientsIndexRoute = AuthLayoutClientsIndexRouteImport.update({
 const AuthLayoutInvoicesIndexRoute = AuthLayoutInvoicesIndexRouteImport.update({
   id: '/invoices/',
   path: '/invoices/',
-  getParentRoute: () => AuthLayoutRoute,
-} as any)
-const AuthLayoutInvoicesIdRoute = AuthLayoutInvoicesIdRouteImport.update({
-  id: '/invoices/$id',
-  path: '/invoices/$id',
   getParentRoute: () => AuthLayoutRoute,
 } as any)
 const AuthLayoutInvoicesNewRoute = AuthLayoutInvoicesNewRouteImport.update({
@@ -171,11 +166,17 @@ const ApiCronFxRatesRoute = ApiCronFxRatesRouteImport.update({
   path: '/api/cron/fx-rates',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthLayoutInvoicesIdIndexRoute =
+  AuthLayoutInvoicesIdIndexRouteImport.update({
+    id: '/invoices/$id/',
+    path: '/invoices/$id/',
+    getParentRoute: () => AuthLayoutRoute,
+  } as any)
 const AuthLayoutInvoicesIdEditRoute =
   AuthLayoutInvoicesIdEditRouteImport.update({
-    id: '/edit',
-    path: '/edit',
-    getParentRoute: () => AuthLayoutInvoicesIdRoute,
+    id: '/invoices/$id/edit',
+    path: '/invoices/$id/edit',
+    getParentRoute: () => AuthLayoutRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -184,7 +185,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthLayoutDashboardRoute
   '/setting': typeof AuthLayoutSettingRoute
   '/team': typeof AuthLayoutTeamRoute
-  '/invoices/$id': typeof AuthLayoutInvoicesIdRouteWithChildren
   '/invoices/new': typeof AuthLayoutInvoicesNewRoute
   '/settings/banks': typeof AuthLayoutSettingsBanksRoute
   '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
@@ -204,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/products/': typeof AuthLayoutProductsIndexRoute
   '/settings/': typeof AuthLayoutSettingsIndexRoute
   '/invoices/$id/edit': typeof AuthLayoutInvoicesIdEditRoute
+  '/invoices/$id/': typeof AuthLayoutInvoicesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -211,7 +212,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthLayoutDashboardRoute
   '/setting': typeof AuthLayoutSettingRoute
   '/team': typeof AuthLayoutTeamRoute
-  '/invoices/$id': typeof AuthLayoutInvoicesIdRouteWithChildren
   '/invoices/new': typeof AuthLayoutInvoicesNewRoute
   '/settings/banks': typeof AuthLayoutSettingsBanksRoute
   '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
@@ -231,6 +231,7 @@ export interface FileRoutesByTo {
   '/products': typeof AuthLayoutProductsIndexRoute
   '/settings': typeof AuthLayoutSettingsIndexRoute
   '/invoices/$id/edit': typeof AuthLayoutInvoicesIdEditRoute
+  '/invoices/$id': typeof AuthLayoutInvoicesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -241,7 +242,6 @@ export interface FileRoutesById {
   '/_auth-layout/dashboard': typeof AuthLayoutDashboardRoute
   '/_auth-layout/setting': typeof AuthLayoutSettingRoute
   '/_auth-layout/team': typeof AuthLayoutTeamRoute
-  '/_auth-layout/invoices/$id': typeof AuthLayoutInvoicesIdRouteWithChildren
   '/_auth-layout/invoices/new': typeof AuthLayoutInvoicesNewRoute
   '/_auth-layout/settings/banks': typeof AuthLayoutSettingsBanksRoute
   '/_auth-layout/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
@@ -261,6 +261,7 @@ export interface FileRoutesById {
   '/_auth-layout/products/': typeof AuthLayoutProductsIndexRoute
   '/_auth-layout/settings/': typeof AuthLayoutSettingsIndexRoute
   '/_auth-layout/invoices/$id/edit': typeof AuthLayoutInvoicesIdEditRoute
+  '/_auth-layout/invoices/$id/': typeof AuthLayoutInvoicesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -270,7 +271,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
-    | '/invoices/$id'
     | '/invoices/new'
     | '/settings/banks'
     | '/settings/businesses'
@@ -290,6 +290,7 @@ export interface FileRouteTypes {
     | '/products/'
     | '/settings/'
     | '/invoices/$id/edit'
+    | '/invoices/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -297,7 +298,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
-    | '/invoices/$id'
     | '/invoices/new'
     | '/settings/banks'
     | '/settings/businesses'
@@ -317,6 +317,7 @@ export interface FileRouteTypes {
     | '/products'
     | '/settings'
     | '/invoices/$id/edit'
+    | '/invoices/$id'
   id:
     | '__root__'
     | '/'
@@ -326,7 +327,6 @@ export interface FileRouteTypes {
     | '/_auth-layout/dashboard'
     | '/_auth-layout/setting'
     | '/_auth-layout/team'
-    | '/_auth-layout/invoices/$id'
     | '/_auth-layout/invoices/new'
     | '/_auth-layout/settings/banks'
     | '/_auth-layout/settings/businesses'
@@ -346,6 +346,7 @@ export interface FileRouteTypes {
     | '/_auth-layout/products/'
     | '/_auth-layout/settings/'
     | '/_auth-layout/invoices/$id/edit'
+    | '/_auth-layout/invoices/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -419,13 +420,6 @@ declare module '@tanstack/react-router' {
       path: '/invoices'
       fullPath: '/invoices/'
       preLoaderRoute: typeof AuthLayoutInvoicesIndexRouteImport
-      parentRoute: typeof AuthLayoutRoute
-    }
-    '/_auth-layout/invoices/$id': {
-      id: '/_auth-layout/invoices/$id'
-      path: '/invoices/$id'
-      fullPath: '/invoices/$id'
-      preLoaderRoute: typeof AuthLayoutInvoicesIdRouteImport
       parentRoute: typeof AuthLayoutRoute
     }
     '/_auth-layout/invoices/new': {
@@ -540,12 +534,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronFxRatesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth-layout/invoices/$id/': {
+      id: '/_auth-layout/invoices/$id/'
+      path: '/invoices/$id'
+      fullPath: '/invoices/$id/'
+      preLoaderRoute: typeof AuthLayoutInvoicesIdIndexRouteImport
+      parentRoute: typeof AuthLayoutRoute
+    }
     '/_auth-layout/invoices/$id/edit': {
       id: '/_auth-layout/invoices/$id/edit'
-      path: '/edit'
+      path: '/invoices/$id/edit'
       fullPath: '/invoices/$id/edit'
       preLoaderRoute: typeof AuthLayoutInvoicesIdEditRouteImport
-      parentRoute: typeof AuthLayoutInvoicesIdRoute
+      parentRoute: typeof AuthLayoutRoute
     }
   }
 }
@@ -566,23 +567,11 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface AuthLayoutInvoicesIdRouteChildren {
-  AuthLayoutInvoicesIdEditRoute: typeof AuthLayoutInvoicesIdEditRoute
-}
-
-const AuthLayoutInvoicesIdRouteChildren: AuthLayoutInvoicesIdRouteChildren = {
-  AuthLayoutInvoicesIdEditRoute: AuthLayoutInvoicesIdEditRoute,
-}
-
-const AuthLayoutInvoicesIdRouteWithChildren =
-  AuthLayoutInvoicesIdRoute._addFileChildren(AuthLayoutInvoicesIdRouteChildren)
-
 interface AuthLayoutRouteChildren {
   AuthLayoutActivityRoute: typeof AuthLayoutActivityRoute
   AuthLayoutDashboardRoute: typeof AuthLayoutDashboardRoute
   AuthLayoutSettingRoute: typeof AuthLayoutSettingRoute
   AuthLayoutTeamRoute: typeof AuthLayoutTeamRoute
-  AuthLayoutInvoicesIdRoute: typeof AuthLayoutInvoicesIdRouteWithChildren
   AuthLayoutInvoicesNewRoute: typeof AuthLayoutInvoicesNewRoute
   AuthLayoutSettingsBanksRoute: typeof AuthLayoutSettingsBanksRoute
   AuthLayoutSettingsBusinessesRoute: typeof AuthLayoutSettingsBusinessesRoute
@@ -595,6 +584,8 @@ interface AuthLayoutRouteChildren {
   AuthLayoutMemosIndexRoute: typeof AuthLayoutMemosIndexRoute
   AuthLayoutProductsIndexRoute: typeof AuthLayoutProductsIndexRoute
   AuthLayoutSettingsIndexRoute: typeof AuthLayoutSettingsIndexRoute
+  AuthLayoutInvoicesIdEditRoute: typeof AuthLayoutInvoicesIdEditRoute
+  AuthLayoutInvoicesIdIndexRoute: typeof AuthLayoutInvoicesIdIndexRoute
 }
 
 const AuthLayoutRouteChildren: AuthLayoutRouteChildren = {
@@ -602,7 +593,6 @@ const AuthLayoutRouteChildren: AuthLayoutRouteChildren = {
   AuthLayoutDashboardRoute: AuthLayoutDashboardRoute,
   AuthLayoutSettingRoute: AuthLayoutSettingRoute,
   AuthLayoutTeamRoute: AuthLayoutTeamRoute,
-  AuthLayoutInvoicesIdRoute: AuthLayoutInvoicesIdRouteWithChildren,
   AuthLayoutInvoicesNewRoute: AuthLayoutInvoicesNewRoute,
   AuthLayoutSettingsBanksRoute: AuthLayoutSettingsBanksRoute,
   AuthLayoutSettingsBusinessesRoute: AuthLayoutSettingsBusinessesRoute,
@@ -615,6 +605,8 @@ const AuthLayoutRouteChildren: AuthLayoutRouteChildren = {
   AuthLayoutMemosIndexRoute: AuthLayoutMemosIndexRoute,
   AuthLayoutProductsIndexRoute: AuthLayoutProductsIndexRoute,
   AuthLayoutSettingsIndexRoute: AuthLayoutSettingsIndexRoute,
+  AuthLayoutInvoicesIdEditRoute: AuthLayoutInvoicesIdEditRoute,
+  AuthLayoutInvoicesIdIndexRoute: AuthLayoutInvoicesIdIndexRoute,
 }
 
 const AuthLayoutRouteWithChildren = AuthLayoutRoute._addFileChildren(
