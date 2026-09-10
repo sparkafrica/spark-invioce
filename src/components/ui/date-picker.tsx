@@ -106,7 +106,7 @@ export function DatePicker({
               className,
             )}
           >
-            {value ? formatDisplay(value, tz) : placeholder}
+            <span className='text-ellipsis overflow-clip'>{value ? formatDisplay(value, tz) : placeholder}</span>
             <CalendarIcon className="h-4 w-4 opacity-50 ml-2 shrink-0" />
           </Button>
         }
@@ -149,7 +149,7 @@ export function DatePicker({
             setOpen(false);
           }}
           captionLayout="dropdown"
-          className="p-3"
+          className="px-3 w-full"
         />
         <div className="p-2 border-t border-[#d6d3d1] flex flex-wrap gap-1.5">
           {presets.map((p) => (

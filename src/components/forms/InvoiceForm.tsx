@@ -69,7 +69,8 @@ const paymentSchema = v.object({
   recordedAt: v.string(),
 });
 
-export const invoiceSchema = v.object({
+// base fields shared by both schemas
+const invoiceBaseFields = {
   businessId: v.pipe(v.string(), v.minLength(1, 'Business is required')),
   companyId: v.pipe(v.string(), v.minLength(1, 'Company is required')),
   clientId: v.pipe(v.string(), v.minLength(1, 'Client is required')),
@@ -95,6 +96,33 @@ export const invoiceSchema = v.object({
     v.array(itemSchema),
     v.minLength(1, 'At least one item is required'),
   ),
+  payments: v.optional(v.array(paymentSchema)),
+} as const;
+
+// strict schema for tranche mode — tranches validated
+const invoiceSchemaTranche = v.object({
+  ...invoiceBaseFields,
+  tranches: v.pipe(
+    v.array(trancheSchema),
+    v.minLength(1, 'At least one tranche is required'),
+  ),
+});
+// loose schema for full payment — tranches not validated (any string, preserved but ignored)
+const trancheLooseSchema = v.object({
+  name: v.string(),
+  deliverables: v.optional(v.string()),
+  dueDate: v.optional(v.string()),
+  amount: v.string(),
+  paid: v.optional(v.boolean()),
+  sortOrder: v.optional(v.number()),
+});
+const invoiceSchemaFull = v.object({
+  ...invoiceBaseFields,
+  tranches: v.optional(v.array(trancheLooseSchema)),
+});
+
+export const invoiceSchema = v.object({
+  ...invoiceBaseFields,
   tranches: v.optional(v.array(trancheSchema)),
   payments: v.optional(v.array(paymentSchema)),
 });
@@ -318,16 +346,20 @@ export function InvoiceForm({
   const form = useForm({
     defaultValues,
     validators: {
-      onChange: ({ value }: { value: InvoiceFormValues }) =>
-        standardSchemaValidators.validate(
+      onChange: ({ value }: { value: InvoiceFormValues }) => {
+        const schema = value.paymentType === 'tranche' ? invoiceSchemaTranche : invoiceSchemaFull;
+        return standardSchemaValidators.validate(
           { value, validationSource: 'field' },
-          invoiceSchema,
-        ),
-      onSubmit: ({ value }: { value: InvoiceFormValues }) =>
-        standardSchemaValidators.validate(
+          schema,
+        );
+      },
+      onSubmit: ({ value }: { value: InvoiceFormValues }) => {
+        const schema = value.paymentType === 'tranche' ? invoiceSchemaTranche : invoiceSchemaFull;
+        return standardSchemaValidators.validate(
           { value, validationSource: 'form' },
-          invoiceSchema,
-        ),
+          schema,
+        );
+      },
     },
     onSubmit: async ({ value }) => {
       try {
@@ -335,12 +367,14 @@ export function InvoiceForm({
           ...item,
           sortOrder: item.sortOrder ?? index,
         }));
-        const normalizedTranches = (value.tranches ?? []).map(
-          (tranche, index) => ({
-            ...tranche,
-            sortOrder: tranche.sortOrder ?? index,
-          }),
-        );
+        // preserve tranches in form state, but don't submit when full payment
+        const normalizedTranches =
+          value.paymentType === 'tranche'
+            ? (value.tranches ?? []).map((tranche, index) => ({
+                ...tranche,
+                sortOrder: tranche.sortOrder ?? index,
+              }))
+            : [];
         const payload = {
           ...value,
           items: normalizedItems,

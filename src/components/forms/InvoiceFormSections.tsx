@@ -306,12 +306,15 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
           {(field) => (
             <Field>
               <FieldLabel>Rate (%)</FieldLabel>
-              <Input
-                type="text"
-                inputMode="decimal"
-                value={field.state.value as string}
-                onChange={(e) => field.handleChange(e.target.value)}
+              <NumberInput
+                value={field.state.value as string ? Number(field.state.value as string) : 0}
+                onValueChange={(next) => field.handleChange(next === null ? '' : next.toFixed(2))}
                 onBlur={field.handleBlur}
+                placeholder="7.50"
+                min={0}
+                max={100}
+                step={0.5}
+                className="h-9 px-2.5 text-[13px] text-right font-mono tabular-nums"
               />
               <FieldError errors={field.state.meta.errors} />
             </Field>
@@ -692,7 +695,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 
       <form.Field name="items" mode="array">
         {(field) => (
-          <div className="flex flex-col gap-0.5 bg-[#201e1d] border-2 border-[#201e1d] p-0.5">
+          <div className="flex flex-col gap-0.5 bg-[#201e1d] border border-[#201e1d] p-0.5">
             {(field.state.value as any[]).map((_: any, index: number) => (
               <div
                 key={index}
@@ -920,7 +923,15 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
               variant={
                 pTypeField.state.value === 'tranche' ? 'default' : 'outline'
               }
-              onClick={() => pTypeField.handleChange('tranche')}
+              onClick={() => {
+                pTypeField.handleChange('tranche');
+                const cur = form.getFieldValue('tranches') as unknown as TrancheValue[] | undefined;
+                if (!cur || cur.length === 0) {
+                  (form as unknown as { setFieldValue: (n: string, v: unknown) => void }).setFieldValue('tranches', [
+                    { name: '', deliverables: '', dueDate: '', amount: '0', paid: false, sortOrder: 0 },
+                  ]);
+                }
+              }}
               className={`rounded-none border-2 px-4 py-1.5 text-xs font-semibold ${pTypeField.state.value === 'tranche' ? 'bg-[#201e1d] text-white border-[#201e1d]' : 'bg-white text-[#201e1d] border-[#201e1d] hover:bg-[#f0dcd8]'}`}
             >
               Tranches / milestones
@@ -1044,13 +1055,9 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
                             {(sub) => (
                               <Field>
                                 <FieldLabel>Amount</FieldLabel>
-                                <Input
-                                  type="text"
-                                  inputMode="decimal"
-                                  value={sub.state.value as string}
-                                  onChange={(e) =>
-                                    sub.handleChange(e.target.value)
-                                  }
+                                <NumberInput
+                                  value={(sub.state.value as string) ? Number(sub.state.value as string) : 0}
+                                  onValueChange={(next) => sub.handleChange(next === null ? '' : next.toFixed(2))}
                                   onBlur={sub.handleBlur}
                                   placeholder="0.00"
                                   className="h-9 px-2.5 text-[13px] text-right font-mono tabular-nums"
