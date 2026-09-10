@@ -33,6 +33,7 @@ import {
 } from '#/components/ui/table';
 import { Textarea } from '#/components/ui/textarea';
 import { toast } from '#/components/ui/toast';
+import { authClient } from '#/lib/auth-client';
 import { getErrorMessage } from '#/lib/errors';
 import { generateInvoicePDF } from '#/lib/server-fns/generate-invoice-pdf';
 import { updateInvoice } from '#/lib/server-fns/invoice-create';
@@ -139,6 +140,9 @@ function formatMoney(n: number, currency: string) {
 
 export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
   const navigate = useNavigate();
+  const { data: sessionData } = authClient.useSession();
+  const role = (sessionData?.user as unknown as { role?: string | null })?.role;
+  const canMutate = role === 'owner' || role === 'admin';
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
 
@@ -428,58 +432,64 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
           Back
         </Button>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <Select
-              value={invoice.status}
-              onValueChange={handleStatusChange}
-              disabled={statusMutation.isPending}
+          {canMutate && (
+            <div className="flex items-center gap-2">
+              <Select
+                value={invoice.status}
+                onValueChange={handleStatusChange}
+                disabled={statusMutation.isPending}
+              >
+                <SelectTrigger className="h-8 min-w-42 rounded-none border-[#201e1d] bg-white text-xs font-semibold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-none border-[#201e1d]">
+                  <SelectGroup>
+                    <SelectItem value="draft" className="text-xs">
+                      Draft
+                    </SelectItem>
+                    <SelectItem value="paid" className="text-xs">
+                      Paid
+                    </SelectItem>
+                    <SelectItem value="part_paid" className="text-xs">
+                      Partially paid
+                    </SelectItem>
+                    <SelectItem value="overdue" className="text-xs">
+                      Overdue
+                    </SelectItem>
+                    <SelectItem value="voided" className="text-xs">
+                      Voided
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              {statusMutation.isPending && pendingStatus && (
+                <Loader2Icon className="h-4 w-4 animate-spin text-[#c02a10]" />
+              )}
+            </div>
+          )}
+          {canMutate && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDeleteDialog(true)}
+              className="border border-[#c02a10] bg-white text-[#c02a10] px-3 py-2 text-xs font-semibold hover:bg-[#fff2ef] rounded-none"
             >
-              <SelectTrigger className="h-8 min-w-42 rounded-none border-[#201e1d] bg-white text-xs font-semibold">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-none border-[#201e1d]">
-                <SelectGroup>
-                  <SelectItem value="draft" className="text-xs">
-                    Draft
-                  </SelectItem>
-                  <SelectItem value="paid" className="text-xs">
-                    Paid
-                  </SelectItem>
-                  <SelectItem value="part_paid" className="text-xs">
-                    Partially paid
-                  </SelectItem>
-                  <SelectItem value="overdue" className="text-xs">
-                    Overdue
-                  </SelectItem>
-                  <SelectItem value="voided" className="text-xs">
-                    Voided
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            {statusMutation.isPending && pendingStatus && (
-              <Loader2Icon className="h-4 w-4 animate-spin text-[#c02a10]" />
-            )}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowDeleteDialog(true)}
-            className="border border-[#c02a10] bg-white text-[#c02a10] px-3 py-2 text-xs font-semibold hover:bg-[#fff2ef] rounded-none"
-          >
-            Delete
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            render={
-              <Link to="/invoices/$id/edit" params={{ id: invoice.id }} />
-            }
-            nativeButton={false}
+              Delete
+            </Button>
+          )}
+          {canMutate && (
+            <Button
+              type="button"
+              variant="outline"
+              render={
+                <Link to="/invoices/$id/edit" params={{ id: invoice.id }} />
+              }
+              nativeButton={false}
             className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none"
           >
             Edit
           </Button>
+          )}
           <Button
             type="button"
             variant="default"
@@ -695,7 +705,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
           </div>
         )}
 
-        {invoice.status !== 'paid' && invoice.status !== 'voided' && (
+        {canMutate && invoice.status !== 'paid' && invoice.status !== 'voided' && (
           <Button
             type="button"
             variant="default"
@@ -773,7 +783,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
       </Dialog>
 
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="rounded-none border-2 border-[#201e1d] max-w-md">
+        <DialogContent className="rounded-none border-2 border-[#201e1d] max-w-md" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold">Delete invoice {invoice.number}?</DialogTitle>
             <DialogDescription className="text-xs text-[#5c5755]">

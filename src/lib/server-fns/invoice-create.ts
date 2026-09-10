@@ -9,8 +9,23 @@ import {
 	invoiceItems,
 	invoices,
 	invoiceTranches} from '#/db/schema';
+import { user } from '#/db/auth-schema';
 import { logActivity, withActivity } from '#/lib/activity';
 import { CURRENCIES } from '#/lib/currencies';
+
+async function assertCanMutate(session: { user: { id: string } } | null) {
+	if (!session?.user?.id) throw new Error('Unauthorized');
+	const roleFromSession = (session.user as unknown as { role?: string | null })?.role;
+	if (roleFromSession === 'owner' || roleFromSession === 'admin') return;
+	// fallback DB lookup
+	const rows = await db
+		.select({ role: user.role })
+		.from(user)
+		.where(eq(user.id, session.user.id))
+		.limit(1);
+	const role = rows[0]?.role;
+	if (role !== 'owner' && role !== 'admin') throw new Error('Forbidden: owner or admin only');
+}
 
 const invoiceItemSchema = z.object({
 	name: z.string().min(1),
@@ -122,9 +137,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				const ctx = context as unknown as {
 					session: { user: { id: string; name: string } } | null;
 				};
-				if (!ctx.session) {
-					throw new Error('Unauthorized');
-				}
+				await assertCanMutate(ctx.session as unknown as { user: { id: string } } | null);
 
 
 				// Get business to generate invoice number (org scoped)
@@ -300,15 +313,15 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				// Log activity — never block invoice creation
 				try {
 					await logActivity({
-						userId: ctx.session.user.id,
-						userName: ctx.session.user.name,
+						userId: ctx.session!.user.id,
+						userName: ctx.session!.user.name,
 						userRole: 'member',
 						type: 'Created',
 						entity: 'Invoice',
 						label: invoiceNumber,
 						detail: data.saveNote
 							? `Invoice ${invoiceNumber} created — ${data.saveNote}`
-							: `Invoice ${invoiceNumber} created for ${ctx.session.user.name}`,
+							: `Invoice ${invoiceNumber} created for ${ctx.session!.user.name}`,
 						metadata: data.saveNote ? { saveNote: data.saveNote } : undefined});
 				} catch {
 					// ignore activity errors — invoice already created
@@ -318,8 +331,8 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				try {
 					await db.insert(invoiceHistory).values({
 						invoiceId,
-						userId: ctx.session.user.id,
-						userName: ctx.session.user.name,
+						userId: ctx.session!.user.id,
+						userName: ctx.session!.user.name,
 						action: 'Created',
 						note: data.saveNote || null,
 						changes: [],
@@ -401,9 +414,7 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 				const ctx = context as unknown as {
 					session: { user: { id: string; name: string } } | null;
 				};
-				if (!ctx.session) {
-					throw new Error('Unauthorized');
-				}
+				await assertCanMutate(ctx.session as unknown as { user: { id: string } } | null);
 
 				const now = new Date();
 
@@ -610,8 +621,8 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 				try {
 					await db.insert(invoiceHistory).values({
 						invoiceId: data.id,
-						userId: ctx.session.user.id,
-						userName: ctx.session.user.name,
+						userId: ctx.session!.user.id,
+						userName: ctx.session!.user.name,
 						action: 'Edited',
 						note: data.saveNote || null,
 						changes: [],
@@ -638,8 +649,8 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 						createdAt: now});
 					if (data.saveNote) {
 						await logActivity({
-														userId: ctx.session.user.id,
-							userName: ctx.session.user.name,
+														userId: ctx.session!.user.id,
+							userName: ctx.session!.user.name,
 							userRole: 'member',
 							type: 'Edited',
 							entity: 'Invoice',

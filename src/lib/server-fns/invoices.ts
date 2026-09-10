@@ -12,6 +12,7 @@ import {
 	invoices,
 	invoiceTranches,
 	payments} from '#/db/schema';
+import { user } from '#/db/auth-schema';
 import { logActivity } from '#/lib/activity';
 
 type InvoiceStatus =
@@ -161,10 +162,16 @@ export const deleteInvoice = createServerFn({ method: 'POST' })
 	.validator(z.object({ id: z.string().min(1) }))
 	.handler(async ({ data, context }) => {
 		const ctx = context as unknown as {
-			session: { user: { id: string; name: string } | null } | null;
+			session: { user: { id: string; name: string; role?: string | null } | null } | null;
 		};
 		if (!ctx.session?.user) {
 			throw new Error('Unauthorized');
+		}
+		const roleFromSession = (ctx.session.user as unknown as { role?: string | null })?.role;
+		if (roleFromSession !== 'owner' && roleFromSession !== 'admin') {
+			const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, ctx.session.user.id)).limit(1);
+			const role = rows[0]?.role;
+			if (role !== 'owner' && role !== 'admin') throw new Error('Forbidden: owner or admin only');
 		}
 
 		const existing = await db

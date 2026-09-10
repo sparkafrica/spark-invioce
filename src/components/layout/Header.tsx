@@ -32,6 +32,7 @@ export function Header({ className }: HeaderProps) {
 	const userName = session?.user?.name ?? '';
 	const userRole = (session?.user as unknown as { role?: string })?.role ?? '—';
 	const roleLabel = String(userRole).toUpperCase();
+	const canMutate = userRole === 'owner' || userRole === 'admin';
 
 	return (
 		<header
@@ -119,15 +120,17 @@ export function Header({ className }: HeaderProps) {
 			)}
 
 			<div className="flex items-center gap-3">
-				<Button
-					type="button"
-					variant="default"
-					onClick={() => navigate({ to: '/invoices/new' })}
-					className="hidden sm:inline-flex bg-[#ec3013] text-white border border-transparent px-3 py-2 text-xs font-semibold hover:bg-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] focus-visible:outline-offset-2 rounded-none h-auto"
-					style={{ padding: '9px 13px', fontSize: 12 }}
-				>
-					New invoice
-				</Button>
+				{canMutate && (
+					<Button
+						type="button"
+						variant="default"
+						onClick={() => navigate({ to: '/invoices/new' })}
+						className="hidden sm:inline-flex bg-[#ec3013] text-white border border-transparent px-3 py-2 text-xs font-semibold hover:bg-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] focus-visible:outline-offset-2 rounded-none h-auto"
+						style={{ padding: '9px 13px', fontSize: 12 }}
+					>
+						New invoice
+					</Button>
+				)}
 				{isPending ? (
 					<Skeleton className="h-8 w-24 rounded-none" />
 				) : session?.user ? (

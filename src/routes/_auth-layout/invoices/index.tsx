@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog';
 import { toast } from '#/components/ui/toast';
+import { authClient } from '#/lib/auth-client';
 import { getErrorMessage } from '#/lib/errors';
 import {
   Select,
@@ -58,6 +59,9 @@ export const Route = createFileRoute('/_auth-layout/invoices/')({
 });
 
 function InvoicesPage() {
+  const { data: sessionData } = authClient.useSession();
+  const role = (sessionData?.user as unknown as { role?: string | null })?.role;
+  const canMutate = role === 'owner' || role === 'admin';
 	const [
 		{
 			business: bizFilter,
@@ -338,8 +342,8 @@ function InvoicesPage() {
 
       <InvoiceTable
         data={filtered}
-        allowEdit
-        onDelete={(inv) => setDeleteTarget({ id: inv.id, number: inv.number })}
+        allowEdit={canMutate}
+        onDelete={canMutate ? (inv) => setDeleteTarget({ id: inv.id, number: inv.number }) : undefined}
         globalFilter={searchQuery}
         onGlobalFilterChange={setSearchQuery}
         pagination={{ pageIndex, pageSize: 10 }}
@@ -355,14 +359,16 @@ function InvoicesPage() {
         }}
       />
 
-      <div className="flex gap-2">
-        <Link
-          to="/invoices/new"
-          className="bg-[#ec3013] text-white px-4 py-2.5 text-xs font-semibold hover:bg-[#c02a10] hover:text-white"
-        >
-          New invoice
-        </Link>
-      </div>
+      {canMutate && (
+        <div className="flex gap-2">
+          <Link
+            to="/invoices/new"
+            className="bg-[#ec3013] text-white px-4 py-2.5 text-xs font-semibold hover:bg-[#c02a10] hover:text-white"
+          >
+            New invoice
+          </Link>
+        </div>
+      )}
 
       <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <DialogContent className="rounded-none border-2 border-[#201e1d] max-w-md">

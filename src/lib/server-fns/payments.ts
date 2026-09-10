@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start';
 import { desc, eq, sum } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '#/db';
+import { user } from '#/db/auth-schema';
 import { invoiceItems, invoices, invoiceTranches, payments } from '#/db/schema';
 import { withActivity } from '#/lib/activity';
 
@@ -19,10 +20,16 @@ export const recordPayment = createServerFn({ method: 'POST' })
 		withActivity(
 			async ({ data, context }) => {
 				const ctx = context as unknown as {
-					session: { user: { id: string; name: string } } | null;
+					session: { user: { id: string; name: string; role?: string | null } } | null;
 				};
-				if (!ctx.session) {
+				if (!ctx.session?.user) {
 					throw new Error('Unauthorized');
+				}
+				const roleFromSession = (ctx.session.user as unknown as { role?: string | null })?.role;
+				if (roleFromSession !== 'owner' && roleFromSession !== 'admin') {
+					const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, ctx.session.user.id)).limit(1);
+					const role = rows[0]?.role;
+					if (role !== 'owner' && role !== 'admin') throw new Error('Forbidden: owner or admin only');
 				}
 
 				const userName = ctx.session.user.name;
