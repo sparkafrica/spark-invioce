@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog';
+import { DatePicker } from '#/components/ui/date-picker';
 import { Field, FieldError, FieldLabel } from '#/components/ui/field';
 import { Input } from '#/components/ui/input';
 import { NumberInput } from '#/components/ui/number-input';
@@ -233,11 +234,10 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
           {(field) => (
             <Field>
               <FieldLabel>Date of issue *</FieldLabel>
-              <Input
-                type="date"
+              <DatePicker
                 value={field.state.value as string}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                onChange={(v) => field.handleChange(v)}
+                placeholder="Pick a date"
               />
               <FieldError errors={field.state.meta.errors} />
             </Field>
@@ -247,11 +247,10 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
           {(field) => (
             <Field>
               <FieldLabel>Due date *</FieldLabel>
-              <Input
-                type="date"
+              <DatePicker
                 value={field.state.value as string}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                onChange={(v) => field.handleChange(v)}
+                placeholder="Pick a date"
               />
               <FieldError errors={field.state.meta.errors} />
             </Field>
@@ -1032,14 +1031,10 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
                             {(sub) => (
                               <Field>
                                 <FieldLabel>Due date</FieldLabel>
-                                <Input
-                                  type="date"
+                                <DatePicker
                                   value={(sub.state.value as string) || ''}
-                                  onChange={(e) =>
-                                    sub.handleChange(e.target.value)
-                                  }
-                                  onBlur={sub.handleBlur}
-                                  className="h-9 px-2.5 text-[13px]"
+                                  onChange={(v) => sub.handleChange(v)}
+                                  placeholder="Pick a date"
                                 />
                                 <FieldError errors={sub.state.meta.errors} />
                               </Field>

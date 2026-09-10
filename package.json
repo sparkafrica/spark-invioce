@@ -54,6 +54,7 @@
     "countries-list": "^3.4.1",
     "country-data-list": "^1.6.3",
     "date-fns": "^4.4.0",
+    "date-fns-tz": "^3.2.0",
     "drizzle-kit": "^0.31.9",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.577.0",

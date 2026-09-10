@@ -8,42 +8,56 @@ import { Calendar } from '#/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '#/components/ui/select';
 import { cn } from '#/lib/utils';
-import { TIMEZONES } from './date-picker';
+
+const TIMEZONES = [
+  'Africa/Lagos',
+  'Africa/Cairo',
+  'Africa/Johannesburg',
+  'Africa/Nairobi',
+  'Europe/London',
+  'Europe/Berlin',
+  'Europe/Paris',
+  'America/New_York',
+  'America/Chicago',
+  'America/Los_Angeles',
+  'America/Sao_Paulo',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Asia/Singapore',
+  'Asia/Tokyo',
+  'Australia/Sydney',
+  'UTC',
+] as const;
 
 function getTodayInTz(tz: string): string {
   return formatInTimeZone(new Date(), tz, 'yyyy-MM-dd');
 }
 function addDaysInTz(dateStr: string, days: number, tz: string): string {
+  // dateStr is YYYY-MM-DD wall in tz, add days correctly
   const base = new Date(`${dateStr}T12:00:00`);
   const next = new Date(base);
   next.setDate(base.getDate() + days);
+  // format back as wall date (tz-stable)
   return formatInTimeZone(next, tz, 'yyyy-MM-dd');
 }
-function startOfMonthInTz(dateStr: string): string {
-  const d = new Date(`${dateStr}T12:00:00`);
-  d.setDate(1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function formatDisplay(value: string, tz: string): string {
+  if (!value) return '';
+  try {
+    const d = new Date(`${value}T12:00:00`);
+    return formatInTimeZone(d, tz, 'dd MMM yyyy');
+  } catch {
+    return value;
+  }
 }
-function endOfMonthInTz(dateStr: string): string {
-  const d = new Date(`${dateStr}T12:00:00`);
-  d.setMonth(d.getMonth() + 1, 0);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-function parseValue(v?: string): Date | undefined {
-  if (!v) return undefined;
-  const d = new Date(`${v}T12:00:00`);
+function parseValue(value: string): Date | undefined {
+  if (!value) return undefined;
+  const d = new Date(`${value}T12:00:00`);
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
-function formatDisplay(v: string, tz: string): string {
-  const d = new Date(`${v}T12:00:00`);
-  return formatInTimeZone(d, tz, 'dd MMM yyyy');
-}
 
-type Range = { from?: string; to?: string };
-
-type DateRangePickerProps = {
-  value?: Range;
-  onChange: (range: Range) => void;
+type DatePickerProps = {
+  value?: string;
+  onChange: (value: string) => void;
   placeholder?: string;
   timeZone?: string;
   defaultTimeZone?: string;
@@ -52,18 +66,16 @@ type DateRangePickerProps = {
   className?: string;
 };
 
-export type DateRange = { from?: string; to?: string };
-
-export function DateRangePicker({
-  value,
+export function DatePicker({
+  value = '',
   onChange,
-  placeholder = 'Pick a date range',
+  placeholder = 'Pick a date',
   timeZone,
   defaultTimeZone = 'Africa/Lagos',
   onTimeZoneChange,
   disabled,
   className,
-}: DateRangePickerProps) {
+}: DatePickerProps) {
   const [internalTz, setInternalTz] = React.useState(defaultTimeZone);
   const tz = timeZone ?? internalTz;
   const setTz = (next: string) => {
@@ -71,38 +83,14 @@ export function DateRangePicker({
     if (timeZone === undefined) setInternalTz(next);
   };
   const [open, setOpen] = React.useState(false);
-  const fromDate = parseValue(value?.from);
-  const toDate = parseValue(value?.to);
+  const selected = parseValue(value);
+  const todayStr = getTodayInTz(tz);
 
-  const display = value?.from || value?.to
-    ? `${value.from ? formatDisplay(value.from, tz) : '…'} — ${value.to ? formatDisplay(value.to, tz) : '…'}`
-    : '';
-
-  const today = getTodayInTz(tz);
-  const presets: Array<{ label: string; range: Range }> = [
-    { label: 'Today', range: { from: today, to: today } },
-    { label: 'Last 7 days', range: { from: addDaysInTz(today, -6, tz), to: today } },
-    { label: 'Last 30 days', range: { from: addDaysInTz(today, -29, tz), to: today } },
-    { label: 'This month', range: { from: startOfMonthInTz(today), to: endOfMonthInTz(today) } },
-    {
-      label: 'Last month',
-      range: (() => {
-        const firstOfThis = startOfMonthInTz(today);
-        const lastMonthEnd = addDaysInTz(firstOfThis, -1, tz);
-        return { from: startOfMonthInTz(lastMonthEnd), to: endOfMonthInTz(lastMonthEnd) };
-      })(),
-    },
-    {
-      label: 'This quarter',
-      range: (() => {
-        const d = new Date(`${today}T12:00:00`);
-        const q = Math.floor(d.getMonth() / 3);
-        const start = new Date(d.getFullYear(), q * 3, 1);
-        const end = new Date(d.getFullYear(), q * 3 + 3, 0);
-        const fmt = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
-        return { from: fmt(start), to: fmt(end) };
-      })(),
-    },
+  const presets: Array<{ label: string; value: string }> = [
+    { label: 'Today', value: todayStr },
+    { label: 'Tomorrow', value: addDaysInTz(todayStr, 1, tz) },
+    { label: 'Next 7 days', value: addDaysInTz(todayStr, 7, tz) },
+    { label: 'Next 30 days', value: addDaysInTz(todayStr, 30, tz) },
   ];
 
   return (
@@ -114,16 +102,16 @@ export function DateRangePicker({
             disabled={disabled}
             className={cn(
               'w-full justify-between border-[#201e1d] bg-white rounded-none h-9 px-2.5 text-[13px] font-normal text-left',
-              !value?.from && !value?.to && 'text-[#9b9797]',
+              !value && 'text-[#9b9797]',
               className,
             )}
           >
-            <span className="truncate">{display || placeholder}</span>
+            {value ? formatDisplay(value, tz) : placeholder}
             <CalendarIcon className="h-4 w-4 opacity-50 ml-2 shrink-0" />
           </Button>
         }
       />
-      <PopoverContent className="w-auto p-0 rounded-none border border-[#201e1d] bg-white" align="start">
+      <PopoverContent className="w-80 p-0 rounded-none border border-[#201e1d] bg-white" align="start">
         <div className="p-3 border-b border-[#d6d3d1] space-y-2">
           <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">TIME ZONE</div>
           <Select value={tz} onValueChange={(v) => setTz((v as string) ?? 'Africa/Lagos')}>
@@ -148,26 +136,18 @@ export function DateRangePicker({
           </Select>
         </div>
         <Calendar
-          mode="range"
-          selected={
-            fromDate || toDate
-              ? { from: fromDate, to: toDate }
-              : undefined
-          }
-          onSelect={(range) => {
-            if (!range) {
-              onChange({});
-              return;
+          mode="single"
+          selected={selected}
+          onSelect={(d) => {
+            if (!d) {
+              onChange('');
+            } else {
+              // wall-date stable: format as YYYY-MM-DD from Date's wall
+              const wall = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              onChange(wall);
             }
-            const from = range.from
-              ? `${range.from.getFullYear()}-${String(range.from.getMonth() + 1).padStart(2, '0')}-${String(range.from.getDate()).padStart(2, '0')}`
-              : undefined;
-            const to = range.to
-              ? `${range.to.getFullYear()}-${String(range.to.getMonth() + 1).padStart(2, '0')}-${String(range.to.getDate()).padStart(2, '0')}`
-              : undefined;
-            onChange({ from, to });
+            setOpen(false);
           }}
-          numberOfMonths={2}
           captionLayout="dropdown"
           className="p-3"
         />
@@ -179,7 +159,7 @@ export function DateRangePicker({
               variant="outline"
               size="sm"
               onClick={() => {
-                onChange(p.range);
+                onChange(p.value);
                 setOpen(false);
               }}
               className="h-7 px-2 text-[11px] rounded-none border-[#201e1d]"
@@ -194,7 +174,7 @@ export function DateRangePicker({
             variant="ghost"
             size="sm"
             onClick={() => {
-              onChange({});
+              onChange('');
               setOpen(false);
             }}
             className="h-7 px-2 text-[11px] rounded-none gap-1"
@@ -215,3 +195,5 @@ export function DateRangePicker({
     </Popover>
   );
 }
+
+export { TIMEZONES };

@@ -4,6 +4,7 @@ import { standardSchemaValidators, useForm } from '@tanstack/react-form';
 import { useQuery } from '@tanstack/react-query';
 import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
+import { DatePicker } from '#/components/ui/date-picker';
 import { Field, FieldError, FieldLabel } from '#/components/ui/field';
 import { Input } from '#/components/ui/input';
 import {
@@ -168,13 +169,10 @@ export function MemoForm({
 						{(field) => (
 							<Field>
 								<FieldLabel htmlFor={field.name}>Date</FieldLabel>
-								<Input
-									id={field.name}
-									name={field.name}
-									type="date"
-									value={field.state.value}
-									onBlur={field.handleBlur}
-									onChange={(e) => field.handleChange(e.target.value)}
+								<DatePicker
+									value={field.state.value as string}
+									onChange={(v) => field.handleChange(v)}
+									placeholder="Pick a date"
 								/>
 								<FieldError errors={field.state.meta.errors} />
 							</Field>

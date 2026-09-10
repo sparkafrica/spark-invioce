@@ -3,10 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Badge } from '#/components/ui/badge';
 import { Button } from '#/components/ui/button';
-import {
-	type DateRange,
-	DateRangePicker,
-} from '#/components/ui/date-range-picker';
+import { DateRangePicker } from '#/components/ui/date-range-picker';
 import { Input } from '#/components/ui/input';
 import { Skeleton } from '#/components/ui/skeleton';
 import {
@@ -25,11 +22,7 @@ export const Route = createFileRoute('/_auth-layout/activity')({
 
 function ActivityPage() {
 	const [search, setSearch] = useState('');
-	const [dateRange, setDateRange] = useState<DateRange>({
-		from: undefined,
-		to: undefined,
-		preset: 'this_week',
-	});
+	const [dateRange, setDateRange] = useState<{ from?: string; to?: string }>({});
 	const [page, setPage] = useState(1);
 	const pageSize = 25;
 
@@ -38,8 +31,8 @@ function ActivityPage() {
 		queryFn: () =>
 			getActivityLog({
 				data: {
-					from: dateRange.from?.toISOString(),
-					to: dateRange.to?.toISOString(),
+					from: dateRange.from ? new Date(`${dateRange.from}T00:00:00`).toISOString() : undefined,
+					to: dateRange.to ? new Date(`${dateRange.to}T23:59:59`).toISOString() : undefined,
 					query: search,
 					page,
 					pageSize,

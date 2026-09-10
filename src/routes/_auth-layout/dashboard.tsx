@@ -16,6 +16,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Badge } from '#/components/ui/badge';
+import { DateRangePicker } from '#/components/ui/date-range-picker';
 import {
   Select,
   SelectContent,
@@ -56,6 +57,8 @@ function Dashboard() {
   const [reportCur, setReportCur] = useState<ReportCur>('USD');
   const [includeCur, setIncludeCur] = useState<string>('All');
   const [period, setPeriod] = useState<Period>('All time');
+  const [customRange, setCustomRange] = useState<{ from?: string; to?: string }>({});
+  const [customTz, setCustomTz] = useState('Africa/Lagos');
   const [statusMetric, setStatusMetric] = useState<'count' | 'value'>('count');
 
   const { data, isLoading } = useQuery({
@@ -112,25 +115,35 @@ function Dashboard() {
       list = list.filter(
         (i) => i.currency === includeCur || i.total?.includes(includeCur),
       );
-    // period filter
-    if (period === '2026')
-      list = list.filter(
-        (i) =>
-          (i.issued || '').includes('2026') ||
-          (i.issueDate || '').includes('2026'),
-      );
-    if (period === 'Last 90 days') {
-      const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .slice(0, 10);
-      list = list.filter((i) => (i.issued || i.issueDate || '') >= cutoff);
-    }
-    if (period === 'This month') {
-      const ym = new Date().toISOString().slice(0, 7);
-      list = list.filter((i) => (i.issued || i.issueDate || '').startsWith(ym));
+    // custom date range overrides period
+    if (customRange.from || customRange.to) {
+      list = list.filter((i) => {
+        const wall = (i.issued || i.issueDate || '').slice(0, 10);
+        if (customRange.from && wall < customRange.from) return false;
+        if (customRange.to && wall > customRange.to) return false;
+        return true;
+      });
+    } else {
+      // period filter
+      if (period === '2026')
+        list = list.filter(
+          (i) =>
+            (i.issued || '').includes('2026') ||
+            (i.issueDate || '').includes('2026'),
+        );
+      if (period === 'Last 90 days') {
+        const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
+        list = list.filter((i) => (i.issued || i.issueDate || '') >= cutoff);
+      }
+      if (period === 'This month') {
+        const ym = new Date().toISOString().slice(0, 7);
+        list = list.filter((i) => (i.issued || i.issueDate || '').startsWith(ym));
+      }
     }
     return list;
-  }, [invoices, biz, includeCur, period]);
+  }, [invoices, biz, includeCur, period, customRange]);
 
   const fmt = (n: number) => {
     const v = n.toLocaleString('en-US', {
@@ -223,7 +236,11 @@ function Dashboard() {
     { label: 'OVERDUE', value: fmtShort(totals.overdue), sub: 'Past due date' },
   ];
 
-  const periodNote = period === 'All time' ? 'All invoices' : period;
+  const periodNote = customRange.from || customRange.to
+    ? `${customRange.from || '…'} → ${customRange.to || '…'} (${customTz})`
+    : period === 'All time'
+      ? 'All invoices'
+      : period;
 
   const navigate = useNavigate();
 
@@ -612,6 +629,30 @@ function Dashboard() {
           </div>
           <div className="text-[11px] text-[#5c5755] whitespace-nowrap">
             {periodNote}
+          </div>
+        </div>
+        <div className="bg-white px-4 py-3 grid grid-cols-[110px_1fr] gap-3.5 items-center">
+          <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">CUSTOM RANGE</div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <div className="min-w-[280px] flex-1 max-w-[420px]">
+              <DateRangePicker
+                value={customRange}
+                onChange={setCustomRange}
+                placeholder="Issued date range"
+                timeZone={customTz}
+                onTimeZoneChange={setCustomTz}
+              />
+            </div>
+            {(customRange.from || customRange.to) && (
+              <button
+                type="button"
+                onClick={() => setCustomRange({})}
+                className="border border-[#201e1d] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] rounded-none"
+              >
+                Clear
+              </button>
+            )}
+            <span className="text-[11px] text-[#5c5755]">Overrides period filter</span>
           </div>
         </div>
       </div>

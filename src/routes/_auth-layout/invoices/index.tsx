@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { InvoiceTable } from '#/components/table/InvoiceTable';
 import { Button } from '#/components/ui/button';
+import { DateRangePicker } from '#/components/ui/date-range-picker';
 import {
   Select,
   SelectContent,
@@ -31,6 +32,11 @@ const searchParams = {
   business: parseAsString.withDefault('All'),
   status: parseAsStringLiteral(statusValues).withDefault('All'),
   currency: parseAsStringLiteral(currencyValues).withDefault('All'),
+  issuedFrom: parseAsString.withDefault(''),
+  issuedTo: parseAsString.withDefault(''),
+  dueFrom: parseAsString.withDefault(''),
+  dueTo: parseAsString.withDefault(''),
+  tz: parseAsString.withDefault('Africa/Lagos'),
 };
 
 export const Route = createFileRoute('/_auth-layout/invoices/')({
@@ -48,6 +54,11 @@ function InvoicesPage() {
 			currency: currencyFilter,
 			searchQuery,
 			pageIndex,
+			issuedFrom,
+			issuedTo,
+			dueFrom,
+			dueTo,
+			tz,
 		},
 		setQueryStates,
 	] = useQueryStates(searchParams, {
@@ -60,6 +71,9 @@ function InvoicesPage() {
 	const setSearchQuery = (v: string) =>
 		setQueryStates({ searchQuery: v }, { limitUrlUpdates: v === '' ? undefined : debounce(300) });
 	const setPageIndex = (v: number) => setQueryStates({ pageIndex: v });
+	const setTz = (v: string) => setQueryStates({ tz: v });
+	const setIssuedRange = (r: { from?: string; to?: string }) => setQueryStates({ issuedFrom: r.from ?? '', issuedTo: r.to ?? '' });
+	const setDueRange = (r: { from?: string; to?: string }) => setQueryStates({ dueFrom: r.from ?? '', dueTo: r.to ?? '' });
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => getInvoices({ data: {} }),
@@ -129,6 +143,13 @@ function InvoicesPage() {
     const matchesBusiness =
       bizFilter === 'All' || invoice.business === bizFilter;
     const dueRaw = (invoice as any).due || (invoice as any).dueDate || '';
+    const issuedRaw = (invoice as any).issued || (invoice as any).issueDate || '';
+    const issuedWall = issuedRaw.slice(0, 10);
+    const dueWall = dueRaw.slice(0, 10);
+    const matchesIssued =
+      (!issuedFrom || issuedWall >= issuedFrom) && (!issuedTo || issuedWall <= issuedTo);
+    const matchesDue =
+      (!dueFrom || dueWall >= dueFrom) && (!dueTo || dueWall <= dueTo);
     const isOverdue = Boolean(
       dueRaw && dueRaw < todayISO && !['paid', 'voided'].includes(invoice.status),
     );
@@ -145,7 +166,7 @@ function InvoicesPage() {
             : invoice.status === statusFilter;
     const matchesCurrency =
       currencyFilter === 'All' || invoice.currency === currencyFilter;
-    return matchesBusiness && matchesStatus && matchesCurrency;
+    return matchesBusiness && matchesStatus && matchesCurrency && matchesIssued && matchesDue;
   });
 
   const statusOptions: Array<typeof statusFilter> = [
@@ -178,6 +199,28 @@ function InvoicesPage() {
       <div className="flex flex-col gap-3 rounded-none border-2 border-[#201e1d] bg-white p-3">
         <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">
           FILTERS — SELECT TO REFINE
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <div className="text-[10px] tracking-[0.12em] font-semibold text-[#5c5755]">ISSUED</div>
+            <DateRangePicker
+              value={{ from: issuedFrom || undefined, to: issuedTo || undefined }}
+              onChange={setIssuedRange}
+              placeholder="Issued range"
+              timeZone={tz}
+              onTimeZoneChange={setTz}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="text-[10px] tracking-[0.12em] font-semibold text-[#5c5755]">DUE</div>
+            <DateRangePicker
+              value={{ from: dueFrom || undefined, to: dueTo || undefined }}
+              onChange={setDueRange}
+              placeholder="Due range"
+              timeZone={tz}
+              onTimeZoneChange={setTz}
+            />
+          </div>
         </div>
         <div className="flex gap-2 justify-end">
           <Select value={bizFilter} onValueChange={(v) => setBizFilter((v as string) ?? 'All')}>
@@ -244,6 +287,27 @@ function InvoicesPage() {
             className="border border-[#201e1d] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-white rounded-none"
           >
             Clear filter
+          </Button>
+        </div>
+      )}
+      {(issuedFrom || issuedTo || dueFrom || dueTo) && (
+        <div className="flex items-center justify-between gap-3 bg-white border border-[#201e1d] px-3.5 py-2.5">
+          <div className="text-xs">
+            <span className="font-semibold">Date filters</span>
+            <span className="text-[#5c5755] ml-2">
+              {issuedFrom || issuedTo ? `Issued ${issuedFrom || '…'} → ${issuedTo || '…'} ` : ''}
+              {dueFrom || dueTo ? `Due ${dueFrom || '…'} → ${dueTo || '…'} ` : ''}
+              <span className="text-[11px]">({tz})</span>
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setQueryStates({ issuedFrom: '', issuedTo: '', dueFrom: '', dueTo: '' })}
+            className="border border-[#201e1d] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] rounded-none"
+          >
+            Clear dates
           </Button>
         </div>
       )}
