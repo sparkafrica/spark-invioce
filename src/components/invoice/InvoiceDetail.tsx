@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Loader2Icon } from 'lucide-react';
 import React from 'react';
 import * as v from 'valibot';
@@ -36,6 +36,7 @@ import { toast } from '#/components/ui/toast';
 import { getErrorMessage } from '#/lib/errors';
 import { generateInvoicePDF } from '#/lib/server-fns/generate-invoice-pdf';
 import { updateInvoice } from '#/lib/server-fns/invoice-create';
+import { deleteInvoice } from '#/lib/server-fns/invoices';
 import { recordPayment } from '#/lib/server-fns/payments';
 
 export interface InvoiceDetail {
@@ -137,7 +138,20 @@ function formatMoney(n: number, currency: string) {
 }
 
 export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
+  const navigate = useNavigate();
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteInvoice({ data: { id: invoice.id } }),
+    onSuccess: () => {
+      toast.add({ title: 'Invoice deleted', type: 'success' });
+      navigate({ to: '/invoices' });
+    },
+    onError: (e: unknown) => {
+      toast.add({ description: getErrorMessage(e, 'Failed to delete'), type: 'error' });
+    },
+  });
 
   const paymentMutation = useMutation({
     mutationFn: ({ amount, note }: { amount: string; note: string }) =>
@@ -450,6 +464,14 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
           <Button
             type="button"
             variant="outline"
+            onClick={() => setShowDeleteDialog(true)}
+            className="border border-[#c02a10] bg-white text-[#c02a10] px-3 py-2 text-xs font-semibold hover:bg-[#fff2ef] rounded-none"
+          >
+            Delete
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
             render={
               <Link to="/invoices/$id/edit" params={{ id: invoice.id }} />
             }
@@ -745,6 +767,35 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
               className="rounded-none bg-[#ec3013] text-white border-[#ec3013] hover:bg-[#c02a10]"
             >
               {statusMutation.isPending ? 'Voiding…' : 'Void invoice'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="rounded-none border-2 border-[#201e1d] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Delete invoice {invoice.number}?</DialogTitle>
+            <DialogDescription className="text-xs text-[#5c5755]">
+              This will permanently delete the invoice and its items, tranches, payments and history. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              className="rounded-none border-[#201e1d]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate()}
+              className="rounded-none bg-[#ec3013] text-white border-[#ec3013] hover:bg-[#c02a10]"
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

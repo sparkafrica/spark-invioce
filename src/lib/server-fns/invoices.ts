@@ -7,10 +7,12 @@ import {
 	businesses,
 	clients,
 	comments,
+	invoiceHistory,
 	invoiceItems,
 	invoices,
 	invoiceTranches,
 	payments} from '#/db/schema';
+import { logActivity } from '#/lib/activity';
 
 type InvoiceStatus =
 	| 'draft'
@@ -159,13 +161,21 @@ export const deleteInvoice = createServerFn({ method: 'POST' })
 	.validator(z.object({ id: z.string().min(1) }))
 	.handler(async ({ data, context }) => {
 		const ctx = context as unknown as {
-			session: { user: { id: string } } | null;
+			session: { user: { id: string; name: string } | null } | null;
 		};
-		if (!ctx.session) {
+		if (!ctx.session?.user) {
 			throw new Error('Unauthorized');
 		}
 
+		const existing = await db
+			.select({ number: invoices.number })
+			.from(invoices)
+			.where(eq(invoices.id, data.id))
+			.limit(1);
+		const number = existing[0]?.number ?? data.id;
+
 		// Delete related records first (cascade should handle this, but being explicit)
+		await db.delete(invoiceHistory).where(eq(invoiceHistory.invoiceId, data.id));
 		await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, data.id));
 		await db
 			.delete(invoiceTranches)
@@ -175,6 +185,20 @@ export const deleteInvoice = createServerFn({ method: 'POST' })
 
 		// Delete invoice
 		await db.delete(invoices).where(eq(invoices.id, data.id));
+
+		try {
+			await logActivity({
+				userId: ctx.session.user!.id,
+				userName: ctx.session.user!.name ?? 'Unknown',
+				userRole: 'member',
+				type: 'Deleted',
+				entity: 'Invoice',
+				label: number,
+				detail: `Invoice ${number} deleted`,
+			});
+		} catch {
+			// ignore
+		}
 
 		return { success: true };
 	});

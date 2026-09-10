@@ -90,6 +90,7 @@ function formatMoney(value: string | number, currency?: string) {
 
 export function InvoiceTable({
   data,
+  onDelete,
   allowEdit,
   globalFilter: propsGlobalFilter,
   onGlobalFilterChange: propsOnGlobalFilterChange,
@@ -213,12 +214,22 @@ export function InvoiceTable({
               >
                 Open
               </Button>
+              {onDelete && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDelete(invoice)}
+                  className="border border-[#c02a10] bg-white text-[#c02a10] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#fff2ef] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
+                >
+                  Delete
+                </Button>
+              )}
             </div>
           );
         },
       }),
     ];
-  }, [allowEdit]);
+  }, [allowEdit, onDelete]);
 
   const table = useTable({
     features,

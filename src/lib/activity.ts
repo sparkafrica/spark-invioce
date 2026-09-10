@@ -108,20 +108,24 @@ export function withActivity<T extends (...args: any[]) => Promise<any>>(
 				?.role as UserRole) || 'member';
 
 		if (userId && userName) {
-			const label = meta.getLabel(args[0], result);
-			const changes = diffObjects(args[0] || {}, result || {});
-			const detail = meta.getDetail(args[0], result, changes);
+			try {
+				const label = meta.getLabel(args[0], result);
+				const changes = diffObjects(args[0] || {}, result || {});
+				const detail = meta.getDetail(args[0], result, changes);
 
-			await logActivity({
-				userId,
-				userName,
-				userRole,
-				type: 'Edited',
-				entity: meta.entity,
-				label,
-				detail,
-				changes,
-			});
+				await logActivity({
+					userId,
+					userName,
+					userRole,
+					type: 'Edited',
+					entity: meta.entity,
+					label,
+					detail,
+					changes,
+				});
+			} catch {
+				// never block main operation on activity failure
+			}
 		}
 
 		return result;

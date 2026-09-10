@@ -222,7 +222,8 @@ export const createInvoice = createServerFn({ method: 'POST' })
 						const isUniqueViolation =
 							code === '23505' ||
 							msg.includes('23505') ||
-							msg.includes('invoices_number_org_unique');
+							msg.includes('invoices_number_org_unique') ||
+							msg.includes('invoices_number_unique');
 						if (isUniqueViolation) {
 							if (isManual) {
 								// Suggest next free number (recompute to ensure fresh)
@@ -296,18 +297,22 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					);
 				}
 
-				// Log activity
-				await logActivity({
-										userId: ctx.session.user.id,
-					userName: ctx.session.user.name,
-					userRole: 'member',
-					type: 'Created',
-					entity: 'Invoice',
-					label: invoiceNumber,
-					detail: data.saveNote
-						? `Invoice ${invoiceNumber} created — ${data.saveNote}`
-						: `Invoice ${invoiceNumber} created for ${ctx.session.user.name}`,
-					metadata: data.saveNote ? { saveNote: data.saveNote } : undefined});
+				// Log activity — never block invoice creation
+				try {
+					await logActivity({
+						userId: ctx.session.user.id,
+						userName: ctx.session.user.name,
+						userRole: 'member',
+						type: 'Created',
+						entity: 'Invoice',
+						label: invoiceNumber,
+						detail: data.saveNote
+							? `Invoice ${invoiceNumber} created — ${data.saveNote}`
+							: `Invoice ${invoiceNumber} created for ${ctx.session.user.name}`,
+						metadata: data.saveNote ? { saveNote: data.saveNote } : undefined});
+				} catch {
+					// ignore activity errors — invoice already created
+				}
 
 				// Insert invoice history snapshot
 				try {
@@ -524,7 +529,8 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 					if (
 						code === '23505' ||
 						msg.includes('23505') ||
-						msg.includes('invoices_number_org_unique')
+						msg.includes('invoices_number_org_unique') ||
+						msg.includes('invoices_number_unique')
 					) {
 						const biz = await db
 							.select({ prefix: businesses.prefix })

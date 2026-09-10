@@ -1,8 +1,19 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useState } from 'react';
 import { InvoiceTable } from '#/components/table/InvoiceTable';
 import { Button } from '#/components/ui/button';
 import { DateRangePicker } from '#/components/ui/date-range-picker';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog';
+import { toast } from '#/components/ui/toast';
+import { getErrorMessage } from '#/lib/errors';
 import {
   Select,
   SelectContent,
@@ -13,7 +24,7 @@ import {
 } from '#/components/ui/select';
 import { Skeleton } from '#/components/ui/skeleton';
 import { useBusinesses } from '#/hooks/useReferences';
-import { getInvoices } from '#/lib/server-fns/invoices';
+import { deleteInvoice, getInvoices } from '#/lib/server-fns/invoices';
 import {
   createStandardSchemaV1,
   debounce,
@@ -74,6 +85,19 @@ function InvoicesPage() {
 	const setTz = (v: string) => setQueryStates({ tz: v });
 	const setIssuedRange = (r: { from?: string; to?: string }) => setQueryStates({ issuedFrom: r.from ?? '', issuedTo: r.to ?? '' });
 	const setDueRange = (r: { from?: string; to?: string }) => setQueryStates({ dueFrom: r.from ?? '', dueTo: r.to ?? '' });
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; number: string } | null>(null);
+  const qc = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteInvoice({ data: { id } }),
+    onSuccess: () => {
+      toast.add({ title: 'Invoice deleted', type: 'success' });
+      qc.invalidateQueries({ queryKey: ['invoices'] });
+      setDeleteTarget(null);
+    },
+    onError: (e: unknown) => {
+      toast.add({ description: getErrorMessage(e, 'Failed to delete'), type: 'error' });
+    },
+  });
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => getInvoices({ data: {} }),
@@ -315,6 +339,7 @@ function InvoicesPage() {
       <InvoiceTable
         data={filtered}
         allowEdit
+        onDelete={(inv) => setDeleteTarget({ id: inv.id, number: inv.number })}
         globalFilter={searchQuery}
         onGlobalFilterChange={setSearchQuery}
         pagination={{ pageIndex, pageSize: 10 }}
@@ -338,6 +363,33 @@ function InvoicesPage() {
           New invoice
         </Link>
       </div>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <DialogContent className="rounded-none border-2 border-[#201e1d] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">Delete invoice {deleteTarget?.number}?</DialogTitle>
+            <DialogDescription className="text-xs text-[#5c5755]">This will permanently delete the invoice and its items, tranches, payments and history.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              className="rounded-none border-[#201e1d]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              className="rounded-none bg-[#ec3013] text-white border-[#ec3013] hover:bg-[#c02a10]"
+            >
+              {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
