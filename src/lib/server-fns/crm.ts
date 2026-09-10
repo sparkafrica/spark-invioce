@@ -16,8 +16,7 @@ const clientSchema = z.object({
 	address: z.string().optional().nullable(),
 	email: z.string().email().optional().nullable(),
 	contact: z.string().optional().nullable(),
-	notes: z.string().optional().nullable(),
-});
+	notes: z.string().optional().nullable()});
 
 export const createClient = createServerFn({ method: 'POST' })
 	.validator(clientSchema)
@@ -28,25 +27,17 @@ export const createClient = createServerFn({ method: 'POST' })
 		if (!ctx.session) {
 			throw new Error('Unauthorized');
 		}
-
-		const orgId = process.env.ORGANIZATION_ID;
-		if (!orgId) {
-			throw new Error('ORGANIZATION_ID is not configured');
-		}
-
 		const clientId = (
 			await db
 				.insert(clients)
 				.values({
 					id: createId(),
-					organizationId: orgId,
-					name: data.name,
+										name: data.name,
 					reg: data.reg,
 					address: data.address,
 					email: data.email,
 					contact: data.contact,
-					notes: data.notes,
-				})
+					notes: data.notes})
 				.returning({ id: clients.id })
 		)[0].id;
 
@@ -69,8 +60,7 @@ export const updateClient = createServerFn({ method: 'POST' })
 			.update(clients)
 			.set({
 				...updates,
-				updatedAt: new Date(),
-			})
+				updatedAt: new Date()})
 			.where(eq(clients.id, id));
 
 		return { success: true };
@@ -99,8 +89,7 @@ const productSchema = z.object({
 	name: z.string().min(1, 'Name is required'),
 	description: z.string().optional().nullable(),
 	cost: z.string().regex(/^\d+(\.\d+)?$/, 'Cost must be a number'),
-	currency: z.enum(CURRENCIES as [string, ...string[]]),
-});
+	currency: z.enum(CURRENCIES as [string, ...string[]])});
 
 export const createProduct = createServerFn({ method: 'POST' })
 	.validator(productSchema)
@@ -111,23 +100,15 @@ export const createProduct = createServerFn({ method: 'POST' })
 		if (!ctx.session) {
 			throw new Error('Unauthorized');
 		}
-
-		const orgId = process.env.ORGANIZATION_ID;
-		if (!orgId) {
-			throw new Error('ORGANIZATION_ID is not configured');
-		}
-
 		const productId = (
 			await db
 				.insert(products)
 				.values({
 					id: createId(),
-					organizationId: orgId,
-					name: data.name,
+										name: data.name,
 					description: data.description,
 					cost: data.cost,
-					currency: data.currency as (typeof products.$inferInsert)['currency'],
-				})
+					currency: data.currency as (typeof products.$inferInsert)['currency']})
 				.returning({ id: products.id })
 		)[0].id;
 
@@ -153,8 +134,7 @@ export const updateProduct = createServerFn({ method: 'POST' })
 				cost: updates.cost ?? undefined,
 				currency:
 					updates.currency as (typeof products.$inferInsert)['currency'],
-				updatedAt: new Date(),
-			})
+				updatedAt: new Date()})
 			.where(eq(products.id, id));
 
 		return { success: true };
@@ -184,22 +164,14 @@ export const getProducts = createServerFn({ method: 'GET' })
 		if (!ctx.session) {
 			throw new Error('Unauthorized');
 		}
-
-		const orgId = process.env.ORGANIZATION_ID;
-		if (!orgId) {
-			throw new Error('ORGANIZATION_ID is not configured');
-		}
-
 		const results = await db
 			.select({
 				id: products.id,
 				name: products.name,
 				description: products.description,
 				cost: products.cost,
-				currency: products.currency,
-			})
+				currency: products.currency})
 			.from(products)
-			.where(eq(products.organizationId, orgId))
 			.orderBy(desc(products.createdAt));
 
 		return { products: results };

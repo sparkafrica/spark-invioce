@@ -1,25 +1,14 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { InvoiceForm } from '#/components/forms/InvoiceForm';
-import { getSession } from '#/lib/auth.functions';
 
 export const Route = createFileRoute('/_auth-layout/invoices/new')({
-	beforeLoad: async () => {
-		const session = await getSession();
-		if (!session) {
-			throw redirect({
-				to: '/auth/login',
-				search: { redirect: '/invoices/new' },
-			});
-		}
-		return { user: session.user, session: session.session };
-	},
-	component: NewInvoicePage,
+  component: NewInvoicePage,
 });
 
 function NewInvoicePage() {
-	return (
-		<div className="space-y-6">
-			<InvoiceForm />
-		</div>
-	);
+  return (
+    <div className="space-y-6">
+      <InvoiceForm />
+    </div>
+  );
 }

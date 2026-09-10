@@ -1,12 +1,5 @@
 import { relations } from 'drizzle-orm';
-import {
-	account,
-	invitation,
-	member,
-	organization,
-	session,
-	user,
-} from './auth-schema';
+import { account, session, user } from './auth-schema';
 import {
 	activityLog,
 	banks,
@@ -28,72 +21,32 @@ import {
 // RELATIONS
 // ============================================
 
-// Organization
-export const organizationRelations = relations(organization, ({ many }) => ({
-	members: many(member),
-	invitations: many(invitation),
-	businesses: many(businesses),
-	companies: many(companies),
-	banks: many(banks),
-	clients: many(clients),
-	products: many(products),
-	invoices: many(invoices),
-	memos: many(memos),
-	settings: many(settings),
-	activityLogs: many(activityLog),
-}));
-
 // Businesses
-export const businessesRelations = relations(businesses, ({ one, many }) => ({
-	organization: one(organization, {
-		fields: [businesses.organizationId],
-		references: [organization.id],
-	}),
+export const businessesRelations = relations(businesses, ({ many }) => ({
 	invoices: many(invoices),
 }));
 
 // Companies
-export const companiesRelations = relations(companies, ({ one, many }) => ({
-	organization: one(organization, {
-		fields: [companies.organizationId],
-		references: [organization.id],
-	}),
+export const companiesRelations = relations(companies, ({ many }) => ({
 	invoices: many(invoices),
 	memos: many(memos),
 }));
 
 // Banks
-export const banksRelations = relations(banks, ({ one, many }) => ({
-	organization: one(organization, {
-		fields: [banks.organizationId],
-		references: [organization.id],
-	}),
+export const banksRelations = relations(banks, ({ many }) => ({
 	invoices: many(invoices),
 }));
 
 // Clients
-export const clientsRelations = relations(clients, ({ one, many }) => ({
-	organization: one(organization, {
-		fields: [clients.organizationId],
-		references: [organization.id],
-	}),
+export const clientsRelations = relations(clients, ({ many }) => ({
 	invoices: many(invoices),
 }));
 
 // Products
-export const productsRelations = relations(products, ({ one }) => ({
-	organization: one(organization, {
-		fields: [products.organizationId],
-		references: [organization.id],
-	}),
-}));
+export const productsRelations = relations(products, () => ({}));
 
 // Invoices
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
-	organization: one(organization, {
-		fields: [invoices.organizationId],
-		references: [organization.id],
-	}),
 	business: one(businesses, {
 		fields: [invoices.businessId],
 		references: [businesses.id],
@@ -152,10 +105,6 @@ export const commentsRelations = relations(comments, ({ one }) => ({
 
 // Memos
 export const memosRelations = relations(memos, ({ one }) => ({
-	organization: one(organization, {
-		fields: [memos.organizationId],
-		references: [organization.id],
-	}),
 	business: one(businesses, {
 		fields: [memos.businessId],
 		references: [businesses.id],
@@ -167,20 +116,10 @@ export const memosRelations = relations(memos, ({ one }) => ({
 }));
 
 // Settings
-export const settingsRelations = relations(settings, ({ one }) => ({
-	organization: one(organization, {
-		fields: [settings.organizationId],
-		references: [organization.id],
-	}),
-}));
+export const settingsRelations = relations(settings, () => ({}));
 
 // Activity Log
-export const activityLogRelations = relations(activityLog, ({ one }) => ({
-	organization: one(organization, {
-		fields: [activityLog.organizationId],
-		references: [organization.id],
-	}),
-}));
+export const activityLogRelations = relations(activityLog, () => ({}));
 
 // Invoice History
 export const invoiceHistoryRelations = relations(invoiceHistory, ({ one }) => ({
@@ -190,18 +129,11 @@ export const invoiceHistoryRelations = relations(invoiceHistory, ({ one }) => ({
 	}),
 }));
 
-// User / Member
+// User
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
 	accounts: many(account),
-	members: many(member),
-	invitations: many(invitation),
 	comments: many(comments),
 }));
 
-export {
-	accountRelations,
-	invitationRelations,
-	memberRelations,
-	sessionRelations,
-} from './auth-schema';
+export { accountRelations, sessionRelations } from './auth-schema';

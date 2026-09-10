@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { EditIcon, SearchIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { ClientForm } from '#/components/forms/ClientForm';
@@ -18,17 +18,9 @@ import {
 } from '#/components/ui/table';
 import { toast } from '#/components/ui/toast';
 import { qk } from '#/hooks/useReferences';
-import { getSession } from '#/lib/auth.functions';
 import { deleteClient, getClients } from '#/lib/server-fns/references';
 
 export const Route = createFileRoute('/_auth-layout/clients/')({
-	beforeLoad: async () => {
-		const session = await getSession();
-		if (!session) {
-			throw redirect({ to: '/auth/login', search: { redirect: '/clients' } });
-		}
-		return { user: session.user, session: session.session };
-	},
 	component: ClientsPage,
 });
 

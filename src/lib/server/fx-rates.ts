@@ -54,7 +54,6 @@ export const fetchFXRatesCron = createServerFn({ method: 'GET' }).handler(
 			await db
 				.insert(settings)
 				.values({
-					organizationId: process.env.ORGANIZATION_ID!,
 					key: 'fx-rates',
 					value: {
 						mode: 'api',
@@ -63,7 +62,7 @@ export const fetchFXRatesCron = createServerFn({ method: 'GET' }).handler(
 					},
 				})
 				.onConflictDoUpdate({
-					target: [settings.organizationId, settings.key],
+					target: [settings.key],
 					set: {
 						value: {
 							mode: 'api',

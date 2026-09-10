@@ -26,9 +26,7 @@ import { Route as AuthLayoutSettingsBanksRouteImport } from './routes/_auth-layo
 import { Route as AuthLayoutSettingsBusinessesRouteImport } from './routes/_auth-layout/settings/businesses'
 import { Route as AuthLayoutSettingsCompaniesRouteImport } from './routes/_auth-layout/settings/companies'
 import { Route as AuthLayoutSettingsFxRatesRouteImport } from './routes/_auth-layout/settings/fx-rates'
-import { Route as AuthLayoutSettingsOrganizationRouteImport } from './routes/_auth-layout/settings/organization'
 import { Route as AuthLayoutSettingsProfileRouteImport } from './routes/_auth-layout/settings/profile'
-import { Route as AuthAuthAcceptInvitationRouteImport } from './routes/_auth/auth/accept-invitation'
 import { Route as AuthAuthForgotPasswordRouteImport } from './routes/_auth/auth/forgot-password'
 import { Route as AuthAuthLoginRouteImport } from './routes/_auth/auth/login'
 import { Route as AuthAuthResetPasswordRouteImport } from './routes/_auth/auth/reset-password'
@@ -123,23 +121,11 @@ const AuthLayoutSettingsFxRatesRoute =
     path: '/settings/fx-rates',
     getParentRoute: () => AuthLayoutRoute,
   } as any)
-const AuthLayoutSettingsOrganizationRoute =
-  AuthLayoutSettingsOrganizationRouteImport.update({
-    id: '/settings/organization',
-    path: '/settings/organization',
-    getParentRoute: () => AuthLayoutRoute,
-  } as any)
 const AuthLayoutSettingsProfileRoute =
   AuthLayoutSettingsProfileRouteImport.update({
     id: '/settings/profile',
     path: '/settings/profile',
     getParentRoute: () => AuthLayoutRoute,
-  } as any)
-const AuthAuthAcceptInvitationRoute =
-  AuthAuthAcceptInvitationRouteImport.update({
-    id: '/auth/accept-invitation',
-    path: '/auth/accept-invitation',
-    getParentRoute: () => AuthRoute,
   } as any)
 const AuthAuthForgotPasswordRoute = AuthAuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
@@ -190,9 +176,7 @@ export interface FileRoutesByFullPath {
   '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
   '/settings/companies': typeof AuthLayoutSettingsCompaniesRoute
   '/settings/fx-rates': typeof AuthLayoutSettingsFxRatesRoute
-  '/settings/organization': typeof AuthLayoutSettingsOrganizationRoute
   '/settings/profile': typeof AuthLayoutSettingsProfileRoute
-  '/auth/accept-invitation': typeof AuthAuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthAuthForgotPasswordRoute
   '/auth/login': typeof AuthAuthLoginRoute
   '/auth/reset-password': typeof AuthAuthResetPasswordRoute
@@ -217,9 +201,7 @@ export interface FileRoutesByTo {
   '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
   '/settings/companies': typeof AuthLayoutSettingsCompaniesRoute
   '/settings/fx-rates': typeof AuthLayoutSettingsFxRatesRoute
-  '/settings/organization': typeof AuthLayoutSettingsOrganizationRoute
   '/settings/profile': typeof AuthLayoutSettingsProfileRoute
-  '/auth/accept-invitation': typeof AuthAuthAcceptInvitationRoute
   '/auth/forgot-password': typeof AuthAuthForgotPasswordRoute
   '/auth/login': typeof AuthAuthLoginRoute
   '/auth/reset-password': typeof AuthAuthResetPasswordRoute
@@ -247,9 +229,7 @@ export interface FileRoutesById {
   '/_auth-layout/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
   '/_auth-layout/settings/companies': typeof AuthLayoutSettingsCompaniesRoute
   '/_auth-layout/settings/fx-rates': typeof AuthLayoutSettingsFxRatesRoute
-  '/_auth-layout/settings/organization': typeof AuthLayoutSettingsOrganizationRoute
   '/_auth-layout/settings/profile': typeof AuthLayoutSettingsProfileRoute
-  '/_auth/auth/accept-invitation': typeof AuthAuthAcceptInvitationRoute
   '/_auth/auth/forgot-password': typeof AuthAuthForgotPasswordRoute
   '/_auth/auth/login': typeof AuthAuthLoginRoute
   '/_auth/auth/reset-password': typeof AuthAuthResetPasswordRoute
@@ -276,9 +256,7 @@ export interface FileRouteTypes {
     | '/settings/businesses'
     | '/settings/companies'
     | '/settings/fx-rates'
-    | '/settings/organization'
     | '/settings/profile'
-    | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -303,9 +281,7 @@ export interface FileRouteTypes {
     | '/settings/businesses'
     | '/settings/companies'
     | '/settings/fx-rates'
-    | '/settings/organization'
     | '/settings/profile'
-    | '/auth/accept-invitation'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -332,9 +308,7 @@ export interface FileRouteTypes {
     | '/_auth-layout/settings/businesses'
     | '/_auth-layout/settings/companies'
     | '/_auth-layout/settings/fx-rates'
-    | '/_auth-layout/settings/organization'
     | '/_auth-layout/settings/profile'
-    | '/_auth/auth/accept-invitation'
     | '/_auth/auth/forgot-password'
     | '/_auth/auth/login'
     | '/_auth/auth/reset-password'
@@ -478,26 +452,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLayoutSettingsFxRatesRouteImport
       parentRoute: typeof AuthLayoutRoute
     }
-    '/_auth-layout/settings/organization': {
-      id: '/_auth-layout/settings/organization'
-      path: '/settings/organization'
-      fullPath: '/settings/organization'
-      preLoaderRoute: typeof AuthLayoutSettingsOrganizationRouteImport
-      parentRoute: typeof AuthLayoutRoute
-    }
     '/_auth-layout/settings/profile': {
       id: '/_auth-layout/settings/profile'
       path: '/settings/profile'
       fullPath: '/settings/profile'
       preLoaderRoute: typeof AuthLayoutSettingsProfileRouteImport
       parentRoute: typeof AuthLayoutRoute
-    }
-    '/_auth/auth/accept-invitation': {
-      id: '/_auth/auth/accept-invitation'
-      path: '/auth/accept-invitation'
-      fullPath: '/auth/accept-invitation'
-      preLoaderRoute: typeof AuthAuthAcceptInvitationRouteImport
-      parentRoute: typeof AuthRoute
     }
     '/_auth/auth/forgot-password': {
       id: '/_auth/auth/forgot-password'
@@ -552,14 +512,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
-  AuthAuthAcceptInvitationRoute: typeof AuthAuthAcceptInvitationRoute
   AuthAuthForgotPasswordRoute: typeof AuthAuthForgotPasswordRoute
   AuthAuthLoginRoute: typeof AuthAuthLoginRoute
   AuthAuthResetPasswordRoute: typeof AuthAuthResetPasswordRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthAuthAcceptInvitationRoute: AuthAuthAcceptInvitationRoute,
   AuthAuthForgotPasswordRoute: AuthAuthForgotPasswordRoute,
   AuthAuthLoginRoute: AuthAuthLoginRoute,
   AuthAuthResetPasswordRoute: AuthAuthResetPasswordRoute,
@@ -577,7 +535,6 @@ interface AuthLayoutRouteChildren {
   AuthLayoutSettingsBusinessesRoute: typeof AuthLayoutSettingsBusinessesRoute
   AuthLayoutSettingsCompaniesRoute: typeof AuthLayoutSettingsCompaniesRoute
   AuthLayoutSettingsFxRatesRoute: typeof AuthLayoutSettingsFxRatesRoute
-  AuthLayoutSettingsOrganizationRoute: typeof AuthLayoutSettingsOrganizationRoute
   AuthLayoutSettingsProfileRoute: typeof AuthLayoutSettingsProfileRoute
   AuthLayoutClientsIndexRoute: typeof AuthLayoutClientsIndexRoute
   AuthLayoutInvoicesIndexRoute: typeof AuthLayoutInvoicesIndexRoute
@@ -598,7 +555,6 @@ const AuthLayoutRouteChildren: AuthLayoutRouteChildren = {
   AuthLayoutSettingsBusinessesRoute: AuthLayoutSettingsBusinessesRoute,
   AuthLayoutSettingsCompaniesRoute: AuthLayoutSettingsCompaniesRoute,
   AuthLayoutSettingsFxRatesRoute: AuthLayoutSettingsFxRatesRoute,
-  AuthLayoutSettingsOrganizationRoute: AuthLayoutSettingsOrganizationRoute,
   AuthLayoutSettingsProfileRoute: AuthLayoutSettingsProfileRoute,
   AuthLayoutClientsIndexRoute: AuthLayoutClientsIndexRoute,
   AuthLayoutInvoicesIndexRoute: AuthLayoutInvoicesIndexRoute,

@@ -11,16 +11,16 @@ import {
 	timestamp,
 	uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { organization, user } from './auth-schema';
+import { user } from './auth-schema';
 
 // ============================================
 // ENUMS
 // ============================================
 export const invoiceStatusEnum = pgEnum('invoice_status', [
 	'draft',
-	'sent',
 	'paid',
 	'part_paid',
+	'due',
 	'overdue',
 	'voided',
 ]);
@@ -104,9 +104,6 @@ export const companies = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		region: text('region').notNull(),
 		name: text('name').notNull(),
 		reg: text('reg'),
@@ -118,7 +115,7 @@ export const companies = pgTable(
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(t) => [index('companies_org_idx').on(t.organizationId)],
+	() => [],
 );
 
 // Businesses (Business Units) - New Business, ASF, ATE
@@ -128,16 +125,13 @@ export const businesses = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		name: text('name').notNull(),
 		prefix: text('prefix').notNull(),
 		logo: text('logo'),
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(t) => [index('businesses_org_idx').on(t.organizationId)],
+	() => [],
 );
 
 // Banks / Payment Accounts
@@ -147,9 +141,6 @@ export const banks = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		currency: currencyEnum('currency').notNull(),
 		label: text('label').notNull(),
 		fields: jsonb('fields')
@@ -159,10 +150,7 @@ export const banks = pgTable(
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(t) => [
-		index('banks_org_idx').on(t.organizationId),
-		index('banks_currency_idx').on(t.currency),
-	],
+	(t) => [index('banks_currency_idx').on(t.currency)],
 );
 
 // Products / Services Catalogue
@@ -172,9 +160,6 @@ export const products = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		name: text('name').notNull(),
 		description: text('description'),
 		cost: decimal('cost', { precision: 14, scale: 2 }).notNull(),
@@ -182,7 +167,7 @@ export const products = pgTable(
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(t) => [index('products_org_idx').on(t.organizationId)],
+	() => [],
 );
 
 // Clients
@@ -192,9 +177,6 @@ export const clients = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		name: text('name').notNull(),
 		reg: text('reg'),
 		address: text('address'),
@@ -204,7 +186,7 @@ export const clients = pgTable(
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(t) => [index('clients_org_idx').on(t.organizationId)],
+	() => [],
 );
 
 // Invoices
@@ -214,9 +196,6 @@ export const invoices = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		number: text('number').notNull(),
 		businessId: text('business_id')
 			.notNull()
@@ -252,11 +231,10 @@ export const invoices = pgTable(
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
 	(t) => [
-		index('invoices_org_idx').on(t.organizationId),
 		index('invoices_client_idx').on(t.clientId),
 		index('invoices_status_idx').on(t.status),
 		index('invoices_due_date_idx').on(t.dueDate),
-		uniqueIndex('invoices_number_org_unique').on(t.number, t.organizationId),
+		uniqueIndex('invoices_number_unique').on(t.number),
 	],
 );
 
@@ -353,9 +331,6 @@ export const activityLog = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		userId: text('user_id').notNull(),
 		userName: text('user_name').notNull(),
 		type: text('type').notNull(),
@@ -366,7 +341,6 @@ export const activityLog = pgTable(
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 	},
 	(t) => [
-		index('activity_log_org_idx').on(t.organizationId),
 		index('activity_log_created_idx').on(t.createdAt),
 		index('activity_log_entity_label_idx').on(t.entity, t.label),
 		index('activity_log_user_created_idx').on(t.userId, t.createdAt),
@@ -380,9 +354,6 @@ export const memos = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		number: text('number').notNull(),
 		businessId: text('business_id')
 			.notNull()
@@ -398,7 +369,7 @@ export const memos = pgTable(
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(t) => [index('memos_org_idx').on(t.organizationId)],
+	() => [],
 );
 
 // Settings (FX Rates, etc.)
@@ -408,15 +379,12 @@ export const settings = pgTable(
 		id: text('id')
 			.primaryKey()
 			.$defaultFn(() => createId()),
-		organizationId: text('organization_id')
-			.notNull()
-			.references(() => organization.id, { onDelete: 'cascade' }),
 		key: text('key').notNull(),
 		value: jsonb('value').notNull(),
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(t) => [uniqueIndex('settings_org_key_unique').on(t.organizationId, t.key)],
+	(t) => [uniqueIndex('settings_key_unique').on(t.key)],
 );
 
 // Invoice History (Audit snapshots per save)
@@ -464,11 +432,6 @@ export const invoiceHistory = pgTable(
 export {
 	account,
 	accountRelations,
-	invitation,
-	invitationRelations,
-	member,
-	memberRelations,
-	organization,
 	session,
 	sessionRelations,
 	user,

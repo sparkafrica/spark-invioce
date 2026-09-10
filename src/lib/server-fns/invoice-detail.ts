@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
-import { and, desc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '#/db';
 import {
@@ -11,25 +11,21 @@ import {
 	invoiceItems,
 	invoices,
 	invoiceTranches,
-	payments,
-} from '#/db/schema';
+	payments} from '#/db/schema';
 
 export const getInvoiceDetail = createServerFn({ method: 'GET' })
 	.validator(
 		z.object({
-			id: z.string().min(1),
-		}),
+			id: z.string().min(1)}),
 	)
 	.handler(async ({ data }) => {
 		const { id } = data;
-		const orgId = process.env.ORGANIZATION_ID!;
 
 		// Fetch invoice with all relations (org scoped)
 		const invoiceResult = await db
 			.select({
 				id: invoices.id,
 				number: invoices.number,
-				organizationId: invoices.organizationId,
 				clientId: invoices.clientId,
 				businessId: invoices.businessId,
 				companyId: invoices.companyId,
@@ -51,10 +47,9 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 				voidedAt: invoices.voidedAt,
 				voidReason: invoices.voidReason,
 				createdAt: invoices.createdAt,
-				updatedAt: invoices.updatedAt,
-			})
+				updatedAt: invoices.updatedAt})
 			.from(invoices)
-			.where(and(eq(invoices.id, id), eq(invoices.organizationId, orgId)))
+			.where(eq(invoices.id, id))
 			.limit(1);
 
 		if (invoiceResult.length === 0) {
@@ -82,8 +77,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					address: clients.address,
 					email: clients.email,
 					contact: clients.contact,
-					notes: clients.notes,
-				})
+					notes: clients.notes})
 				.from(clients)
 				.where(eq(clients.id, invoice.clientId))
 				.limit(1),
@@ -93,8 +87,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					id: businesses.id,
 					name: businesses.name,
 					prefix: businesses.prefix,
-					logo: businesses.logo,
-				})
+					logo: businesses.logo})
 				.from(businesses)
 				.where(eq(businesses.id, invoice.businessId))
 				.limit(1),
@@ -108,8 +101,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					email: companies.email,
 					phone: companies.phone,
 					tin: companies.tin,
-					defaultCurrency: companies.defaultCurrency,
-				})
+					defaultCurrency: companies.defaultCurrency})
 				.from(companies)
 				.where(eq(companies.id, invoice.companyId))
 				.limit(1),
@@ -118,8 +110,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 				.select({
 					id: banks.id,
 					label: banks.label,
-					fields: banks.fields,
-				})
+					fields: banks.fields})
 				.from(banks)
 				.where(eq(banks.id, invoice.bankId!))
 				.limit(1),
@@ -134,8 +125,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					discountName: invoiceItems.discountName,
 					discountPct: invoiceItems.discountPct,
 					discountAmt: invoiceItems.discountAmt,
-					sortOrder: invoiceItems.sortOrder,
-				})
+					sortOrder: invoiceItems.sortOrder})
 				.from(invoiceItems)
 				.where(eq(invoiceItems.invoiceId, invoice.id))
 				.orderBy(invoiceItems.sortOrder),
@@ -149,8 +139,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					amount: invoiceTranches.amount,
 					paid: invoiceTranches.paid,
 					paidAt: invoiceTranches.paidAt,
-					sortOrder: invoiceTranches.sortOrder,
-				})
+					sortOrder: invoiceTranches.sortOrder})
 				.from(invoiceTranches)
 				.where(eq(invoiceTranches.invoiceId, invoice.id))
 				.orderBy(invoiceTranches.sortOrder),
@@ -161,8 +150,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					amount: payments.amount,
 					note: payments.note,
 					recordedBy: payments.recordedBy,
-					recordedAt: payments.recordedAt,
-				})
+					recordedAt: payments.recordedAt})
 				.from(payments)
 				.where(eq(payments.invoiceId, invoice.id))
 				.orderBy(desc(payments.recordedAt)),
@@ -172,8 +160,7 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 					id: comments.id,
 					userId: comments.userId,
 					text: comments.text,
-					createdAt: comments.createdAt,
-				})
+					createdAt: comments.createdAt})
 				.from(comments)
 				.where(eq(comments.invoiceId, invoice.id))
 				.orderBy(comments.createdAt),
@@ -267,37 +254,34 @@ export const getInvoiceDetail = createServerFn({ method: 'GET' })
 				discountName: item.discountName,
 				discountPct: item.discountPct ?? '0',
 				discountAmt: item.discountAmt ?? '0',
-				sortOrder: item.sortOrder,
-			})),
+				sortOrder: item.sortOrder})),
 			tranches: tranchesResult.map((t) => ({
 				id: t.id,
 				name: t.name,
 				deliverables: t.deliverables,
 				dueDate: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : null,
+				dueDateRaw: t.dueDate
+					? new Date(t.dueDate).toISOString().split('T')[0]
+					: null,
 				amount: t.amount,
 				paid: t.paid,
 				paidAt: t.paidAt ? new Date(t.paidAt).toLocaleDateString() : null,
-				sortOrder: t.sortOrder,
-			})),
+				sortOrder: t.sortOrder})),
 			payments: paymentsResult.map((p) => ({
 				id: p.id,
 				amount: p.amount,
 				note: p.note,
 				recordedBy: p.recordedBy,
-				recordedAt: new Date(p.recordedAt).toLocaleDateString(),
-			})),
+				recordedAt: new Date(p.recordedAt).toLocaleDateString()})),
 			comments: commentsResult.map((c: any) => ({
 				id: c.id,
 				userId: c.userId,
 				text: c.text,
-				createdAt: new Date(c.createdAt).toLocaleDateString(),
-			})),
+				createdAt: new Date(c.createdAt).toLocaleDateString()})),
 			subtotal,
 			taxAmount: taxAmountVal,
-			total: totalVal,
-		};
+			total: totalVal};
 
 		return {
-			invoice: invoiceDetail,
-		};
+			invoice: invoiceDetail};
 	});

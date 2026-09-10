@@ -15,6 +15,13 @@
       "when": 1787693861292,
       "tag": "0001_shallow_sprite",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788694332525,
+      "tag": "0002_remove-sent",
+      "breakpoints": true
     }
   ]
 }

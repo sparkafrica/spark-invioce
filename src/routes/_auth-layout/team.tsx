@@ -1,7 +1,7 @@
 // --- Validation & Form Imports ---
 import { standardSchemaValidators, useForm } from '@tanstack/react-form';
-import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
 import { formatDate } from 'date-fns';
 import { useState } from 'react';
 import * as v from 'valibot';
@@ -25,40 +25,34 @@ import {
 	TableHeader,
 	TableRow,
 } from '#/components/ui/table';
-import { getSession } from '#/lib/auth.functions';
 import { authClient } from '#/lib/auth-client';
-import { getOrgMembers } from '#/lib/server-fns/references';
-import { inviteMember } from '#/lib/server-fns/team';
+import { inviteMember, listUsers } from '#/lib/server-fns/team';
+import type { user } from '#/db/auth-schema';
 
 export const Route = createFileRoute('/_auth-layout/team')({
-	beforeLoad: async () => {
-		const session = await getSession();
-		if (!session)
-			throw redirect({ to: '/auth/login', search: { redirect: '/team' } });
-		return { user: session.user, session: session.session };
-	},
 	component: TeamPage,
 });
 
 const inviteSchema = v.object({
-	name: v.optional(v.string()),
+	name: v.pipe(v.string(), v.minLength(1, 'Name is required')),
 	email: v.pipe(v.string(), v.email('Please enter a valid email address')),
 	role: v.picklist(['member', 'admin'], 'Please select a valid role'),
 });
 
 type InviteFormValues = v.InferOutput<typeof inviteSchema>;
+type UserRow = typeof user.$inferSelect;
 
 function TeamPage() {
 	const { data: session, isPending } = authClient.useSession();
-	const isAdmin =
-		(session?.user as unknown as { role?: string })?.role === 'owner' ||
-		(session?.user as unknown as { role?: string })?.role === 'admin';
+	const qc = useQueryClient();
+	const role = (session?.user as unknown as { role?: string | null })?.role;
+	const isAdmin = role === 'owner' || role === 'admin';
 
 	const [msg, setMsg] = useState('');
 
 	const { data: membersData, isLoading } = useQuery({
-		queryKey: ['org-members'],
-		queryFn: () => getOrgMembers(),
+		queryKey: ['users'],
+		queryFn: () => listUsers(),
 	});
 
 	// 2. Initialize TanStack Form
@@ -66,8 +60,8 @@ function TeamPage() {
 		defaultValues: {
 			name: '',
 			email: '',
-			role: '',
-		} as unknown as InviteFormValues,
+			role: 'member' as const,
+		} as InviteFormValues,
 		validators: {
 			onChange: ({ value }) =>
 				standardSchemaValidators.validate(
@@ -85,26 +79,29 @@ function TeamPage() {
 				setMsg('');
 				const res = await inviteMember({
 					data: {
-						organizationId: membersData?.organizationId,
 						email: value.email,
 						role: value.role,
 						name: value.name,
 					},
 				});
 
-				console.log(res?.error);
+				if (!res.success) throw new Error(res.error || res.message);
 
-				if (res?.error) throw new Error(res.error);
-
-				setMsg(`Invite sent to ${value.email}`);
+				const pwd = (res as unknown as { tempPassword?: string }).tempPassword;
+				setMsg(
+					pwd
+						? `User created for ${value.email} — temp password emailed`
+						: `User created for ${value.email}`,
+				);
 				form.reset();
+				qc.invalidateQueries({ queryKey: ['users'] });
 			} catch (e: unknown) {
 				const msg =
 					typeof e === 'object' && e !== null && 'message' in e
 						? (e as { message?: unknown }).message
 						: undefined;
 
-				setMsg(typeof msg === 'string' ? msg : 'Failed to send invite');
+				setMsg(typeof msg === 'string' ? msg : 'Failed to create user');
 			}
 		},
 	});
@@ -138,7 +135,7 @@ function TeamPage() {
 		);
 	}
 
-	const teamRows = membersData?.members || [];
+	const teamRows = (membersData?.users ?? []) as unknown as UserRow[];
 
 	return (
 		<div className="grid lg:grid-cols-[1.4fr_1fr] gap-9 items-start">
@@ -166,22 +163,24 @@ function TeamPage() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{teamRows.map((m) => (
+						{teamRows.map((u) => (
 							<TableRow
-								key={m.user.email}
+								key={u.email}
 								className="border-b border-[#d6d3d1] hover:bg-black/5"
 							>
 								<TableCell className="py-3 px-3 text-[13px] font-semibold">
-									{m.user.name}
+									{u.name}
 								</TableCell>
 								<TableCell className="py-3 px-3 text-[13px]">
-									{m.user.email}
+									{u.email}
 								</TableCell>
 								<TableCell className="py-3 px-3 text-[13px] capitalize">
-									{m.role === 'member' ? 'Editor' : m.role}
+									{u.role === 'member' ? 'Editor' : (u.role ?? 'member')}
 								</TableCell>
 								<TableCell className="py-3 px-3 text-[13px] text-[#5c5755]">
-									{formatDate(m.createdAt, 'dd MMM yyyy, KK:mm:ss a')}
+									{u.createdAt
+										? formatDate(new Date(u.createdAt), 'dd MMM yyyy, KK:mm:ss a')
+										: '—'}
 								</TableCell>
 							</TableRow>
 						))}
@@ -275,7 +274,7 @@ function TeamPage() {
 									<Select
 										value={field.state.value}
 										onValueChange={(val) =>
-											field.handleChange(val ?? ('' as 'member' | 'admin'))
+											field.handleChange(val as 'member' | 'admin')
 										}
 									>
 										<SelectTrigger className="rounded-none border border-[#201e1d] bg-white px-2.5 py-2 text-[13px] h-auto focus:ring-1 focus:ring-[#201e1d]">
@@ -309,7 +308,7 @@ function TeamPage() {
 									disabled={!canSubmit || isSubmitting}
 									className="rounded-none bg-[#ec3013] text-white border border-[#ec3013] px-3.5 py-4 text-xs font-semibold hover:bg-[#c02a10] w-full justify-start mt-2"
 								>
-									{isSubmitting ? 'Sending...' : 'Send invite'}
+									{isSubmitting ? 'Creating...' : 'Create user'}
 								</Button>
 							)}
 						</form.Subscribe>

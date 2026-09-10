@@ -26,10 +26,8 @@ export const getMemos = createServerFn({ method: 'GET' })
 				subject: memos.subject,
 				body: memos.body,
 				createdAt: memos.createdAt,
-				updatedAt: memos.updatedAt,
-			})
+				updatedAt: memos.updatedAt})
 			.from(memos)
-			.where(eq(memos.organizationId, process.env.ORGANIZATION_ID!));
 
 		return { memos: results };
 	});
@@ -44,8 +42,7 @@ export const createMemo = createServerFn({ method: 'POST' })
 			from: z.string().min(1),
 			date: z.string().min(1),
 			subject: z.string().min(1),
-			body: z.string().min(1),
-		}),
+			body: z.string().min(1)}),
 	)
 	.handler(async ({ data, context }) => {
 		const ctx = context as unknown as {
@@ -55,20 +52,17 @@ export const createMemo = createServerFn({ method: 'POST' })
 			throw new Error('Unauthorized');
 		}
 
-		const orgId = process.env.ORGANIZATION_ID!;
 		const [result] = await db
 			.insert(memos)
 			.values({
-				organizationId: orgId,
-				number: data.number,
+								number: data.number,
 				businessId: data.businessId,
 				companyId: data.companyId,
 				to: data.to,
 				from: data.from,
 				date: new Date(data.date),
 				subject: data.subject,
-				body: data.body,
-			})
+				body: data.body})
 			.returning({ id: memos.id });
 
 		return { memoId: result.id };
@@ -85,8 +79,7 @@ export const updateMemo = createServerFn({ method: 'POST' })
 			from: z.string().min(1).optional(),
 			date: z.string().min(1).optional(),
 			subject: z.string().min(1).optional(),
-			body: z.string().min(1).optional(),
-		}),
+			body: z.string().min(1).optional()}),
 	)
 	.handler(async ({ data, context }) => {
 		const ctx = context as unknown as {

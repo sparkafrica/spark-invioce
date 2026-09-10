@@ -8,8 +8,7 @@ import {
 	invoiceHistory,
 	invoiceItems,
 	invoices,
-	invoiceTranches,
-} from '#/db/schema';
+	invoiceTranches} from '#/db/schema';
 import { logActivity, withActivity } from '#/lib/activity';
 import { CURRENCIES } from '#/lib/currencies';
 
@@ -27,8 +26,7 @@ const invoiceItemSchema = z.object({
 		.string()
 		.regex(/^\d+(\.\d+)?$/)
 		.optional(),
-	sortOrder: z.number().int().nonnegative(),
-});
+	sortOrder: z.number().int().nonnegative()});
 
 const invoiceTrancheSchema = z.object({
 	name: z.string().min(1),
@@ -36,13 +34,11 @@ const invoiceTrancheSchema = z.object({
 	dueDate: z.string().optional().nullable(),
 	amount: z.string().regex(/^\d+(\.\d+)?$/),
 	paid: z.boolean().optional(),
-	sortOrder: z.number().int().nonnegative(),
-});
+	sortOrder: z.number().int().nonnegative()});
 
 // helper to compute next number for a business within org
 async function computeNextInvoiceNumber(
 	businessId: string,
-	orgId: string,
 	prefix: string,
 ): Promise<{ nextNumber: string; next: number }> {
 	const rows = await db
@@ -50,7 +46,6 @@ async function computeNextInvoiceNumber(
 		.from(invoices)
 		.where(
 			and(
-				eq(invoices.organizationId, orgId),
 				eq(invoices.businessId, businessId),
 			),
 		);
@@ -70,22 +65,17 @@ async function computeNextInvoiceNumber(
 export const getLatestInvoiceNumber = createServerFn({ method: 'GET' })
 	.validator(z.object({ businessId: z.string().min(1) }))
 	.handler(async ({ data }) => {
-		const orgId = process.env.ORGANIZATION_ID!;
 		const biz = await db
 			.select({ prefix: businesses.prefix })
 			.from(businesses)
 			.where(
 				and(
 					eq(businesses.id, data.businessId),
-					eq(businesses.organizationId, orgId),
-				),
+					),
 			)
 			.limit(1);
 		if (!biz[0]) throw new Error('Business not found');
-		const { nextNumber, next } = await computeNextInvoiceNumber(
-			data.businessId,
-			orgId,
-			biz[0].prefix,
+		const { nextNumber, next } = await computeNextInvoiceNumber(data.businessId, biz[0].prefix,
 		);
 		return { nextNumber, next, prefix: biz[0].prefix };
 	});
@@ -122,8 +112,7 @@ const createInvoiceSchema = z.object({
 	),
 	items: z.array(invoiceItemSchema).min(1),
 	tranches: z.array(invoiceTrancheSchema).optional(),
-	saveNote: z.string().optional().nullable(),
-});
+	saveNote: z.string().optional().nullable()});
 
 export const createInvoice = createServerFn({ method: 'POST' })
 	.validator(createInvoiceSchema)
@@ -137,7 +126,6 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					throw new Error('Unauthorized');
 				}
 
-				const orgId = process.env.ORGANIZATION_ID!;
 
 				// Get business to generate invoice number (org scoped)
 				const business = await db
@@ -146,8 +134,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					.where(
 						and(
 							eq(businesses.id, data.businessId),
-							eq(businesses.organizationId, orgId),
-						),
+							),
 					)
 					.limit(1);
 
@@ -157,7 +144,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 
 				const prefix = business[0].prefix;
 				const { nextNumber: computedNext, next: initialNext } =
-					await computeNextInvoiceNumber(data.businessId, orgId, prefix);
+					await computeNextInvoiceNumber(data.businessId, prefix);
 
 				let invoiceNumber = data.number?.trim() || '';
 				const isManual = invoiceNumber !== '';
@@ -199,8 +186,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					try {
 						await db.insert(invoices).values({
 							id: invoiceId,
-							organizationId: orgId,
-							number: currentNumber,
+														number: currentNumber,
 							businessId: data.businessId,
 							companyId: data.companyId,
 							clientId: data.clientId,
@@ -221,8 +207,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 								finalPayLinkCurrency as unknown as typeof invoices.$inferInsert.payLinkCurrency,
 							status: 'draft',
 							createdAt: now,
-							updatedAt: now,
-						});
+							updatedAt: now});
 						inserted = true;
 						invoiceNumber = currentNumber;
 						break;
@@ -241,10 +226,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 						if (isUniqueViolation) {
 							if (isManual) {
 								// Suggest next free number (recompute to ensure fresh)
-								const fresh = await computeNextInvoiceNumber(
-									data.businessId,
-									orgId,
-									prefix,
+								const fresh = await computeNextInvoiceNumber(data.businessId, prefix,
 								);
 								throw new Error(
 									`Number already exists — proceed with ${fresh.nextNumber}?`,
@@ -283,8 +265,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 								discountAmt: item.discountAmt ?? '0',
 								sortOrder: item.sortOrder ?? index,
 								createdAt: now,
-								updatedAt: now,
-							}),
+								updatedAt: now}),
 						),
 					);
 				}
@@ -310,16 +291,14 @@ export const createInvoice = createServerFn({ method: 'POST' })
 								paid: tranche.paid ?? false,
 								sortOrder: tranche.sortOrder ?? index,
 								createdAt: now,
-								updatedAt: now,
-							}),
+								updatedAt: now}),
 						),
 					);
 				}
 
-				// Log activity with correct orgId
+				// Log activity
 				await logActivity({
-					organizationId: orgId,
-					userId: ctx.session.user.id,
+										userId: ctx.session.user.id,
 					userName: ctx.session.user.name,
 					userRole: 'member',
 					type: 'Created',
@@ -328,8 +307,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 					detail: data.saveNote
 						? `Invoice ${invoiceNumber} created — ${data.saveNote}`
 						: `Invoice ${invoiceNumber} created for ${ctx.session.user.name}`,
-					metadata: data.saveNote ? { saveNote: data.saveNote } : undefined,
-				});
+					metadata: data.saveNote ? { saveNote: data.saveNote } : undefined});
 
 				// Insert invoice history snapshot
 				try {
@@ -346,22 +324,18 @@ export const createInvoice = createServerFn({ method: 'POST' })
 								qty: Number(i.qty),
 								cost: Number(i.cost),
 								discountName: i.discountName || '',
-								discountPct: Number(i.discountPct || 0),
-							})),
+								discountPct: Number(i.discountPct || 0)})),
 							tranches: (data.tranches || []).map((t: any) => ({
 								name: t.name,
 								deliverables: t.deliverables || '',
 								due: t.dueDate || '',
 								amount: Number(t.amount),
-								paid: !!t.paid,
-							})),
+								paid: !!t.paid})),
 							currency: data.currency,
 							taxName: data.taxName,
 							taxRate: Number(data.taxRate),
-							dueDate: data.dueDate,
-						} as unknown as typeof invoiceHistory.$inferInsert.snapshot,
-						createdAt: now,
-					});
+							dueDate: data.dueDate} as unknown as typeof invoiceHistory.$inferInsert.snapshot,
+						createdAt: now});
 				} catch {
 					// history insert failure should not block invoice creation
 				}
@@ -371,8 +345,7 @@ export const createInvoice = createServerFn({ method: 'POST' })
 			{
 				entity: 'Invoice',
 				getLabel: (_: unknown, result: { number: string }) => result.number,
-				getDetail: () => `Invoice created`,
-			},
+				getDetail: () => `Invoice created`},
 		),
 	);
 
@@ -408,13 +381,12 @@ const updateInvoiceSchema = z.object({
 			.optional(),
 	),
 	status: z
-		.enum(['draft', 'sent', 'paid', 'part_paid', 'overdue', 'voided'])
+		.enum(['draft', 'paid', 'part_paid', 'due', 'overdue', 'voided'])
 		.optional(),
 	voidReason: z.string().optional().nullable(),
 	items: z.array(invoiceItemSchema).min(1),
 	tranches: z.array(invoiceTrancheSchema).optional(),
-	saveNote: z.string().optional().nullable(),
-});
+	saveNote: z.string().optional().nullable()});
 
 export const updateInvoice = createServerFn({ method: 'POST' })
 	.validator(updateInvoiceSchema)
@@ -428,7 +400,6 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 					throw new Error('Unauthorized');
 				}
 
-				const orgId = process.env.ORGANIZATION_ID!;
 				const now = new Date();
 
 				const bankIdVal = (data.bankId as unknown as string | null)?.trim?.()
@@ -445,21 +416,18 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 				const finalPayLinkCurrency =
 					payLinkCurrencyVal === '' ? null : payLinkCurrencyVal;
 
-				// Fetch existing for org scoping and diff
+				// Fetch existing for diff
 				const existing = await db
 					.select({
 						id: invoices.id,
 						number: invoices.number,
-						organizationId: invoices.organizationId,
 						status: invoices.status,
 						voided: invoices.voided,
 						voidedAt: invoices.voidedAt,
 						voidReason: invoices.voidReason,
 					})
 					.from(invoices)
-					.where(
-						and(eq(invoices.id, data.id), eq(invoices.organizationId, orgId)),
-					)
+					.where(eq(invoices.id, data.id))
 					.limit(1);
 				if (!existing[0]) throw new Error('Invoice not found');
 
@@ -487,7 +455,6 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							.from(invoices)
 							.where(
 								and(
-									eq(invoices.organizationId, orgId),
 									eq(invoices.number, trimmed),
 								),
 							)
@@ -500,15 +467,11 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 								.where(
 									and(
 										eq(businesses.id, data.businessId),
-										eq(businesses.organizationId, orgId),
-									),
+										),
 								)
 								.limit(1);
 							const prefix = biz[0]?.prefix || 'INV';
-							const fresh = await computeNextInvoiceNumber(
-								data.businessId,
-								orgId,
-								prefix,
+							const fresh = await computeNextInvoiceNumber(data.businessId, prefix,
 							);
 							throw new Error(
 								`Number already exists — proceed with ${fresh.nextNumber}?`,
@@ -546,10 +509,9 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							voided: willBeVoided,
 							voidedAt: voidedAtToSet,
 							voidReason: voidReasonToSet,
-							updatedAt: now,
-						})
+							updatedAt: now})
 						.where(
-							and(eq(invoices.id, data.id), eq(invoices.organizationId, orgId)),
+							and(eq(invoices.id, data.id), ),
 						);
 				} catch (e: unknown) {
 					const err = e as {
@@ -570,15 +532,11 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							.where(
 								and(
 									eq(businesses.id, data.businessId),
-									eq(businesses.organizationId, orgId),
-								),
+									),
 							)
 							.limit(1);
 						const prefix = biz[0]?.prefix || 'INV';
-						const fresh = await computeNextInvoiceNumber(
-							data.businessId,
-							orgId,
-							prefix,
+						const fresh = await computeNextInvoiceNumber(data.businessId, prefix,
 						);
 						throw new Error(
 							`Number already exists — proceed with ${fresh.nextNumber}?`,
@@ -607,8 +565,7 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 								discountAmt: item.discountAmt ?? '0',
 								sortOrder: item.sortOrder ?? index,
 								createdAt: now,
-								updatedAt: now,
-							}),
+								updatedAt: now}),
 						),
 					);
 				}
@@ -638,8 +595,7 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 								paid: tranche.paid ?? false,
 								sortOrder: tranche.sortOrder ?? index,
 								createdAt: now,
-								updatedAt: now,
-							}),
+								updatedAt: now}),
 						),
 					);
 				}
@@ -659,36 +615,30 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 								qty: Number(i.qty),
 								cost: Number(i.cost),
 								discountName: i.discountName || '',
-								discountPct: Number(i.discountPct || 0),
-							})),
+								discountPct: Number(i.discountPct || 0)})),
 							tranches: (data.tranches || []).map((t: any) => ({
 								name: t.name,
 								deliverables: t.deliverables || '',
 								due: t.dueDate || '',
 								amount: Number(t.amount),
-								paid: !!t.paid,
-							})),
+								paid: !!t.paid})),
 							currency: data.currency,
 							taxName: data.taxName,
 							taxRate: Number(data.taxRate),
 							dueDate: data.dueDate,
 							status: statusToSet,
 							voided: willBeVoided,
-							voidReason: voidReasonToSet,
-						} as unknown as typeof invoiceHistory.$inferInsert.snapshot,
-						createdAt: now,
-					});
+							voidReason: voidReasonToSet} as unknown as typeof invoiceHistory.$inferInsert.snapshot,
+						createdAt: now});
 					if (data.saveNote) {
 						await logActivity({
-							organizationId: orgId,
-							userId: ctx.session.user.id,
+														userId: ctx.session.user.id,
 							userName: ctx.session.user.name,
 							userRole: 'member',
 							type: 'Edited',
 							entity: 'Invoice',
 							label: numberToSet || existing[0].number,
-							detail: data.saveNote,
-						});
+							detail: data.saveNote});
 					}
 				} catch {
 					// ignore history errors
@@ -706,7 +656,6 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 					return ch && ch.length > 0
 						? `Updated invoice: ${ch.map((c) => `${c.field}: ${c.from} → ${c.to}`).join('; ')}`
 						: 'Invoice updated';
-				},
-			},
+				}},
 		),
 	);

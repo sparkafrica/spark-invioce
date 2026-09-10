@@ -10,14 +10,13 @@ import {
 	invoiceItems,
 	invoices,
 	invoiceTranches,
-	payments,
-} from '#/db/schema';
+	payments} from '#/db/schema';
 
 type InvoiceStatus =
 	| 'draft'
-	| 'sent'
 	| 'paid'
 	| 'part_paid'
+	| 'due'
 	| 'overdue'
 	| 'voided';
 
@@ -51,15 +50,13 @@ export const getInvoices = createServerFn({ method: 'GET' })
 			sortDir: z.enum(['asc', 'desc']).optional(),
 			filter: z.string().optional(),
 			status: z.string().optional(),
-			businessId: z.string().optional(),
-		}),
+			businessId: z.string().optional()}),
 	)
 	.handler(async ({ data }): Promise<GetInvoicesResponse> => {
 		const { page, pageSize, sortBy, sortDir, filter, status, businessId } =
 			data;
 
-		const orgId = process.env.ORGANIZATION_ID!;
-		const whereConditions = [eq(invoices.organizationId, orgId)];
+		const whereConditions = [];
 
 		if (status) {
 			whereConditions.push(eq(invoices.status, status as InvoiceStatus));
@@ -96,8 +93,7 @@ export const getInvoices = createServerFn({ method: 'GET' })
 			issued: invoices.issueDate,
 			due: invoices.dueDate,
 			type: invoices.paymentType,
-			status: invoices.status,
-		} as const;
+			status: invoices.status} as const;
 		let orderByClause = desc(invoices.createdAt);
 		if (sortBy) {
 			const sortKey = sortBy as keyof typeof columnMap;
@@ -124,8 +120,7 @@ export const getInvoices = createServerFn({ method: 'GET' })
 					SELECT SUM((ii.qty * ii.cost) * (1 - COALESCE(ii.discount_pct, 0) / 100) - COALESCE(ii.discount_amt, 0))
 					FROM invoice_items ii
 					WHERE ii.invoice_id = ${invoices.id}
-				), 0)`,
-			})
+				), 0)`})
 			.from(invoices)
 			.leftJoin(clients, eq(invoices.clientId, clients.id))
 			.leftJoin(businesses, eq(invoices.businessId, businesses.id))
@@ -150,16 +145,14 @@ export const getInvoices = createServerFn({ method: 'GET' })
 				currency: r.currency || 'NGN',
 				total: totalWithTax.toFixed(2),
 				status: r.status,
-				commentCount: 0,
-			};
+				commentCount: 0};
 		});
 
 		return {
 			invoices: invoicesWithTotals,
 			total,
 			page,
-			pageSize,
-		};
+			pageSize};
 	});
 
 export const deleteInvoice = createServerFn({ method: 'POST' })

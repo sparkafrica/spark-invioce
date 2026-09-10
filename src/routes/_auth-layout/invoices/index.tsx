@@ -1,38 +1,65 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-} from '@tanstack/react-router';
-import { useState } from 'react';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { InvoiceTable } from '#/components/table/InvoiceTable';
 import { Button } from '#/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select';
 import { Skeleton } from '#/components/ui/skeleton';
 import { useBusinesses } from '#/hooks/useReferences';
-import { getSession } from '#/lib/auth.functions';
 import { getInvoices } from '#/lib/server-fns/invoices';
+import {
+  createStandardSchemaV1,
+  debounce,
+  parseAsIndex,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryStates,
+} from 'nuqs';
+
+const statusValues = ['All', 'paid', 'part_paid', 'overdue', 'draft', 'voided', 'due'] as const;
+const currencyValues = ['All', 'NGN', 'USD', 'KES', 'RWF', 'GBP', 'EUR'] as const;
+
+const searchParams = {
+  searchQuery: parseAsString.withDefault(''),
+  pageIndex: parseAsIndex.withDefault(0),
+  business: parseAsString.withDefault('All'),
+  status: parseAsStringLiteral(statusValues).withDefault('All'),
+  currency: parseAsStringLiteral(currencyValues).withDefault('All'),
+};
 
 export const Route = createFileRoute('/_auth-layout/invoices/')({
-  beforeLoad: async () => {
-    const session = await getSession();
-    if (!session) {
-      throw redirect({ to: '/auth/login', search: { redirect: '/invoices' } });
-    }
-    return { user: session.user, session: session.session };
-  },
   component: InvoicesPage,
+  validateSearch: createStandardSchemaV1(searchParams, {
+    partialOutput: true
+  })
 });
 
 function InvoicesPage() {
-  const navigate = useNavigate();
-  const [bizFilter, setBizFilter] = useState<string>('All');
-  const [statusFilter, setStatusFilter] = useState<
-    'All' | 'paid' | 'part_paid' | 'overdue' | 'draft' | 'sent' | 'voided'
-  >('All');
-  const [currencyFilter, setCurrencyFilter] = useState<
-    'All' | 'NGN' | 'USD' | 'KES' | 'RWF' | 'GBP' | 'EUR'
-  >('All');
+	const [
+		{
+			business: bizFilter,
+			status: statusFilter,
+			currency: currencyFilter,
+			searchQuery,
+			pageIndex,
+		},
+		setQueryStates,
+	] = useQueryStates(searchParams, {
+		history: 'replace',
+		clearOnDefault: true,
+	});
+	const setBizFilter = (v: string) => setQueryStates({ business: v });
+	const setStatusFilter = (v: string) => setQueryStates({ status: v as typeof statusFilter });
+	const setCurrencyFilter = (v: string) => setQueryStates({ currency: v as typeof currencyFilter });
+	const setSearchQuery = (v: string) =>
+		setQueryStates({ searchQuery: v }, { limitUrlUpdates: v === '' ? undefined : debounce(300) });
+	const setPageIndex = (v: number) => setQueryStates({ pageIndex: v });
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => getInvoices({ data: {} }),
@@ -97,11 +124,25 @@ function InvoicesPage() {
   }
 
   const invoices = data?.invoices || [];
-  const filtered = invoices.filter((invoice) => {
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const filtered = invoices.filter((invoice: any) => {
     const matchesBusiness =
       bizFilter === 'All' || invoice.business === bizFilter;
+    const dueRaw = (invoice as any).due || (invoice as any).dueDate || '';
+    const isOverdue = Boolean(
+      dueRaw && dueRaw < todayISO && !['paid', 'voided'].includes(invoice.status),
+    );
+    const isDue = Boolean(
+      dueRaw && dueRaw >= todayISO && invoice.status === 'draft',
+    );
     const matchesStatus =
-      statusFilter === 'All' || invoice.status === statusFilter;
+      statusFilter === 'All'
+        ? true
+        : statusFilter === 'due'
+          ? isDue
+          : statusFilter === 'overdue'
+            ? isOverdue || invoice.status === 'overdue'
+            : invoice.status === statusFilter;
     const matchesCurrency =
       currencyFilter === 'All' || invoice.currency === currencyFilter;
     return matchesBusiness && matchesStatus && matchesCurrency;
@@ -113,8 +154,8 @@ function InvoicesPage() {
     'part_paid',
     'overdue',
     'draft',
-    'sent',
     'voided',
+    'due',
   ] as const;
   const currencyOptions: Array<typeof currencyFilter> = [
     'All',
@@ -132,62 +173,61 @@ function InvoicesPage() {
         <h1 className="text-[32px] font-medium tracking-[-0.02em] leading-none">
           Invoices
         </h1>
-        <div className="flex gap-1 flex-wrap justify-end">
-          {bizOptions.map((b) => (
-            <Button
-              type="button"
-              key={b}
-              variant={bizFilter === b ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setBizFilter(b)}
-              className={
-                bizFilter === b
-                  ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold rounded-none'
-                  : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none'
-              }
-            >
-              {b}
-            </Button>
-          ))}
-        </div>
       </div>
 
       <div className="flex flex-col gap-3 rounded-none border-2 border-[#201e1d] bg-white p-3">
-        <div className="flex flex-wrap gap-1">
-          {statusOptions.map((option) => (
-            <Button
-              type="button"
-              key={option}
-              variant={statusFilter === option ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setStatusFilter(option)}
-              className={
-                statusFilter === option
-                  ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold rounded-none'
-                  : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] rounded-none'
-              }
-            >
-              {option === 'All' ? 'All statuses' : option.replace('_', ' ')}
-            </Button>
-          ))}
+        <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">
+          FILTERS — SELECT TO REFINE
         </div>
-        <div className="flex flex-wrap gap-1">
-          {currencyOptions.map((option) => (
-            <Button
-              type="button"
-              key={option}
-              variant={currencyFilter === option ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCurrencyFilter(option)}
-              className={
-                currencyFilter === option
-                  ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold rounded-none'
-                  : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] rounded-none'
-              }
-            >
-              {option === 'All' ? 'All currencies' : option}
-            </Button>
-          ))}
+        <div className="flex gap-2 justify-end">
+          <Select value={bizFilter} onValueChange={(v) => setBizFilter((v as string) ?? 'All')}>
+            <SelectTrigger className="min-w-36 rounded-none border-[#201e1d] bg-white text-xs font-semibold">
+              <SelectValue placeholder="Business" />
+            </SelectTrigger>
+            <SelectContent className="rounded-none border-[#201e1d]">
+              <SelectGroup>
+                {bizOptions.map((b) => (
+                  <SelectItem key={b} value={b} className="text-xs">
+                    {b === 'All' ? 'All businesses' : b}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter((v as typeof statusFilter) ?? 'All')}
+          >
+            <SelectTrigger className="min-w-32 rounded-none border-[#201e1d] bg-white text-xs font-semibold">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent className="rounded-none border-[#201e1d]">
+              <SelectGroup>
+                {statusOptions.map((option) => (
+                  <SelectItem key={option} value={option} className="text-xs">
+                    {option === 'All' ? 'All statuses' : option.replace('_', ' ')}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <Select
+            value={currencyFilter}
+            onValueChange={(v) => setCurrencyFilter((v as typeof currencyFilter) ?? 'All')}
+          >
+            <SelectTrigger className="min-w-32 rounded-none border-[#201e1d] bg-white text-xs font-semibold">
+              <SelectValue placeholder="Currency" />
+            </SelectTrigger>
+            <SelectContent className="rounded-none border-[#201e1d]">
+              <SelectGroup>
+                {currencyOptions.map((option) => (
+                  <SelectItem key={option} value={option} className="text-xs">
+                    {option === 'All' ? 'All currencies' : option}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -208,7 +248,23 @@ function InvoicesPage() {
         </div>
       )}
 
-      <InvoiceTable data={filtered} allowEdit />
+      <InvoiceTable
+        data={filtered}
+        allowEdit
+        globalFilter={searchQuery}
+        onGlobalFilterChange={setSearchQuery}
+        pagination={{ pageIndex, pageSize: 10 }}
+        onPaginationChange={(updater) => {
+          const next =
+            typeof updater === 'function'
+              ? (updater as (old: { pageIndex: number; pageSize: number }) => { pageIndex: number; pageSize: number })({
+                  pageIndex,
+                  pageSize: 10,
+                })
+              : updater;
+          setPageIndex(next.pageIndex);
+        }}
+      />
 
       <div className="flex gap-2">
         <Link

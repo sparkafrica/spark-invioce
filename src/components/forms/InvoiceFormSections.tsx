@@ -1,11 +1,23 @@
-// @ts-nocheck
 'use client';
 
 import { standardSchemaValidators, useForm } from '@tanstack/react-form';
-import { CheckIcon, PlusIcon, TrashIcon } from 'lucide-react';
+import {
+	CheckIcon,
+	ChevronsUpDownIcon,
+	PlusIcon,
+	TrashIcon,
+} from 'lucide-react';
 import { useState } from 'react';
 import * as v from 'valibot';
 import { Button } from '#/components/ui/button';
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from '#/components/ui/command';
 import { CurrencySelect } from '#/components/ui/currency-select';
 import {
 	Dialog,
@@ -17,6 +29,11 @@ import {
 import { Field, FieldError, FieldLabel } from '#/components/ui/field';
 import { Input } from '#/components/ui/input';
 import { NumberInput } from '#/components/ui/number-input';
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '#/components/ui/popover';
 import {
 	Select,
 	SelectContent,
@@ -38,7 +55,8 @@ import {
 import { getErrorMessage } from '#/lib/errors';
 import { createClient } from '#/lib/server-fns/crm';
 import { getLatestInvoiceNumber } from '#/lib/server-fns/invoice-create';
-import type { InvoiceFormApi } from './InvoiceForm';
+import { cn } from '#/lib/utils';
+import type { InvoiceFormApi, ItemValue, TrancheValue } from './InvoiceForm';
 
 export function BusinessEntitySection({ form }: { form: InvoiceFormApi }) {
 	const { data: businessesData, isLoading: loadingBiz } = useBusinesses();
@@ -193,7 +211,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 							<FieldLabel>Invoice number</FieldLabel>
 							<div className="grid grid-cols-[1fr_auto] gap-1.5">
 								<Input
-									value={field.state.value || ''}
+									value={(field.state.value as string) || ''}
 									onChange={(e) => field.handleChange(e.target.value)}
 									placeholder="SPK-2026-…"
 								/>
@@ -217,7 +235,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 							<FieldLabel>Date of issue *</FieldLabel>
 							<Input
 								type="date"
-								value={field.state.value}
+								value={field.state.value as string}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 							/>
@@ -231,7 +249,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 							<FieldLabel>Due date *</FieldLabel>
 							<Input
 								type="date"
-								value={field.state.value}
+								value={field.state.value as string}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 							/>
@@ -244,7 +262,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 						<Field>
 							<FieldLabel>Currency *</FieldLabel>
 							<CurrencySelect
-								value={field.state.value}
+								value={field.state.value as string}
 								onValueChange={(v) => field.handleChange(v)}
 								placeholder="Search currency..."
 							/>
@@ -259,7 +277,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 						<Field>
 							<FieldLabel>Invoice description</FieldLabel>
 							<Textarea
-								value={field.state.value || ''}
+								value={(field.state.value as string) || ''}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 								placeholder="What this invoice is for — appears under Re: on the document"
@@ -276,7 +294,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 						<Field>
 							<FieldLabel>Tax / fee name</FieldLabel>
 							<Input
-								value={field.state.value}
+								value={field.state.value as string}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 								placeholder="VAT"
@@ -292,7 +310,7 @@ export function InvoiceSection({ form }: { form: InvoiceFormApi }) {
 							<Input
 								type="text"
 								inputMode="decimal"
-								value={field.state.value}
+								value={field.state.value as string}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 							/>
@@ -476,7 +494,7 @@ const NewClientForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Field>
 							<FieldLabel>Name *</FieldLabel>
 							<Input
-								value={field.state.value}
+								value={field.state.value as string}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 								placeholder="B4B Partners Limited"
@@ -490,7 +508,7 @@ const NewClientForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Field>
 							<FieldLabel>Email</FieldLabel>
 							<Input
-								value={field.state.value || ''}
+								value={(field.state.value as string) || ''}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 								placeholder="you@client.co"
@@ -504,7 +522,7 @@ const NewClientForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Field>
 							<FieldLabel>Contact person</FieldLabel>
 							<Input
-								value={field.state.value || ''}
+								value={(field.state.value as string) || ''}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 								placeholder="Chinapa Onwusah"
@@ -518,7 +536,7 @@ const NewClientForm = ({ onSuccess }: { onSuccess: () => void }) => {
 						<Field>
 							<FieldLabel>Registration no.</FieldLabel>
 							<Input
-								value={field.state.value || ''}
+								value={(field.state.value as string) || ''}
 								onChange={(e) => field.handleChange(e.target.value)}
 								onBlur={field.handleBlur}
 								placeholder="RC 7347187"
@@ -533,7 +551,7 @@ const NewClientForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							<Field>
 								<FieldLabel>Address</FieldLabel>
 								<Textarea
-									value={field.state.value || ''}
+									value={(field.state.value as string) || ''}
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
 									placeholder="Road 13, Ikota Villa Estate, Ajah…"
@@ -550,7 +568,7 @@ const NewClientForm = ({ onSuccess }: { onSuccess: () => void }) => {
 							<Field>
 								<FieldLabel>About the client</FieldLabel>
 								<Textarea
-									value={field.state.value || ''}
+									value={(field.state.value as string) || ''}
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
 									placeholder="Internal notes…"
@@ -571,7 +589,9 @@ const NewClientForm = ({ onSuccess }: { onSuccess: () => void }) => {
 				>
 					Cancel
 				</Button>
-				<form.Subscribe selector={(s) => [s.canSubmit, s.isSubmitting]}>
+				<form.Subscribe
+					selector={(s: any) => [s.canSubmit, s.isSubmitting] as const}
+				>
 					{([canSubmit, isSubmitting]) => (
 						<Button
 							type="submit"
@@ -603,7 +623,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 							<Button
 								type="button"
 								onClick={() =>
-									field.pushValue({
+									(field as any).pushValue({
 										name: '',
 										description: '',
 										qty: '1',
@@ -611,7 +631,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 										discountName: '',
 										discountPct: '0',
 										discountAmt: '0',
-										sortOrder: field.state.value.length,
+										sortOrder: (field.state.value as ItemValue[]).length,
 									})
 								}
 								size="sm"
@@ -619,7 +639,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 							>
 								Add blank line
 							</Button>
-							{field.state.value.length > 1 && (
+							{(field.state.value as ItemValue[]).length > 1 && (
 								<Button
 									type="button"
 									size="sm"
@@ -665,7 +685,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 											type="button"
 											variant="outline"
 											onClick={() =>
-												field.pushValue({
+												(field as any).pushValue({
 													name: p.name,
 													description: p.description || '',
 													qty: '1',
@@ -673,7 +693,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 													discountName: '',
 													discountPct: '0',
 													discountAmt: '0',
-													sortOrder: field.state.value.length,
+													sortOrder: (field.state.value as ItemValue[]).length,
 												})
 											}
 											className="h-7 px-2 text-[11px] rounded-none border-[#201e1d] hover:bg-[#f0dcd8]"
@@ -691,7 +711,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 			<form.Field name="items" mode="array">
 				{(field) => (
 					<div className="space-y-2">
-						{field.state.value.map((_, index: number) => (
+						{(field.state.value as any[]).map((_: any, index: number) => (
 							<div
 								key={index}
 								className="grid grid-cols-[1fr_80px_90px_80px_40px] gap-2 items-start p-2 border border-[#d6d3d1] bg-white"
@@ -700,7 +720,7 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									{(sub) => (
 										<Field>
 											<Input
-												value={sub.state.value}
+												value={sub.state.value as string}
 												onChange={(e) => sub.handleChange(e.target.value)}
 												onBlur={sub.handleBlur}
 												placeholder="Item name"
@@ -714,7 +734,11 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									{(sub) => (
 										<Field>
 											<NumberInput
-												value={sub.state.value ? Number(sub.state.value) : 0}
+												value={
+													(sub.state.value as string)
+														? Number(sub.state.value as string)
+														: 0
+												}
 												onValueChange={(nextValue) => {
 													sub.handleChange(
 														nextValue === null ? '' : nextValue.toFixed(2),
@@ -732,7 +756,11 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									{(sub) => (
 										<Field>
 											<NumberInput
-												value={sub.state.value ? Number(sub.state.value) : 0}
+												value={
+													(sub.state.value as string)
+														? Number(sub.state.value as string)
+														: 0
+												}
 												onValueChange={(nextValue) => {
 													sub.handleChange(
 														nextValue === null ? '' : nextValue.toFixed(2),
@@ -750,7 +778,11 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 									{(sub) => (
 										<Field>
 											<NumberInput
-												value={sub.state.value ? Number(sub.state.value) : 0}
+												value={
+													(sub.state.value as string)
+														? Number(sub.state.value as string)
+														: 0
+												}
 												onValueChange={(nextValue) => {
 													sub.handleChange(
 														nextValue === null ? '' : nextValue.toFixed(2),
@@ -766,8 +798,8 @@ export function LineItemsSection({ form }: { form: InvoiceFormApi }) {
 								</form.Field>
 								<Button
 									type="button"
-									onClick={() => field.removeValue(index)}
-									disabled={field.state.value.length === 1}
+									onClick={() => (field as any).removeValue(index)}
+									disabled={(field.state.value as ItemValue[]).length === 1}
 									className="h-9 w-9 p-0 rounded-none border border-[#201e1d] bg-white text-[#c02a10] hover:bg-[#fff2ef] disabled:opacity-30"
 								>
 									<TrashIcon className="h-4 w-4" />
@@ -827,14 +859,14 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 										<Button
 											type="button"
 											onClick={() =>
-												field.pushValue({
-													name: `M${field.state.value.length + 1} — `,
+												(field as any).pushValue({
+													name: `M${(field.state.value as ItemValue[]).length + 1} — `,
 													deliverables: '',
 													dueDate:
 														(form.getFieldValue('dueDate') as string) || '',
 													amount: '0',
 													paid: false,
-													sortOrder: field.state.value.length,
+													sortOrder: (field.state.value as ItemValue[]).length,
 												})
 											}
 											className="border border-[#201e1d] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#201e1d] h-9"
@@ -851,21 +883,22 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 														s + Number(it.qty || 0) * Number(it.cost || 0),
 													0,
 												);
-												const n = field.state.value.length || 1;
+												const n =
+													(field.state.value as TrancheValue[]).length || 1;
 												const each = Math.round((subtotal / n) * 100) / 100;
-												const newTranches = field.state.value.map(
-													(t: TrancheValue, i: number) => ({
-														...t,
-														amount:
-															i === n - 1
-																? (
-																		Math.round(
-																			(subtotal - each * (n - 1)) * 100,
-																		) / 100
-																	).toFixed(2)
-																: each.toFixed(2),
-													}),
-												);
+												const newTranches = (
+													field.state.value as TrancheValue[]
+												).map((t: TrancheValue, i: number) => ({
+													...t,
+													amount:
+														i === n - 1
+															? (
+																	Math.round(
+																		(subtotal - each * (n - 1)) * 100,
+																	) / 100
+																).toFixed(2)
+															: each.toFixed(2),
+												}));
 												field.handleChange(newTranches);
 											}}
 											className="border border-[#201e1d] bg-white px-3 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#201e1d] h-9"
@@ -874,105 +907,109 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 										</Button>
 									</div>
 									<div className="flex flex-col gap-0.5 bg-[#201e1d] border-2 border-[#201e1d] p-0.5">
-										{(field.state.value || []).map((_, index) => (
-											<div
-												key={index}
-												className="bg-white p-3 grid grid-cols-[1fr_1.8fr_1fr_1fr_auto] gap-2 items-end"
-											>
-												<form.Field name={`tranches[${index}].name`}>
-													{(sub) => (
-														<Field>
-															<FieldLabel>Milestone</FieldLabel>
-															<Input
-																value={sub.state.value}
-																onChange={(e) =>
-																	sub.handleChange(e.target.value)
-																}
-																onBlur={sub.handleBlur}
-																placeholder="M1 — Mobilisation"
-																className="h-9 px-2.5 text-[13px]"
-															/>
-															<FieldError errors={sub.state.meta.errors} />
-														</Field>
-													)}
-												</form.Field>
-												<form.Field name={`tranches[${index}].deliverables`}>
-													{(sub) => (
-														<Field>
-															<FieldLabel>Deliverables</FieldLabel>
-															<Input
-																value={sub.state.value || ''}
-																onChange={(e) =>
-																	sub.handleChange(e.target.value)
-																}
-																onBlur={sub.handleBlur}
-																placeholder="SOW signature, PO"
-																className="h-9 px-2.5 text-[13px]"
-															/>
-															<FieldError errors={sub.state.meta.errors} />
-														</Field>
-													)}
-												</form.Field>
-												<form.Field name={`tranches[${index}].dueDate`}>
-													{(sub) => (
-														<Field>
-															<FieldLabel>Due date</FieldLabel>
-															<Input
-																type="date"
-																value={sub.state.value || ''}
-																onChange={(e) =>
-																	sub.handleChange(e.target.value)
-																}
-																onBlur={sub.handleBlur}
-																className="h-9 px-2.5 text-[13px]"
-															/>
-															<FieldError errors={sub.state.meta.errors} />
-														</Field>
-													)}
-												</form.Field>
-												<form.Field name={`tranches[${index}].amount`}>
-													{(sub) => (
-														<Field>
-															<FieldLabel>Amount</FieldLabel>
-															<Input
-																type="text"
-																inputMode="decimal"
-																value={sub.state.value}
-																onChange={(e) =>
-																	sub.handleChange(e.target.value)
-																}
-																onBlur={sub.handleBlur}
-																placeholder="0.00"
-																className="h-9 px-2.5 text-[13px] text-right font-mono tabular-nums"
-															/>
-															<FieldError errors={sub.state.meta.errors} />
-														</Field>
-													)}
-												</form.Field>
-												<div className="flex gap-1 self-end">
-													<form.Field name={`tranches[${index}].paid`}>
-														{(paidField) => (
-															<Button
-																type="button"
-																onClick={() =>
-																	paidField.handleChange(!paidField.state.value)
-																}
-																className={`h-9 px-3 text-xs font-semibold rounded-none border-2 ${paidField.state.value ? 'bg-[#ec3013] text-white border-[#ec3013]' : 'bg-white text-[#201e1d] border-[#201e1d] hover:bg-[#f0dcd8]'}`}
-															>
-																{paidField.state.value ? 'Paid' : 'Unpaid'}
-															</Button>
+										{((field.state.value as TrancheValue[]) || []).map(
+											(_: any, index: any) => (
+												<div
+													key={index}
+													className="bg-white p-3 grid grid-cols-[1fr_1.8fr_1fr_1fr_auto] gap-2 items-end"
+												>
+													<form.Field name={`tranches[${index}].name`}>
+														{(sub) => (
+															<Field>
+																<FieldLabel>Milestone</FieldLabel>
+																<Input
+																	value={sub.state.value as string}
+																	onChange={(e) =>
+																		sub.handleChange(e.target.value)
+																	}
+																	onBlur={sub.handleBlur}
+																	placeholder="M1 — Mobilisation"
+																	className="h-9 px-2.5 text-[13px]"
+																/>
+																<FieldError errors={sub.state.meta.errors} />
+															</Field>
 														)}
 													</form.Field>
-													<Button
-														type="button"
-														onClick={() => field.removeValue(index)}
-														className="h-9 w-9 p-0 rounded-none border border-[#201e1d] bg-white text-[#c02a10] hover:bg-[#fff2ef]"
-													>
-														<TrashIcon className="h-4 w-4" />
-													</Button>
+													<form.Field name={`tranches[${index}].deliverables`}>
+														{(sub) => (
+															<Field>
+																<FieldLabel>Deliverables</FieldLabel>
+																<Input
+																	value={(sub.state.value as string) || ''}
+																	onChange={(e) =>
+																		sub.handleChange(e.target.value)
+																	}
+																	onBlur={sub.handleBlur}
+																	placeholder="SOW signature, PO"
+																	className="h-9 px-2.5 text-[13px]"
+																/>
+																<FieldError errors={sub.state.meta.errors} />
+															</Field>
+														)}
+													</form.Field>
+													<form.Field name={`tranches[${index}].dueDate`}>
+														{(sub) => (
+															<Field>
+																<FieldLabel>Due date</FieldLabel>
+																<Input
+																	type="date"
+																	value={(sub.state.value as string) || ''}
+																	onChange={(e) =>
+																		sub.handleChange(e.target.value)
+																	}
+																	onBlur={sub.handleBlur}
+																	className="h-9 px-2.5 text-[13px]"
+																/>
+																<FieldError errors={sub.state.meta.errors} />
+															</Field>
+														)}
+													</form.Field>
+													<form.Field name={`tranches[${index}].amount`}>
+														{(sub) => (
+															<Field>
+																<FieldLabel>Amount</FieldLabel>
+																<Input
+																	type="text"
+																	inputMode="decimal"
+																	value={sub.state.value as string}
+																	onChange={(e) =>
+																		sub.handleChange(e.target.value)
+																	}
+																	onBlur={sub.handleBlur}
+																	placeholder="0.00"
+																	className="h-9 px-2.5 text-[13px] text-right font-mono tabular-nums"
+																/>
+																<FieldError errors={sub.state.meta.errors} />
+															</Field>
+														)}
+													</form.Field>
+													<div className="flex gap-1 self-end">
+														<form.Field name={`tranches[${index}].paid`}>
+															{(paidField) => (
+																<Button
+																	type="button"
+																	onClick={() =>
+																		paidField.handleChange(
+																			!paidField.state.value,
+																		)
+																	}
+																	className={`h-9 px-3 text-xs font-semibold rounded-none border-2 ${paidField.state.value ? 'bg-[#ec3013] text-white border-[#ec3013]' : 'bg-white text-[#201e1d] border-[#201e1d] hover:bg-[#f0dcd8]'}`}
+																>
+																	{paidField.state.value ? 'Paid' : 'Unpaid'}
+																</Button>
+															)}
+														</form.Field>
+														<Button
+															type="button"
+															onClick={() => (field as any).removeValue(index)}
+															className="h-9 w-9 p-0 rounded-none border border-[#201e1d] bg-white text-[#c02a10] hover:bg-[#fff2ef]"
+														>
+															<TrashIcon className="h-4 w-4" />
+														</Button>
+													</div>
 												</div>
-											</div>
-										))}
+											),
+										)}
 									</div>
 									<TrancheSummary form={form} />
 								</div>
@@ -988,13 +1025,13 @@ export function TranchesSection({ form }: { form: InvoiceFormApi }) {
 function TrancheSummary({ form }: { form: InvoiceFormApi }) {
 	return (
 		<form.Subscribe
-			selector={(s) =>
+			selector={(s: any) =>
 				[
-					s.values.items,
-					s.values.currency,
-					s.values.taxName,
-					s.values.taxRate,
-					s.values.tranches,
+					(s.values as any).items,
+					(s.values as any).currency,
+					(s.values as any).taxName,
+					(s.values as any).taxRate,
+					(s.values as any).tranches,
 				] as const
 			}
 		>
@@ -1008,13 +1045,13 @@ function TrancheSummary({ form }: { form: InvoiceFormApi }) {
 				const tax = subtotal * (rate / 100);
 				const total = subtotal + tax;
 				const trSum =
-					(tranches as ItemValue[] | undefined)?.reduce(
+					(tranches as TrancheValue[] | undefined)?.reduce(
 						(s: number, t: TrancheValue) => s + Number(t.amount || 0),
 						0,
 					) ?? 0;
 				const hasWarn =
 					Math.abs(trSum - subtotal) > 0.5 &&
-					(tranches as ItemValue[])?.length > 0;
+					(tranches as TrancheValue[])?.length > 0;
 				const fmt = (n: number) => {
 					try {
 						return new Intl.NumberFormat('en-NG', {
@@ -1086,7 +1123,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 								<Field>
 									<FieldLabel>Bank account on the invoice</FieldLabel>
 									<BankSelect
-										value={bankField.state.value || ''}
+										value={(bankField.state.value as string) || ''}
 										onValueChange={bankField.handleChange}
 									/>
 									<FieldError errors={bankField.state.meta.errors} />
@@ -1101,7 +1138,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 										<Field>
 											<FieldLabel>Payment link</FieldLabel>
 											<Input
-												value={field.state.value || ''}
+												value={(field.state.value as string) || ''}
 												onChange={(e) => field.handleChange(e.target.value)}
 												onBlur={field.handleBlur}
 												placeholder="https://checkout.korapay.com/pay/..."
@@ -1115,7 +1152,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 										<Field>
 											<FieldLabel>Button label</FieldLabel>
 											<Input
-												value={field.state.value || ''}
+												value={(field.state.value as string) || ''}
 												onChange={(e) => field.handleChange(e.target.value)}
 												onBlur={field.handleBlur}
 												placeholder="Pay online"
@@ -1130,7 +1167,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 									<Field>
 										<FieldLabel>Pay link currency — searchable</FieldLabel>
 										<CurrencySelect
-											value={field.state.value || ''}
+											value={(field.state.value as string) || ''}
 											onValueChange={(v) => field.handleChange(v)}
 											placeholder="Search currency..."
 										/>
@@ -1148,7 +1185,7 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 										Editable note printed at the foot of the invoice
 									</FieldLabel>
 									<Textarea
-										value={field.state.value || ''}
+										value={(field.state.value as string) || ''}
 										onChange={(e) => field.handleChange(e.target.value)}
 										onBlur={field.handleBlur}
 										placeholder="Withholding tax of 5% applies per clause 5.5 ..."
@@ -1168,9 +1205,9 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
 export function StatusSection({ form }: { form: InvoiceFormApi }) {
 	const statusOptions = [
 		{ value: 'draft', label: 'Draft' },
-		{ value: 'sent', label: 'Sent' },
 		{ value: 'paid', label: 'Paid' },
 		{ value: 'part_paid', label: 'Partially paid' },
+		{ value: 'due', label: 'Due' },
 		{ value: 'overdue', label: 'Overdue' },
 		{ value: 'voided', label: 'Voided' },
 	] as const;
@@ -1225,7 +1262,7 @@ export function StatusSection({ form }: { form: InvoiceFormApi }) {
 									<Field>
 										<FieldLabel>Void reason</FieldLabel>
 										<Textarea
-											value={field.state.value ?? ''}
+											value={(field.state.value as string) ?? ''}
 											onChange={(e) => field.handleChange(e.target.value)}
 											onBlur={field.handleBlur}
 											placeholder="Why voided — shown on record"
@@ -1246,7 +1283,7 @@ export function StatusSection({ form }: { form: InvoiceFormApi }) {
 
 type BankSelectProps = {
 	value?: string;
-	onValueChange: (v: Currency) => void;
+	onValueChange: (v: string | null) => void;
 	placeholder?: string;
 	disabled?: boolean;
 	className?: string;

@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start';
 import { getRequestHeaders } from '@tanstack/react-start/server';
-import { and, desc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '#/db';
 import {
@@ -11,8 +11,7 @@ import {
 	invoiceItems,
 	invoices,
 	invoiceTranches,
-	payments,
-} from '#/db/schema';
+	payments} from '#/db/schema';
 import { auth } from '#/lib/auth';
 
 interface GeneratePDFResponse {
@@ -26,8 +25,7 @@ interface GeneratePDFResponse {
 export const generateInvoicePDF = createServerFn({ method: 'GET' })
 	.validator(
 		z.object({
-			invoiceId: z.string().min(1),
-		}),
+			invoiceId: z.string().min(1)}),
 	)
 	.handler(async ({ data }): Promise<GeneratePDFResponse> => {
 		const { invoiceId } = data;
@@ -38,15 +36,11 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 		if (!session) {
 			throw new Error('Unauthorized');
 		}
-		const orgId = process.env.ORGANIZATION_ID!;
-		if (!orgId) throw new Error('ORGANIZATION_ID not configured');
-
 		// Fetch invoice org-scoped like invoice-detail.ts
 		const invoiceResult = await db
 			.select({
 				id: invoices.id,
 				number: invoices.number,
-				organizationId: invoices.organizationId,
 				clientId: invoices.clientId,
 				businessId: invoices.businessId,
 				companyId: invoices.companyId,
@@ -67,12 +61,9 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 				voidedAt: invoices.voidedAt,
 				voidReason: invoices.voidReason,
 				createdAt: invoices.createdAt,
-				updatedAt: invoices.updatedAt,
-			})
+				updatedAt: invoices.updatedAt})
 			.from(invoices)
-			.where(
-				and(eq(invoices.id, invoiceId), eq(invoices.organizationId, orgId)),
-			)
+			.where(eq(invoices.id, invoiceId))
 			.limit(1);
 
 		if (invoiceResult.length === 0) {
@@ -98,8 +89,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					email: clients.email,
 					contact: clients.contact,
 					address: clients.address,
-					reg: clients.reg,
-				})
+					reg: clients.reg})
 				.from(clients)
 				.where(eq(clients.id, invoice.clientId))
 				.limit(1),
@@ -109,8 +99,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					id: businesses.id,
 					name: businesses.name,
 					prefix: businesses.prefix,
-					logo: businesses.logo,
-				})
+					logo: businesses.logo})
 				.from(businesses)
 				.where(eq(businesses.id, invoice.businessId))
 				.limit(1),
@@ -123,8 +112,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					email: companies.email,
 					phone: companies.phone,
 					tin: companies.tin,
-					reg: companies.reg,
-				})
+					reg: companies.reg})
 				.from(companies)
 				.where(eq(companies.id, invoice.companyId))
 				.limit(1),
@@ -134,8 +122,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 						.select({
 							id: banks.id,
 							label: banks.label,
-							fields: banks.fields,
-						})
+							fields: banks.fields})
 						.from(banks)
 						.where(eq(banks.id, invoice.bankId))
 						.limit(1)
@@ -157,8 +144,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					discountName: invoiceItems.discountName,
 					discountPct: invoiceItems.discountPct,
 					discountAmt: invoiceItems.discountAmt,
-					sortOrder: invoiceItems.sortOrder,
-				})
+					sortOrder: invoiceItems.sortOrder})
 				.from(invoiceItems)
 				.where(eq(invoiceItems.invoiceId, invoice.id))
 				.orderBy(invoiceItems.sortOrder),
@@ -171,8 +157,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					dueDate: invoiceTranches.dueDate,
 					amount: invoiceTranches.amount,
 					paid: invoiceTranches.paid,
-					sortOrder: invoiceTranches.sortOrder,
-				})
+					sortOrder: invoiceTranches.sortOrder})
 				.from(invoiceTranches)
 				.where(eq(invoiceTranches.invoiceId, invoice.id))
 				.orderBy(invoiceTranches.sortOrder),
@@ -183,8 +168,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 					amount: payments.amount,
 					note: payments.note,
 					recordedBy: payments.recordedBy,
-					recordedAt: payments.recordedAt,
-				})
+					recordedAt: payments.recordedAt})
 				.from(payments)
 				.where(eq(payments.invoiceId, invoice.id))
 				.orderBy(desc(payments.recordedAt)),
@@ -231,33 +215,28 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 				paymentMethod: invoice.paymentMethod,
 				payLink: invoice.payLink,
 				payLinkLabel: invoice.payLinkLabel,
-				status: invoice.status,
-			},
+				status: invoice.status},
 			client: {
 				name: client?.name || '',
 				email: client?.email || null,
 				contact: client?.contact || null,
 				address: client?.address || null,
-				reg: client?.reg || null,
-			},
+				reg: client?.reg || null},
 			company: {
 				name: company?.name || '',
 				address: company?.address || null,
 				email: company?.email || null,
 				phone: company?.phone || null,
 				tin: company?.tin || null,
-				reg: company?.reg || null,
-			},
+				reg: company?.reg || null},
 			business: {
 				name: business?.name || '',
 				prefix: business?.prefix || '',
-				logo: business?.logo || null,
-			},
+				logo: business?.logo || null},
 			bank: bank
 				? {
 						label: bank.label,
-						fields: bank.fields || [],
-					}
+						fields: bank.fields || []}
 				: null,
 			items: itemsResult.map((item) => ({
 				name: item.name,
@@ -266,25 +245,21 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 				cost: item.cost,
 				discountName: item.discountName,
 				discountPct: item.discountPct ?? '0',
-				discountAmt: item.discountAmt ?? '0',
-			})),
+				discountAmt: item.discountAmt ?? '0'})),
 			tranches: tranchesResult.map((t) => ({
 				name: t.name,
 				deliverables: t.deliverables,
 				dueDate: t.dueDate ? new Date(t.dueDate).toLocaleDateString() : null,
 				amount: t.amount,
-				paid: t.paid,
-			})),
+				paid: t.paid})),
 			payments: paymentsResult.map((p) => ({
 				amount: p.amount,
 				note: p.note,
 				recordedBy: p.recordedBy,
-				recordedAt: new Date(p.recordedAt).toLocaleDateString(),
-			})),
+				recordedAt: new Date(p.recordedAt).toLocaleDateString()})),
 			subtotal,
 			taxAmount,
-			total,
-		};
+			total};
 
 		// Generate PDF using React-PDF — guarded for font/render failures
 		try {
@@ -311,8 +286,7 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 
 			return {
 				pdf: pdfArray,
-				filename: `${invoice.number}.pdf`,
-			};
+				filename: `${invoice.number}.pdf`};
 		} catch (err) {
 			// Surface font or render failures explicitly (e.g. missing Archivo fonts)
 			throw new Error(`Failed to generate PDF: ${(err as Error).message}`);

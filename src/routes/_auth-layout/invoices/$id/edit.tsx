@@ -42,7 +42,7 @@ function EditInvoicePage() {
 					</h1>
 					<Skeleton className="h-6 w-24 rounded-none" />
 				</div>
-				<div className="grid lg:grid-cols-[1.55fr_1fr] gap-8 p-6">
+				<div className="grid lg:grid-cols-[1.55fr_1fr] gap-8">
 					<div className="space-y-4">
 						<Skeleton className="h-8 w-40 rounded-none" />
 						<Skeleton className="h-20 w-full rounded-none" />
@@ -92,17 +92,14 @@ function EditInvoicePage() {
 
 	const invoice = data.invoice;
 
-	// Transform invoice data to form initial values
+	// Transform invoice data to form initial values — inferred from DB, no manual types/casts
 	const initialData = {
+		number: invoice.number,
 		businessId: invoice.businessId,
 		companyId: invoice.companyId,
 		clientId: invoice.clientId,
-		issueDate: invoice.issueDate
-			? new Date(invoice.issueDate).toISOString().split('T')[0]
-			: null,
-		dueDate: invoice.dueDate
-			? new Date(invoice.dueDate).toISOString().split('T')[0]
-			: null,
+		issueDate: invoice.issueDateRaw ?? null,
+		dueDate: invoice.dueDateRaw ?? null,
 		currency: invoice.currency,
 		taxName: invoice.taxName,
 		taxRate: invoice.taxRate,
@@ -113,72 +110,32 @@ function EditInvoicePage() {
 		paymentMethod: invoice.paymentMethod,
 		payLink: invoice.payLink,
 		payLinkLabel: invoice.payLinkLabel,
-		payLinkCurrency:
-			(invoice as unknown as { payLinkCurrency?: string | null })
-				.payLinkCurrency ?? undefined,
-		status: invoice.status as
-			| 'draft'
-			| 'sent'
-			| 'paid'
-			| 'part_paid'
-			| 'overdue'
-			| 'voided',
+		payLinkCurrency: invoice.payLinkCurrency ?? undefined,
+		status: invoice.status,
 		voidReason: invoice.voidReason,
-		items: invoice.items.map(
-			(item: {
-				id: string;
-				name: string;
-				description: string | null;
-				qty: string;
-				cost: string;
-				discountName: string | null;
-				discountPct: string;
-				discountAmt: string;
-				sortOrder: number;
-			}) => ({
-				name: item.name,
-				description: item.description || '',
-				qty: item.qty,
-				cost: item.cost,
-				discountName: item.discountName || '',
-				discountPct: item.discountPct,
-				discountAmt: item.discountAmt,
-			}),
-		),
-		tranches: invoice.tranches.map(
-			(t: {
-				id: string;
-				name: string;
-				deliverables: string | null;
-				dueDate: string | null;
-				amount: string;
-				paid: boolean;
-				sortOrder: number;
-			}) => ({
-				name: t.name,
-				deliverables: t.deliverables || '',
-				dueDate: t.dueDate
-					? new Date(t.dueDate).toISOString().split('T')[0]
-					: null,
-				amount: t.amount,
-				paid: t.paid,
-			}),
-		),
-		payments: invoice.payments.map(
-			(p: {
-				id: string;
-				amount: string;
-				note: string | null;
-				recordedBy: string;
-				recordedAt: string;
-			}) => ({
-				id: p.id,
-				amount: p.amount,
-				note: p.note ?? undefined,
-				recordedBy: p.recordedBy,
-				recordedAt: p.recordedAt,
-			}),
-		),
+		items: invoice.items.map((item) => ({
+			name: item.name,
+			description: item.description ?? '',
+			qty: item.qty,
+			cost: item.cost,
+			discountName: item.discountName ?? '',
+			discountPct: item.discountPct,
+			discountAmt: item.discountAmt,
+		})),
+		tranches: invoice.tranches.map((t) => ({
+			name: t.name,
+			deliverables: t.deliverables ?? '',
+			dueDate: t.dueDateRaw ?? null,
+			amount: t.amount,
+			paid: t.paid,
+		})),
+		payments: invoice.payments.map((p) => ({
+			id: p.id,
+			amount: p.amount,
+			note: p.note ?? undefined,
+			recordedBy: p.recordedBy,
+			recordedAt: p.recordedAt,
+		})),
 	};
 
 	return (

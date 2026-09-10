@@ -1,13 +1,13 @@
 /** biome-ignore-all lint/correctness/useExhaustiveDependencies: not all deps need to be included, only filtered and reportCur are relevant */
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import {
   Area,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -15,7 +15,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Button } from '#/components/ui/button';
+import { Badge } from '#/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -33,19 +33,11 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { useBusinesses, useFXRates } from '#/hooks/useReferences';
-import { getSession } from '#/lib/auth.functions';
 import { convertCurrencyValue, DEFAULT_FX_RATES } from '#/lib/currencies';
+import { getActivityLog } from '#/lib/server-fns/references';
 import { getInvoices } from '#/lib/server-fns/invoices';
-import { cn } from '#/lib/utils';
 
 export const Route = createFileRoute('/_auth-layout/dashboard')({
-  beforeLoad: async () => {
-    const session = await getSession();
-    if (!session) {
-      throw redirect({ to: '/auth/login', search: { redirect: '/dashboard' } });
-    }
-    return { user: session.user, session: session.session };
-  },
   component: Dashboard,
 });
 
@@ -161,24 +153,29 @@ function Dashboard() {
       outstanding = 0,
       overdue = 0,
       draft = 0;
+    let invoicedCount = 0;
     let paidCount = 0;
     filtered.forEach((inv) => {
+      if (inv.status === 'draft') {
+        draft++;
+        return;
+      }
       const totalStr = String(inv.total || '0').replace(/[^0-9.-]/g, '');
       const total = convertToReportCurrency(
         Number(totalStr) || 0,
         inv.currency,
       );
-      invoiced += total;
+      if (inv.status !== 'voided') {
+        invoiced += total;
+        invoicedCount++;
+      }
       if (inv.status === 'paid') {
         collected += total;
         paidCount++;
       } else if (inv.status === 'part_paid') {
         collected += total * 0.5;
         outstanding += total * 0.5;
-      } else if (inv.status === 'draft') {
-        draft++;
-        outstanding += total;
-      } else {
+      } else if (inv.status !== 'voided') {
         outstanding += total;
       }
       const due = inv.due || inv.dueDate || '';
@@ -186,7 +183,8 @@ function Dashboard() {
         due &&
         due < todayISO &&
         inv.status !== 'paid' &&
-        inv.status !== 'voided'
+        inv.status !== 'voided' &&
+        inv.status !== 'draft'
       )
         overdue += total;
     });
@@ -199,7 +197,8 @@ function Dashboard() {
       outstanding,
       overdue,
       draft,
-      total: filtered.length,
+      total: invoicedCount,
+      invoicedCount,
       paidCount,
     };
   }, [filtered, todayISO, reportCur, fxRates]);
@@ -208,7 +207,8 @@ function Dashboard() {
     {
       label: 'TOTAL INVOICED',
       value: fmtShort(totals.invoiced),
-      sub: `${totals.total} invoice${totals.total === 1 ? '' : 's'}`,
+      sub: `${totals.invoicedCount} invoice${totals.invoicedCount === 1 ? '' : 's'}`,
+      draft: totals.draft,
     },
     {
       label: 'COLLECTED',
@@ -221,7 +221,6 @@ function Dashboard() {
       sub: 'Awaiting payment',
     },
     { label: 'OVERDUE', value: fmtShort(totals.overdue), sub: 'Past due date' },
-    { label: 'DRAFT', value: String(totals.draft), sub: 'Not yet sent' },
   ];
 
   const periodNote = period === 'All time' ? 'All invoices' : period;
@@ -233,24 +232,34 @@ function Dashboard() {
       paid: 'paid',
       part_paid: 'part_paid',
       overdue: 'overdue',
+      due: 'due',
+      draft: 'draft',
+      voided: 'voided',
     };
     const status = mapping[key] ?? key;
     const search: Record<string, string | undefined> = {
       status,
+      business: biz !== 'All' ? biz : undefined,
       currency: includeCur === 'All' ? undefined : includeCur,
-      reportCur: reportCur === 'All' ? undefined : reportCur,
     };
     navigate({ to: '/invoices', search });
   };
 
   const invoiceStatusData = useMemo(() => {
-    const overduePredicate = (i: InvoiceRow) => {
+    const isOverdue = (i: InvoiceRow) => {
       const due = i.due || i.dueDate || '';
-      return (
-        due && due < todayISO && !['paid', 'voided'].includes(i.status)
+      return Boolean(due && due < todayISO && !['paid', 'voided'].includes(i.status));
+    };
+    const isDue = (i: InvoiceRow) => {
+      const due = i.due || i.dueDate || '';
+      return Boolean(
+        due &&
+        due >= todayISO &&
+        !['paid', 'part_paid', 'voided'].includes(i.status) &&
+        !isOverdue(i),
       );
     };
-
+    // Ref: v2.dc.html statDef [['Paid','#201e1d'],['Part paid','#f0866f'],['Due','#c9c4c2'],['Overdue','#ec3013']]
     const statuses = [
       {
         name: 'Paid',
@@ -284,14 +293,14 @@ function Dashboard() {
               ),
             0,
           ),
-        color: '#f7d9d3',
+        color: '#f0866f',
       },
       {
-        name: 'Overdue',
-        key: 'overdue',
-        count: filtered.filter(overduePredicate).length,
+        name: 'Due',
+        key: 'due',
+        count: filtered.filter(isDue).length,
         value: filtered
-          .filter(overduePredicate)
+          .filter(isDue)
           .reduce(
             (s, i) =>
               s +
@@ -301,7 +310,22 @@ function Dashboard() {
               ),
             0,
           ),
-        color: '#e15b47',
+        color: '#c9c4c2',
+      },
+      {
+        name: 'Overdue',
+        key: 'overdue',
+        count: filtered.filter(isOverdue).length,
+        value: filtered.filter(isOverdue).reduce(
+          (s, i) =>
+            s +
+            convertToReportCurrency(
+              Number(String(i.total).replace(/[^0-9.-]/g, '')) || 0,
+              i.currency,
+            ),
+          0,
+        ),
+        color: '#ec3013',
       },
     ];
 
@@ -330,73 +354,93 @@ function Dashboard() {
   }, [filtered, statusMetric]);
 
   const trendData = useMemo(() => {
-    const monthNames = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    const buckets = new Map<
-      string,
-      { month: string; invoiced: number; collected: number }
-    >();
-
-    monthNames.forEach((month) => {
-      buckets.set(month, {
-        month,
-        invoiced: 0,
-        collected: 0,
+    // Ref: v2.dc.html 1888 — continuous months from issueDate, invoiced vs collected
+    const shift = (m: string, n: number) => {
+      const d0 = new Date(`${m}-01T00:00:00`);
+      d0.setMonth(d0.getMonth() + n);
+      return `${d0.getFullYear()}-${String(d0.getMonth() + 1).padStart(2, '0')}`;
+    };
+    const mk: Record<string, 1> = {};
+    filtered.forEach((inv: any) => {
+      const issue = (inv.issued || inv.issueDate || '').slice(0, 7);
+      if (issue && /^\d{4}-\d{2}$/.test(issue)) mk[issue] = 1;
+      // collected month not separate in this dataset — use issue month for gap calc
+    });
+    const found = Object.keys(mk).sort();
+    const months: string[] = [];
+    if (found.length) {
+      let c0 = found[0];
+      const last = found[found.length - 1];
+      while (c0 <= last) {
+        months.push(c0);
+        c0 = shift(c0, 1);
+      }
+    } else {
+      // fallback to current month if no data
+      const now = new Date().toISOString().slice(0, 7);
+      months.push(now);
+    }
+    const buckets = new Map<string, { month: string; invoiced: number; collected: number }>();
+    months.forEach((m) => {
+      const label = new Date(`${m}-01T00:00:00`).toLocaleDateString('en-GB', {
+        month: 'short',
+        year: '2-digit',
       });
+      buckets.set(m, { month: label, invoiced: 0, collected: 0 });
     });
 
     filtered.forEach((inv) => {
-      const date = inv.issued || inv.issueDate || '';
-      const monthIndex = date
-        ? new Date(date).getMonth()
-        : new Date().getMonth();
-      const month = monthNames[monthIndex];
+      const m = (inv.issued || inv.issueDate || '').slice(0, 7);
+      if (!m || !buckets.has(m)) return;
       const amount = convertToReportCurrency(
         Number(String(inv.total).replace(/[^0-9.-]/g, '')) || 0,
         inv.currency,
       );
-      const bucket = buckets.get(month) ?? { month, invoiced: 0, collected: 0 };
+      const bucket = buckets.get(m) ?? { month: m, invoiced: 0, collected: 0 };
       bucket.invoiced += amount;
       if (inv.status === 'paid') {
         bucket.collected += amount;
+      } else if (inv.status === 'part_paid') {
+        bucket.collected += amount * 0.5;
       }
-      buckets.set(month, bucket);
+      buckets.set(m, bucket);
     });
 
-    return monthNames.map(
-      (month) => buckets.get(month) ?? { month, invoiced: 0, collected: 0 },
-    );
-  }, [filtered]);
+    return Array.from(buckets.values());
+  }, [filtered, reportCur, fxRates]);
 
-  const outstandingCustomers = useMemo<[string, number][]>(() => {
-    const customerTotals = filtered
-      .filter((i) => i.status !== 'paid')
-      .reduce<Record<string, number>>((acc, inv) => {
-        acc[inv.client] =
-          (acc[inv.client] || 0) +
-          convertToReportCurrency(
-            Number(String(inv.total).replace(/[^0-9.-]/g, '')) || 0,
-            inv.currency,
-          );
-        return acc;
-      }, {});
-
-    return Object.entries(customerTotals)
-      .sort((a, b) => b[1] - a[1])
+  const outstandingCustomers = useMemo<
+    Array<{ name: string; out: number; over: number; pct: number; count: number }>
+  >(() => {
+    const map = new Map<string, { out: number; over: number; count: number }>();
+    const today = todayISO;
+    filtered
+      .filter((i) => i.status !== 'paid' && i.status !== 'voided')
+      .forEach((inv) => {
+        const amt = convertToReportCurrency(
+          Number(String(inv.total).replace(/[^0-9.-]/g, '')) || 0,
+          inv.currency,
+        );
+        const cur = map.get(inv.client) ?? { out: 0, over: 0, count: 0 };
+        cur.out += amt;
+        cur.count += 1;
+        const due = (inv as any).due || (inv as any).dueDate || '';
+        const isOver = Boolean(due && due < today && !['paid', 'voided'].includes(inv.status));
+        if (isOver) cur.over += amt;
+        map.set(inv.client, cur);
+      });
+    const maxOut = Math.max(1, ...Array.from(map.values()).map((v) => v.out));
+    return Array.from(map.entries())
+      .map(([name, v]) => ({
+        name,
+        out: v.out,
+        over: v.over,
+        count: v.count,
+        pct: Math.round((v.out / maxOut) * 100),
+      }))
+      .sort((a, b) => b.out - a.out)
       .slice(0, 4);
-  }, [filtered]);
+  }, [filtered, todayISO, reportCur, fxRates]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -437,23 +481,20 @@ function Dashboard() {
               </SelectContent>
             </Select>
           </div>
-          {/* Desktop: Button group */}
+          {/* Desktop: Badge group */}
           <div className="hidden lg:flex gap-1 flex-wrap">
             {['All', ...businessNames].map((l) => (
-              <Button
+              <Badge
                 key={l}
-                type="button"
                 variant={biz === l ? 'default' : 'outline'}
-                size="sm"
                 onClick={() => setBiz(l)}
-                className={
-                  biz === l
-                    ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold rounded-none'
-                    : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none'
-                }
+                className={`cursor-pointer rounded-none px-2.5 py-1.5 text-xs font-semibold ${biz === l
+                  ? 'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white'
+                  : 'bg-white text-[#201e1d] border-[#201e1d] hover:bg-[#f0dcd8]'
+                  }`}
               >
                 {l}
-              </Button>
+              </Badge>
             ))}
           </div>
         </div>
@@ -481,20 +522,17 @@ function Dashboard() {
             <div className="gap-1 items-center hidden lg:flex">
               <span className="text-[11px] text-[#5c5755] mr-1">Report in</span>
               {(['USD', 'NGN', 'GBP', 'All'] as ReportCur[]).map((c) => (
-                <Button
+                <Badge
                   key={c}
-                  type="button"
                   variant={reportCur === c ? 'default' : 'outline'}
-                  size="sm"
                   onClick={() => setReportCur(c)}
-                  className={
-                    reportCur === c
-                      ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold rounded-none'
-                      : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none'
-                  }
+                  className={`cursor-pointer rounded-none px-2.5 py-1.5 text-xs font-semibold ${reportCur === c
+                    ? 'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white'
+                    : 'bg-white text-[#201e1d] border-[#201e1d] hover:bg-[#f0dcd8]'
+                    }`}
                 >
                   {c}
-                </Button>
+                </Badge>
               ))}
             </div>
             <div className="flex gap-1 items-center lg:hidden">
@@ -516,20 +554,17 @@ function Dashboard() {
             <div className="gap-1 items-center hidden lg:flex">
               <span className="text-[11px] text-[#5c5755] mr-1">Include</span>
               {(['All', 'KES', 'NGN', 'USD'] as string[]).map((c) => (
-                <Button
+                <Badge
                   key={c}
-                  type="button"
                   variant={includeCur === c ? 'default' : 'outline'}
-                  size="sm"
                   onClick={() => setIncludeCur(c)}
-                  className={
-                    includeCur === c
-                      ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold rounded-none'
-                      : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none'
-                  }
+                  className={`cursor-pointer rounded-none px-2.5 py-1.5 text-xs font-semibold ${includeCur === c
+                    ? 'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white'
+                    : 'bg-white text-[#201e1d] border-[#201e1d] hover:bg-[#f0dcd8]'
+                    }`}
                 >
                   {c}
-                </Button>
+                </Badge>
               ))}
             </div>
           </div>
@@ -560,20 +595,17 @@ function Dashboard() {
             {(
               ['All time', '2026', 'Last 90 days', 'This month'] as Period[]
             ).map((p) => (
-              <Button
+              <Badge
                 key={p}
-                type="button"
                 variant={period === p ? 'default' : 'outline'}
-                size="sm"
                 onClick={() => setPeriod(p)}
-                className={
-                  period === p
-                    ? 'bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold rounded-none'
-                    : 'bg-white text-[#201e1d] border border-[#201e1d] px-2.5 py-1.5 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none'
-                }
+                className={`cursor-pointer rounded-none px-2.5 py-1.5 text-xs font-semibold ${period === p
+                  ? 'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white'
+                  : 'bg-white text-[#201e1d] border-[#201e1d] hover:bg-[#f0dcd8]'
+                  }`}
               >
                 {p}
-              </Button>
+              </Badge>
             ))}
           </div>
           <div className="text-[11px] text-[#5c5755] whitespace-nowrap">
@@ -582,7 +614,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-0.5 bg-[#201e1d] border-2 border-[#201e1d]">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-0.5 bg-[#201e1d] border-2 border-[#201e1d]">
         {kpis.map((k) => (
           <div key={k.label} className="bg-white px-4 py-4">
             <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">
@@ -596,54 +628,53 @@ function Dashboard() {
               </div>
             )}
             <div className="text-[11px] text-[#5c5755] mt-1">{k.sub}</div>
+            {k.label === 'TOTAL INVOICED' && (k as any).draft > 0 && (
+              <div className="text-[11px] font-semibold text-[#c02a10] mt-1">
+                + {(k as any).draft} draft not counted
+              </div>
+            )}
           </div>
         ))}
       </div>
 
       <div className="grid lg:grid-cols-[1.45fr_1fr] gap-0.5 bg-[#201e1d] border-2 border-[#201e1d]">
-        <div className="bg-white p-4 lg:p-5">
-          <div className="flex justify-between items-baseline gap-3 mb-3.5">
+        {/* Revenue & Collections Chart matching image_f9a410.png */}
+        <div className="bg-white p-6">
+          <div className="flex justify-between items-start mb-8">
             <div>
-              <div className="text-sm font-bold">Revenue &amp; collections</div>
-              <div className="text-[11px] text-[#5c5755] mt-0.5">
-                Monthly · {periodNote}
+              <h2 className="text-[15px] font-bold text-gray-900 mb-1">
+                Revenue &amp; collections
+              </h2>
+              <div className="text-[13px] text-gray-500">
+                Monthly, {periodNote}
               </div>
             </div>
-            <div className="text-[11px] text-[#5c5755] text-right">
-              Gap {(totals.invoiced - totals.collected).toLocaleString('en-US')}
+            <div className="text-[13px] text-gray-600">
+              Gap <span className="font-medium">{fmtShort(totals.invoiced - totals.collected)}</span>
             </div>
           </div>
+
           {filtered.length === 0 ? (
-            <div className="h-45 bg-[#faf9f9] border border-[#e7e4e2] flex items-center justify-center text-xs text-[#5c5755]">
+            <div className="h-62.5 bg-[#faf9f9] border border-[#e7e4e2] flex items-center justify-center text-xs text-[#5c5755]">
               No invoices in this selection
             </div>
           ) : (
-            <div className="h-45 bg-[#faf9f9] border border-[#e7e4e2] p-2">
-              <div style={{ width: '100%', height: '100%', minWidth: 160, minHeight: 160 }}>
+            <>
+              <div className="h-62.5 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
+                  <ComposedChart
                     data={trendData}
-                    margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#e7e4e2"
-                    />
+                    <CartesianGrid vertical={false} stroke="#f0f0f0" />
                     <XAxis
                       dataKey="month"
-                      tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 10, fill: '#5c5755' }}
-                    />
-                    <YAxis
                       tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 10, fill: '#5c5755' }}
-                      tickFormatter={(value) =>
-                        `${value >= 1000000 ? `${(value / 1000000).toFixed(1)}M` : `${Math.round(value / 1000)}k`}`
-                      }
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      dy={10}
                     />
+                    <YAxis hide domain={[0, 'dataMax + (dataMax * 0.1)']} />
                     <Tooltip
                       cursor={{ stroke: '#201e1d', strokeDasharray: '3 3' }}
                       formatter={(value) => {
@@ -657,106 +688,87 @@ function Dashboard() {
                       }}
                     />
                     <Area
-                      type="monotone"
+                      type="linear"
                       dataKey="invoiced"
-                      stroke="#ec3013"
-                      fill="#f5d5ce"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      fill="#fee2e2"
                       fillOpacity={0.6}
+                      dot={{ r: 4, fill: '#ef4444', strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
                     />
                     <Line
-                      type="monotone"
-                      dataKey="invoiced"
-                      stroke="#ec3013"
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 5, fill: '#ec3013' }}
-                    />
-                    <Line
-                      type="monotone"
+                      type="linear"
                       dataKey="collected"
-                      stroke="#201e1d"
+                      stroke="#111827"
                       strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 5, fill: '#201e1d' }}
+                      strokeDasharray="4 4"
+                      dot={{ r: 4, fill: '#111827', strokeWidth: 0 }}
+                      activeDot={{ r: 6 }}
                     />
-                  </LineChart>
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+              <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200">
+                <div className="flex gap-6">
+                  <div className="flex items-center gap-2 text-[13px]">
+                    <div className="w-4 h-0.5 bg-[#ef4444]"></div>
+                    <span className="text-gray-600">Invoiced</span>
+                    <span className="font-bold text-gray-900">{fmtShort(totals.invoiced)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[13px]">
+                    <div className="w-4 border-t-2 border-dashed border-[#111827]"></div>
+                    <span className="text-gray-600">Collected</span>
+                    <span className="font-bold text-gray-900">{fmtShort(totals.collected)}</span>
+                  </div>
+                </div>
+                <div className="text-[13px] text-gray-500">
+                  Peak month {fmtShort(Math.max(...trendData.map(d => d.invoiced), 0))}
+                </div>
+              </div>
+            </>
           )}
-          <div className="flex justify-between text-[10px] text-[#5c5755] mt-1.5">
-            {trendData.slice(0, 4).map((item) => (
-              <span key={item.month}>{item.month}</span>
-            ))}
-          </div>
-          <div className="flex gap-5 mt-3.5 pt-2.5 border-t border-[#d6d3d1] text-xs">
-            <div>
-              <span className="inline-block w-3.5 h-0.5 bg-[#ec3013] align-middle mr-1.5" />
-              Invoiced{' '}
-              <strong className="tabular-nums">
-                {fmtShort(totals.invoiced)}
-              </strong>
-            </div>
-            <div>
-              <span className="inline-block w-3.5 h-0.5 bg-[#201e1d] align-middle mr-1.5" />
-              Collected{' '}
-              <strong className="tabular-nums">
-                {fmtShort(totals.collected)}
-              </strong>
-            </div>
-            <div className="ml-auto text-[#5c5755] text-[11px]">
-              Peak month —
-            </div>
-          </div>
         </div>
-        <div className="bg-white p-4 lg:p-5">
-          <div className="flex justify-between items-baseline gap-2.5 mb-3.5">
-            <div className="text-sm font-bold">Invoice status</div>
-            <div className="flex gap-1">
-              <Button
+
+        {/* Invoice Status Pie Chart matching image_f9ab8b.png */}
+        <div className="bg-white p-6">
+          <div className="flex justify-between items-start gap-2.5 mb-8">
+            <div className="text-[15px] font-bold text-gray-900">Invoice status</div>
+            <div className="flex border border-[#201e1d] rounded-sm overflow-hidden">
+              <button
                 type="button"
-                variant="outline"
-                size="xs"
-                onClick={() => setStatusMetric('count')}
-                className={cn(
-                  statusMetric === 'count'
-                    ? 'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white'
-                    : 'border-[#201e1d] bg-white text-[#201e1d] hover:bg-[#f0dcd8] hover:text-[#201e1d]',
-                )}
-              >
-                Count
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="xs"
                 onClick={() => setStatusMetric('value')}
-                className={cn({
-                  'bg-[#201e1d] text-white border-[#201e1d] hover:bg-[#201e1d] hover:text-white':
-                    statusMetric === 'value',
-                  'border-[#201e1d] bg-white text-[#201e1d] hover:bg-[#f0dcd8] hover:text-[#201e1d]':
-                    statusMetric !== 'value',
-                })}
+                className={`px-3 py-1 text-[13px] font-semibold transition-colors ${statusMetric === 'value'
+                  ? 'bg-[#201e1d] text-white'
+                  : 'bg-white text-[#201e1d] hover:bg-gray-50'
+                  }`}
               >
-                Value
-              </Button>
+                By value
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusMetric('count')}
+                className={`px-3 py-1 text-[13px] font-semibold border-l border-[#201e1d] transition-colors ${statusMetric === 'count'
+                  ? 'bg-[#201e1d] text-white'
+                  : 'bg-white text-[#201e1d] hover:bg-gray-50'
+                  }`}
+              >
+                By count
+              </button>
             </div>
           </div>
-          <div className="grid grid-cols-[140px_1fr] gap-6 items-center">
-            <div className="relative h-35 w-35">
+
+          <div className="flex flex-col lg:flex-row items-center lg:items-stretch gap-8">
+            <div className="relative h-40 w-40 shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={invoiceStatusData.statuses}
+                    data={invoiceStatusData.statuses.filter(d => statusMetric === 'count' ? d.count > 0 : d.value > 0)}
                     dataKey={statusMetric === 'count' ? 'count' : 'value'}
                     nameKey="name"
-                    innerRadius={36}
-                    outerRadius={62}
-                    paddingAngle={3}
-                    stroke="#f5f3f1"
-                    strokeWidth={2}
-                    startAngle={90}
-                    endAngle={-270}
+                    innerRadius={50}
+                    outerRadius={70}
+                    stroke="none"
                     isAnimationActive={false}
                     onClick={(data) => {
                       const payload = data?.payload as
@@ -766,63 +778,48 @@ function Dashboard() {
                       handleSegmentClick(payload.key);
                     }}
                   >
-                    {invoiceStatusData.statuses.map((item) => (
-                      <Cell
-                        key={item.key}
-                        fill={item.color}
-                        // Optionally hide zero segments visually
-                        opacity={
-                          statusMetric === 'count' ? (item.count > 0 ? 1 : 0) : item.value > 0 ? 1 : 0
-                        }
-                      />
-                    ))}
+                    {invoiceStatusData.statuses
+                      .filter(d => statusMetric === 'count' ? d.count > 0 : d.value > 0)
+                      .map((item) => (
+                        <Cell key={item.key} fill={item.color} />
+                      ))}
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
-              <div className="pointer-events-none absolute inset-3.75 rounded-full bg-white border border-[#d6d3d1] flex items-center justify-center text-center px-2">
-                {isLoading ? (
-                  <Skeleton className="h-4 w-14 rounded-none" />
-                ) : (
-                  <div className="text-[11px] text-[#5c5755] leading-tight">
-                    <div className="font-semibold text-[#201e1d] tabular-nums text-[13px]">
-                      {statusMetric === 'count'
-                        ? totals.total
-                        : fmtShort(invoiceStatusData.totalMetric)}
-                    </div>
-                    <div>{statusMetric === 'count' ? 'total' : 'value'}</div>
-                  </div>
-                )}
-              </div>
             </div>
 
-            <div className="flex flex-col gap-2 text-xs">
-              {invoiceStatusData.statuses.map((d) => {
-                const metric = statusMetric === 'count' ? d.count : d.value;
-                const total = invoiceStatusData.totalMetric || 1;
-                const pct =
-                  total > 0 ? `${Math.round((metric / total) * 100)}%` : '0%';
+            <div className="flex-1 flex flex-col justify-center w-full">
+              <div className="flex flex-col gap-4">
+                {invoiceStatusData.statuses
+                  .filter(d => (statusMetric === 'count' ? d.count : d.value) > 0)
+                  .map((d) => {
+                    const metric = statusMetric === 'count' ? d.count : d.value;
+                    const total = invoiceStatusData.totalMetric || 1;
+                    const pct = total > 0 ? `${Math.round((metric / total) * 100)}%` : '0%';
 
-                return (
-                  <div
-                    key={d.name}
-                    className="flex items-center gap-2 py-1 px-1 hover:bg-[#f0dcd8]"
-                  >
-                    <span
-                      className="w-3 h-3"
-                      style={{ background: d.color }}
-                    />
-                    <span>{d.name}</span>
-                    <strong className="ml-auto tabular-nums whitespace-nowrap">
-                      {statusMetric === 'count' ? d.count : fmtShort(d.value)}
-                    </strong>
-                    <span className="text-[11px] text-[#5c5755] w-8.5 text-right">
-                      {pct}
-                    </span>
-                  </div>
-                );
-              })}
-              <div className="text-[11px] text-[#5c5755] border-t border-[#d6d3d1] pt-1.5 mt-1">
-                Total {totals.total} · filtered {filtered.length}
+                    return (
+                      // biome-ignore lint/a11y/noStaticElementInteractions: allow
+                      // biome-ignore lint/a11y/useKeyWithClickEvents: allow
+                      <div
+                        key={d.name}
+                        className="flex items-center gap-3 cursor-pointer group"
+                        onClick={() => handleSegmentClick(d.key)}
+                      >
+                        <span className="w-3.5 h-3.5 rounded-sm shrink-0" style={{ background: d.color }} />
+                        <span className="text-[13px] text-gray-700">{d.name}</span>
+                        <span className="ml-auto text-[13px] font-bold tabular-nums">
+                          {statusMetric === 'count' ? d.count : fmtShort(d.value)}
+                        </span>
+                        <span className="text-[13px] text-gray-400 w-10 text-right">
+                          {pct}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              <div className="text-[12px] text-gray-500 border-t border-gray-200 pt-3 mt-5">
+                Total {statusMetric === 'count' ? totals.total : fmtShort(invoiceStatusData.totalMetric)} &middot; click a segment to see the invoices
               </div>
             </div>
           </div>
@@ -909,34 +906,47 @@ function Dashboard() {
             Outstanding {fmtShort(totals.outstanding)} by age
           </div>
           <div className="flex items-end gap-2.5 h-37.5 border-b-2 border-[#201e1d]">
-            {['Current', '1-30', '31-60', '61-90', '90+'].map((label, i) => {
-              const bucket = filtered.filter((inv) => {
-                const due = inv.due || inv.dueDate || '';
-                if (!due) return i === 0;
-                const diff =
-                  (new Date(due).getTime() - new Date(todayISO).getTime()) /
-                  (1000 * 60 * 60 * 24);
-                if (diff >= 0) return i === 0;
-                if (diff >= -30) return i === 1;
-                if (diff >= -60) return i === 2;
-                if (diff >= -90) return i === 3;
-                return i === 4;
+            {(() => {
+              const allSums = ['Current', '1-30', '31-60', '61-90', '90+'].map(
+                (_, idx) => {
+                  const b = filtered.filter((inv) => {
+                    const due = inv.due || inv.dueDate || '';
+                    if (!due) return idx === 0;
+                    const diff =
+                      (new Date(due).getTime() - new Date(todayISO).getTime()) /
+                      (1000 * 60 * 60 * 24);
+                    if (diff >= 0) return idx === 0;
+                    if (diff >= -30) return idx === 1;
+                    if (diff >= -60) return idx === 2;
+                    if (diff >= -90) return idx === 3;
+                    return idx === 4;
+                  });
+                  return b.reduce(
+                    (s: number, inv: InvoiceRow) =>
+                      s + (Number(String(inv.total).replace(/[^0-9.-]/g, '')) || 0),
+                    0,
+                  );
+                },
+              );
+              const maxSum = Math.max(1, ...allSums);
+              return ['Current', '1-30', '31-60', '61-90', '90+'].map((label, i) => {
+                const sum = allSums[i];
+                const h = sum ? Math.min(130, (sum / maxSum) * 120 + 8) : 8;
+                const bg =
+                  i === 0
+                    ? 'bg-[#e7e4e2]'
+                    : i === 1
+                      ? 'bg-[#c9c4c2]'
+                      : i === 2
+                        ? 'bg-[#f0866f]'
+                        : 'bg-[#ec3013]';
+                return (
+                  <div key={label} className="flex-1 h-full flex flex-col justify-end">
+                    <div className={`${bg} w-full`} style={{ height: h }} title={`${label}: ${fmtShort(sum)}`} />
+                  </div>
+                );
               });
-              const sum = bucket.reduce(
-                (s: number, inv: InvoiceRow) =>
-                  s + (Number(String(inv.total).replace(/[^0-9.-]/g, '')) || 0),
-                0,
-              );
-              const h = sum ? Math.min(130, (sum / 50000) * 20 + 8) : 8;
-              return (
-                <div
-                  key={label}
-                  className="flex-1 h-full flex flex-col justify-end"
-                >
-                  <div className="bg-[#e7e4e2] w-full" style={{ height: h }} />
-                </div>
-              );
-            })}
+            })()}
           </div>
           <div className="flex gap-2.5 mt-2">
             {[
@@ -1098,7 +1108,7 @@ function Dashboard() {
             Top outstanding customers
           </div>
           <div className="text-[11px] text-[#5c5755] mb-4">
-            Largest unpaid balances first
+            Largest unpaid balances first · click a customer for their invoices
           </div>
           {filtered.filter((i) => i.status !== 'paid').length === 0 ? (
             <div className="text-xs text-[#5c5755] py-6 border-t border-[#d6d3d1]">
@@ -1106,25 +1116,40 @@ function Dashboard() {
             </div>
           ) : (
             <div className="flex flex-col gap-0">
-              {outstandingCustomers.map(([name, val]) => (
+              {outstandingCustomers.map((c) => (
                 <div
-                  key={String(name)}
-                  className="border-b border-[#d6d3d1] py-3"
+                  key={c.name}
+                  onClick={() =>
+                    navigate({
+                      to: '/invoices',
+                      search: {
+                        searchQuery: c.name,
+                        business: biz !== 'All' ? biz : undefined,
+                      } as any,
+                    })
+                  }
+                  title={`${c.name} · ${c.count} invoice${c.count === 1 ? '' : 's'} · ${fmt(c.out)} outstanding${c.over ? ` (${fmt(c.over)} overdue)` : ''} — click to filter`}
+                  className="border-b border-[#d6d3d1] py-3 cursor-pointer hover:bg-[#f0dcd8] px-1 -mx-1"
                 >
                   <div className="flex justify-between items-baseline gap-3 mb-1.5">
-                    <div className="text-[13px] font-semibold">
-                      {String(name)}
+                    <div>
+                      <div className="text-[13px] font-semibold">{c.name}</div>
+                      <div className="text-[11px] text-[#5c5755]">
+                        {c.count} invoice{c.count === 1 ? '' : 's'}
+                      </div>
                     </div>
                     <div className="text-[13px] tabular-nums whitespace-nowrap">
-                      {fmt(Number(val))}
+                      {fmt(c.out)}
                     </div>
                   </div>
                   <div className="h-1.5 bg-[#e7e4e2] w-full">
-                    <div
-                      className="h-full bg-[#ec3013]"
-                      style={{ width: '60%' }}
-                    />
+                    <div className="h-full bg-[#ec3013]" style={{ width: `${c.pct}%` }} />
                   </div>
+                  {c.over > 0 ? (
+                    <div className="text-[11px] font-semibold text-[#c02a10] text-right mt-1">
+                      {fmt(c.over)} overdue
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -1138,32 +1163,57 @@ function Dashboard() {
             </div>
           ) : (
             <div className="border-t border-[#d6d3d1]">
-              {filtered.slice(0, 5).map((inv) => (
-                <div
-                  key={inv.id}
-                  className="flex justify-between gap-3 py-2.5 border-b border-[#d6d3d1]"
-                >
-                  <div>
-                    <div className="text-[13px] font-semibold">
-                      {inv.number}
+              {filtered
+                .filter((i) => i.status !== 'paid' && i.status !== 'voided')
+                .sort((a: any, b: any) => {
+                  const da = new Date(a.due || a.dueDate || 0).getTime();
+                  const db = new Date(b.due || b.dueDate || 0).getTime();
+                  return da - db;
+                })
+                .slice(0, 5)
+                .map((inv: any) => {
+                  const dueRaw = inv.due || inv.dueDate || '';
+                  const isOver = Boolean(dueRaw && dueRaw < todayISO);
+                  const dueLabel = dueRaw
+                    ? new Date(dueRaw).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : '—';
+                  const meta = isOver ? `due ${dueLabel} · Overdue` : `due ${dueLabel}`;
+                  return (
+                    <div
+                      key={inv.id}
+                      onClick={() => navigate({ to: '/invoices/$id', params: { id: inv.id } })}
+                      title={`${inv.number} — ${meta}`}
+                      className="flex justify-between gap-3 py-2.5 border-b border-[#d6d3d1] cursor-pointer hover:bg-[#f0dcd8] px-1 -mx-1"
+                    >
+                      <div>
+                        <div className="text-[13px] font-semibold">{inv.number}</div>
+                        <div
+                          className={`text-[11px] ${isOver ? 'text-[#c02a10] font-semibold' : 'text-[#5c5755]'}`}
+                        >
+                          {meta}
+                        </div>
+                      </div>
+                      <div className="text-[13px] tabular-nums whitespace-nowrap">
+                        {fmt(
+                          convertToReportCurrency(
+                            Number(String(inv.total).replace(/[^0-9.-]/g, '')) || 0,
+                            inv.currency,
+                          ),
+                        )}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-[#5c5755]">
-                      due {inv.due || inv.dueDate}
-                    </div>
-                  </div>
-                  <div className="text-[13px] tabular-nums whitespace-nowrap">
-                    {inv.total}
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
             </div>
           )}
           <div className="text-[11px] tracking-[0.12em] font-semibold mt-6 mb-2.5">
             RECENT ACTIVITY
           </div>
-          <div className="border-t border-[#d6d3d1] text-xs text-[#5c5755] py-3">
-            No activity yet.
-          </div>
+          <RecentActivityList />
         </div>
       </div>
 
@@ -1181,6 +1231,55 @@ function Dashboard() {
           View invoices
         </Link>
       </div>
+    </div>
+  );
+}
+
+function RecentActivityList() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['activityLog', { page: 1, pageSize: 5 }],
+    queryFn: () => getActivityLog({ data: { page: 1, pageSize: 5 } }),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="border-t border-[#d6d3d1] py-3 space-y-2">
+        <div className="h-3 w-24 bg-[#e7e4e2] animate-pulse" />
+        <div className="h-3 w-full bg-[#e7e4e2] animate-pulse" />
+      </div>
+    );
+  }
+
+  const items = (data as any)?.activities ?? [];
+  if (!items.length) {
+    return (
+      <div className="border-t border-[#d6d3d1] text-xs text-[#5c5755] py-3">
+        No activity yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t border-[#d6d3d1]">
+      {items.slice(0, 5).map((a: any) => (
+        <div key={a.id} className="py-2.5 border-b border-[#d6d3d1]">
+          <div className="flex justify-between gap-2">
+            <div className="text-xs font-semibold">{a.userName}</div>
+            <div className="text-[11px] text-[#5c5755] whitespace-nowrap">
+              {new Date(a.createdAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </div>
+          </div>
+          <div className="text-xs mt-1">
+            {a.type} {a.entity} {a.label}
+            {a.detail ? `: ${a.detail}` : ''}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

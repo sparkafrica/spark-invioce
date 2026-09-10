@@ -6,16 +6,10 @@ import { BanksPanel } from './BanksPanel';
 import { BusinessesPanel } from './BusinessesPanel';
 import { CompaniesPanel } from './CompaniesPanel';
 import { FXRatesPanel } from './FxRatesPanel';
-import { OrganizationPanel } from './OrganizationPanel';
 import { ProfilePanel } from './ProfilePanel';
 
 const TABS = [
 	{ id: 'profile', label: 'Profile', href: '/settings/profile' as const },
-	{
-		id: 'organization',
-		label: 'Organization',
-		href: '/settings/organization' as const,
-	},
 	{
 		id: 'companies',
 		label: 'Invoicing companies',
@@ -77,7 +71,6 @@ export function SettingsLayout() {
 			</div>
 
 			{activeId === 'profile' && <ProfilePanel />}
-			{activeId === 'organization' && <OrganizationPanel />}
 			{activeId === 'companies' && <CompaniesPanel />}
 			{activeId === 'banks' && <BanksPanel />}
 			{activeId === 'businesses' && <BusinessesPanel canManage={canManage} />}

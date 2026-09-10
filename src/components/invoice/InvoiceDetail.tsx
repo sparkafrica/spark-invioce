@@ -161,9 +161,9 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
   const [showVoidDialog, setShowVoidDialog] = React.useState(false);
   const statusPicklist = v.picklist([
     'draft',
-    'sent',
     'paid',
     'part_paid',
+    'due',
     'overdue',
     'voided',
   ]);
@@ -202,9 +202,9 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         payLinkCurrency: invoice.payLinkCurrency ?? undefined,
         status: nextStatus as
           | 'draft'
-          | 'sent'
           | 'paid'
           | 'part_paid'
+          | 'due'
           | 'overdue'
           | 'voided',
         voidReason: vr,
@@ -427,9 +427,6 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                 <SelectGroup>
                   <SelectItem value="draft" className="text-xs">
                     Draft
-                  </SelectItem>
-                  <SelectItem value="sent" className="text-xs">
-                    Sent
                   </SelectItem>
                   <SelectItem value="paid" className="text-xs">
                     Paid

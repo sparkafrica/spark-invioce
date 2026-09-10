@@ -27,28 +27,24 @@ export const sendSeedToken = createServerFn({ method: 'POST' }).handler(
 	async (): Promise<{ sent: boolean }> => {
 		const token = generateToken();
 		const expiresAt = new Date(Date.now() + SEED_TOKEN_TTL_MINUTES * 60 * 1000);
-		const orgId = process.env.ORGANIZATION_ID!;
 
 		// Store token in activityLog with special type for verification
 		await db.insert(activityLog).values({
-			organizationId: orgId,
-			userId: 'system',
+						userId: 'system',
 			userName: 'System',
 			type: 'SettingsChanged',
 			entity: 'Settings',
 			label: 'seed-token',
 			detail: `Seed token generated: ${token}`,
 			metadata: { token, expiresAt: expiresAt.toISOString() },
-			createdAt: new Date(),
-		});
+			createdAt: new Date()});
 
 		const ownerEmail = getSeedTokenEmail();
 		await resend.emails.send({
 			from: 'no-reply@sparkafrica.co',
 			to: ownerEmail,
 			subject: 'Spark Invoice — Seed Token',
-			text: `Your seed token is: ${token}\n\nThis token expires in ${SEED_TOKEN_TTL_MINUTES} minutes.\n\nIf you did not request this, please ignore this email.`,
-		});
+			text: `Your seed token is: ${token}\n\nThis token expires in ${SEED_TOKEN_TTL_MINUTES} minutes.\n\nIf you did not request this, please ignore this email.`});
 
 		return { sent: true };
 	},
@@ -56,16 +52,13 @@ export const sendSeedToken = createServerFn({ method: 'POST' }).handler(
 
 export const verifySeedToken = createServerFn({ method: 'POST' })
 	.validator(z.object({ token: z.string().length(TOKEN_LENGTH) }))
-	.handler(
-		async ({ data }): Promise<{ valid: boolean; organizationId?: string }> => {
-			const orgId = process.env.ORGANIZATION_ID!;
+	.handler(async ({ data }): Promise<{ valid: boolean }> => {
 
 			const [record] = await db
 				.select()
 				.from(activityLog)
 				.where(
 					and(
-						eq(activityLog.organizationId, orgId),
 						eq(activityLog.type, 'SettingsChanged'),
 						eq(activityLog.entity, 'Settings'),
 						eq(activityLog.label, 'seed-token'),
@@ -93,6 +86,6 @@ export const verifySeedToken = createServerFn({ method: 'POST' })
 			// Mark token as used
 			await db.delete(activityLog).where(eq(activityLog.id, record.id));
 
-			return { valid: true, organizationId: orgId };
+			return { valid: true};
 		},
 	);

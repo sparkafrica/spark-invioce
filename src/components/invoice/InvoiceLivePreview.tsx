@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import type { InvoiceFormApi } from '#/components/forms/InvoiceForm';
@@ -38,7 +37,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 
 	return (
 		<form.Subscribe
-			selector={(s) =>
+			selector={(s: any) =>
 				[
 					s.values.businessId,
 					s.values.companyId,

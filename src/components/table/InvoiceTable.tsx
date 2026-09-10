@@ -17,6 +17,7 @@ import {
   sortFn_alphanumeric,
   sortFn_text,
   tableFeatures,
+  type Updater,
   useTable,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
@@ -43,7 +44,7 @@ export interface Invoice {
   type: 'full' | 'tranche';
   currency: string;
   total: string;
-  status: 'draft' | 'sent' | 'paid' | 'part_paid' | 'overdue' | 'voided';
+  status: 'draft' | 'paid' | 'part_paid' | 'due' | 'overdue' | 'voided';
   commentCount: number;
   onEdit?: boolean;
   onView?: boolean;
@@ -54,6 +55,10 @@ interface InvoiceTableProps {
   onDelete?: (invoice: Invoice) => void;
   onDuplicate?: (invoice: Invoice) => void;
   allowEdit?: boolean;
+  globalFilter?: string;
+  onGlobalFilterChange?: (value: string) => void;
+  pagination?: PaginationState;
+  onPaginationChange?: (updater: Updater<PaginationState>) => void;
 }
 
 const features = tableFeatures({
@@ -83,14 +88,25 @@ function formatMoney(value: string | number, currency?: string) {
   }).format(num);
 }
 
-export function InvoiceTable({ data, allowEdit }: InvoiceTableProps) {
+export function InvoiceTable({
+  data,
+  allowEdit,
+  globalFilter: propsGlobalFilter,
+  onGlobalFilterChange: propsOnGlobalFilterChange,
+  pagination: propsPagination,
+  onPaginationChange: propsOnPaginationChange,
+}: InvoiceTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
-  const [pagination, setPagination] = useState<PaginationState>({
+  const [internalGlobalFilter, setInternalGlobalFilter] = useState('');
+  const [internalPagination, setInternalPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
+  const globalFilter = propsGlobalFilter ?? internalGlobalFilter;
+  const setGlobalFilter = propsOnGlobalFilterChange ?? setInternalGlobalFilter;
+  const pagination = propsPagination ?? internalPagination;
+  const setPagination = propsOnPaginationChange ?? setInternalPagination;
 
   const columns = useMemo(() => {
     const h = createColumnHelper<Features, Invoice>();
@@ -182,6 +198,7 @@ export function InvoiceTable({ data, allowEdit }: InvoiceTableProps) {
                   variant="outline"
                   size="sm"
                   render={<Link to="/invoices/$id/edit" params={{ id: invoice.id }} />}
+                  nativeButton={false}
                   className="border border-[#201e1d] bg-white px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
                 >
                   Edit
@@ -191,6 +208,7 @@ export function InvoiceTable({ data, allowEdit }: InvoiceTableProps) {
                 variant="default"
                 size="sm"
                 render={<Link to="/invoices/$id" params={{ id: invoice.id }} />}
+                nativeButton={false}
                 className="bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#c02a10] hover:border-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
               >
                 Open

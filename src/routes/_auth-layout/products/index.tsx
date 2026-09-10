@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { EditIcon, SearchIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { ProductForm } from '#/components/forms/ProductForm';
@@ -18,17 +18,9 @@ import {
 	TableRow,
 } from '#/components/ui/table';
 import { toast } from '#/components/ui/toast';
-import { getSession } from '#/lib/auth.functions';
 import { deleteProduct, getProducts } from '#/lib/server-fns/crm';
 
 export const Route = createFileRoute('/_auth-layout/products/')({
-	beforeLoad: async () => {
-		const session = await getSession();
-		if (!session) {
-			throw redirect({ to: '/auth/login', search: { redirect: '/products' } });
-		}
-		return { user: session.user, session: session.session };
-	},
 	component: ProductsPage,
 });
 

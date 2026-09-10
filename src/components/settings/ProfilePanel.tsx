@@ -57,8 +57,6 @@ export function ProfilePanel() {
 				} as unknown as never)) as { error?: { message?: string } };
 				if (res?.error) throw new Error(res.error.message ?? 'Update failed');
 				await qc.invalidateQueries({ queryKey: ['session'] });
-				await qc.invalidateQueries({ queryKey: ['org-members'] });
-				await qc.invalidateQueries({ queryKey: ['organization'] });
 				toast.add({ title: 'Profile updated', type: 'success' });
 			} catch (e: unknown) {
 				const msg = e instanceof Error ? e.message : 'Failed to update profile';

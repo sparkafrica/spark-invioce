@@ -13,14 +13,12 @@ const logoSchema = z
 	.optional()
 	.nullable()
 	.refine((v) => !v || v.startsWith('data:') || v.startsWith('http'), {
-		message: 'Logo must be URL or data URI',
-	});
+		message: 'Logo must be URL or data URI'});
 
 const createBusinessSchema = z.object({
 	name: z.string().min(1),
 	prefix: z.string().min(1).max(10),
-	logo: logoSchema,
-});
+	logo: logoSchema});
 
 export const createBusiness = createServerFn({ method: 'POST' })
 	.validator(createBusinessSchema)
@@ -34,14 +32,12 @@ export const createBusiness = createServerFn({ method: 'POST' })
 					throw new Error('Unauthorized');
 				}
 
-				const orgId = process.env.ORGANIZATION_ID!;
 
 				const existing = await db
 					.select({ id: businesses.id })
 					.from(businesses)
 					.where(
 						and(
-							eq(businesses.organizationId, orgId),
 							eq(businesses.prefix, data.prefix),
 						),
 					)
@@ -55,11 +51,9 @@ export const createBusiness = createServerFn({ method: 'POST' })
 					await db
 						.insert(businesses)
 						.values({
-							organizationId: orgId,
-							name: data.name,
+														name: data.name,
 							prefix: data.prefix.toUpperCase(),
-							logo: data.logo,
-						})
+							logo: data.logo})
 						.returning({ id: businesses.id })
 				)[0].id;
 
@@ -68,8 +62,7 @@ export const createBusiness = createServerFn({ method: 'POST' })
 			{
 				entity: 'Business',
 				getLabel: (_args, result) => result.businessId,
-				getDetail: () => 'Created business',
-			},
+				getDetail: () => 'Created business'},
 		),
 	);
 
@@ -77,8 +70,7 @@ const updateBusinessSchema = z.object({
 	id: z.string().min(1),
 	name: z.string().min(1).optional(),
 	prefix: z.string().min(1).max(10).optional(),
-	logo: logoSchema,
-});
+	logo: logoSchema});
 
 export const updateBusiness = createServerFn({ method: 'POST' })
 	.validator(updateBusinessSchema)
@@ -107,8 +99,7 @@ export const updateBusiness = createServerFn({ method: 'POST' })
 					.update(businesses)
 					.set({
 						...updates,
-						updatedAt: new Date(),
-					})
+						updatedAt: new Date()})
 					.where(eq(businesses.id, id));
 
 				return { success: true, id, old };
@@ -121,8 +112,7 @@ export const updateBusiness = createServerFn({ method: 'POST' })
 					return changes.length > 0
 						? `Updated business: ${changes.map((c) => `${c.field}: ${c.from} → ${c.to}`).join('; ')}`
 						: 'Updated business';
-				},
-			},
+				}},
 		),
 	);
 
@@ -145,8 +135,7 @@ export const deleteBusiness = createServerFn({ method: 'POST' })
 			{
 				entity: 'Business',
 				getLabel: (args) => args.id,
-				getDetail: () => 'Deleted business',
-			},
+				getDetail: () => 'Deleted business'},
 		),
 	);
 
@@ -158,8 +147,7 @@ const createCompanySchema = z.object({
 	email: z.string().email().optional().nullable(),
 	phone: z.string().optional().nullable(),
 	tin: z.string().optional().nullable(),
-	defaultCurrency: z.enum(currencyEnumValues),
-});
+	defaultCurrency: z.enum(currencyEnumValues)});
 
 export const createCompany = createServerFn({ method: 'POST' })
 	.validator(createCompanySchema)
@@ -173,22 +161,19 @@ export const createCompany = createServerFn({ method: 'POST' })
 					throw new Error('Unauthorized');
 				}
 
-				const orgId = process.env.ORGANIZATION_ID!;
 
 				const companyId = (
 					await db
 						.insert(companies)
 						.values({
-							organizationId: orgId,
-							region: data.region,
+														region: data.region,
 							name: data.name,
 							reg: data.reg,
 							address: data.address,
 							email: data.email,
 							phone: data.phone,
 							tin: data.tin,
-							defaultCurrency: data.defaultCurrency,
-						})
+							defaultCurrency: data.defaultCurrency})
 						.returning({ id: companies.id })
 				)[0].id;
 
@@ -197,8 +182,7 @@ export const createCompany = createServerFn({ method: 'POST' })
 			{
 				entity: 'Company',
 				getLabel: (_args, result) => result.companyId,
-				getDetail: () => 'Created company',
-			},
+				getDetail: () => 'Created company'},
 		),
 	);
 
@@ -211,8 +195,7 @@ const updateCompanySchema = z.object({
 	email: z.string().email().optional().nullable(),
 	phone: z.string().optional().nullable(),
 	tin: z.string().optional().nullable(),
-	defaultCurrency: z.enum(currencyEnumValues).optional(),
-});
+	defaultCurrency: z.enum(currencyEnumValues).optional()});
 
 export const updateCompany = createServerFn({ method: 'POST' })
 	.validator(updateCompanySchema)
@@ -237,8 +220,7 @@ export const updateCompany = createServerFn({ method: 'POST' })
 					.update(companies)
 					.set({
 						...updates,
-						updatedAt: new Date(),
-					})
+						updatedAt: new Date()})
 					.where(eq(companies.id, id));
 
 				return { success: true, id, old };
@@ -251,8 +233,7 @@ export const updateCompany = createServerFn({ method: 'POST' })
 					return changes.length > 0
 						? `Updated company: ${changes.map((c) => `${c.field}: ${c.from} → ${c.to}`).join('; ')}`
 						: 'Updated company';
-				},
-			},
+				}},
 		),
 	);
 
@@ -275,23 +256,20 @@ export const deleteCompany = createServerFn({ method: 'POST' })
 			{
 				entity: 'Company',
 				getLabel: (args) => args.id,
-				getDetail: () => 'Deleted company',
-			},
+				getDetail: () => 'Deleted company'},
 		),
 	);
 
 const createBankSchema = z.object({
 	label: z.string().min(1),
 	currency: z.enum(currencyEnumValues),
-	fields: z.array(z.tuple([z.string(), z.string()])),
-});
+	fields: z.array(z.tuple([z.string(), z.string()]))});
 
 const updateBankSchema = z.object({
 	id: z.string().min(1),
 	label: z.string().min(1).optional(),
 	currency: z.enum(currencyEnumValues).optional(),
-	fields: z.array(z.tuple([z.string(), z.string()])).optional(),
-});
+	fields: z.array(z.tuple([z.string(), z.string()])).optional()});
 
 export const createBank = createServerFn({ method: 'POST' })
 	.validator(createBankSchema)
@@ -302,16 +280,13 @@ export const createBank = createServerFn({ method: 'POST' })
 					session: { user: { id: string } } | null;
 				};
 				if (!ctx.session) throw new Error('Unauthorized');
-				const orgId = process.env.ORGANIZATION_ID!;
 				const bankId = (
 					await db
 						.insert(banks)
 						.values({
-							organizationId: orgId,
-							label: data.label,
+														label: data.label,
 							currency: data.currency as any,
-							fields: data.fields,
-						})
+							fields: data.fields})
 						.returning({ id: banks.id })
 				)[0].id;
 				return { bankId };
@@ -319,8 +294,7 @@ export const createBank = createServerFn({ method: 'POST' })
 			{
 				entity: 'Bank',
 				getLabel: (_args, result) => result.bankId,
-				getDetail: () => 'Created bank account',
-			},
+				getDetail: () => 'Created bank account'},
 		),
 	);
 
@@ -355,8 +329,7 @@ export const updateBank = createServerFn({ method: 'POST' })
 					return changes.length > 0
 						? `Updated bank: ${changes.map((c) => `${c.field}: ${c.from} → ${c.to}`).join('; ')}`
 						: 'Updated bank';
-				},
-			},
+				}},
 		),
 	);
 
@@ -375,7 +348,6 @@ export const deleteBank = createServerFn({ method: 'POST' })
 			{
 				entity: 'Bank',
 				getLabel: (args) => args.id,
-				getDetail: () => 'Deleted bank account',
-			},
+				getDetail: () => 'Deleted bank account'},
 		),
 	);

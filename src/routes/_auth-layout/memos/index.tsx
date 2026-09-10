@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { EditIcon, FileTextIcon, SearchIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '#/components/ui/button';
@@ -15,17 +15,9 @@ import {
 	TableRow,
 } from '#/components/ui/table';
 import { toast } from '#/components/ui/toast';
-import { getSession } from '#/lib/auth.functions';
 import { deleteMemo, getMemos } from '#/lib/server-fns/memos';
 
 export const Route = createFileRoute('/_auth-layout/memos/')({
-	beforeLoad: async () => {
-		const session = await getSession();
-		if (!session) {
-			throw redirect({ to: '/auth/login', search: { redirect: '/memos' } });
-		}
-		return { user: session.user, session: session.session };
-	},
 	component: MemosPage,
 });
 

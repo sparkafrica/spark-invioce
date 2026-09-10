@@ -1,6 +1,5 @@
 import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { db } from '#/db';
-import { organization } from '#/db/auth-schema';
 import { activityLog } from '#/db/schema';
 
 export type ActivityType =
@@ -33,7 +32,6 @@ export interface FieldChange {
 }
 
 export interface LogActivityParams {
-	organizationId?: string;
 	userId: string;
 	userName: string;
 	userRole: UserRole;
@@ -45,23 +43,8 @@ export interface LogActivityParams {
 	metadata?: Record<string, unknown>;
 }
 
-async function resolveActivityOrgId(explicit?: string): Promise<string> {
-	if (explicit) return explicit;
-	if (process.env.ORGANIZATION_ID) return process.env.ORGANIZATION_ID!;
-	const rows = await db
-		.select({ id: organization.id, slug: organization.slug })
-		.from(organization)
-		.limit(10);
-	const bySlug = rows.find((r) => r.slug === 'spark-invoice-system');
-	if (bySlug) return bySlug.id;
-	if (rows[0]) return rows[0].id;
-	throw new Error('No organization found. Run seed.');
-}
-
 export async function logActivity(params: LogActivityParams): Promise<void> {
-	const orgId = await resolveActivityOrgId(params.organizationId);
 	await db.insert(activityLog).values({
-		organizationId: orgId,
 		userId: params.userId,
 		userName: params.userName,
 		type: params.type,
@@ -146,7 +129,6 @@ export function withActivity<T extends (...args: any[]) => Promise<any>>(
 }
 
 export async function getActivityLog(params: {
-	organizationId?: string;
 	from?: Date;
 	to?: Date;
 	query?: string;
@@ -155,20 +137,19 @@ export async function getActivityLog(params: {
 	entity?: ActivityEntity;
 	userId?: string;
 }): Promise<{ activities: any[]; total: number }> {
-	const orgId = params.organizationId || process.env.ORGANIZATION_ID!;
 	const page = params.page || 1;
 	const pageSize = params.pageSize || 25;
 	const offset = (page - 1) * pageSize;
 
-	const conditions = [eq(activityLog.organizationId, orgId)];
+	const conditions: ReturnType<typeof eq>[] = [];
 
 	if (params.from) {
-		conditions.push(gte(activityLog.createdAt, params.from));
+		conditions.push(gte(activityLog.createdAt, params.from) as unknown as ReturnType<typeof eq>);
 	}
 	if (params.to) {
 		const toDate = new Date(params.to);
 		toDate.setHours(23, 59, 59, 999);
-		conditions.push(lte(activityLog.createdAt, toDate));
+		conditions.push(lte(activityLog.createdAt, toDate) as unknown as ReturnType<typeof eq>);
 	}
 	if (params.entity) {
 		conditions.push(eq(activityLog.entity, params.entity));
@@ -178,7 +159,9 @@ export async function getActivityLog(params: {
 	}
 
 	const whereClause =
-		conditions.length > 1 ? and(...conditions) : conditions[0];
+		conditions.length > 1
+			? and(...(conditions as Parameters<typeof and>))
+			: conditions[0];
 
 	const [activities, totalResult] = await Promise.all([
 		db
