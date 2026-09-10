@@ -22,6 +22,20 @@
       "when": 1788694332525,
       "tag": "0002_remove-sent",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789018418148,
+      "tag": "0003_remove-org",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789020503710,
+      "tag": "0004_add-due-status",
+      "breakpoints": true
     }
   ]
 }

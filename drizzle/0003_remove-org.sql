@@ -1,0 +1,26 @@
+-- Custom SQL migration file, put your code below! --
+ALTER TABLE "companies" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "businesses" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "banks" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "products" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "clients" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "invoices" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "activity_log" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "memos" DROP COLUMN IF EXISTS "organization_id";
+ALTER TABLE "settings" DROP COLUMN IF EXISTS "organization_id";
+DROP INDEX IF EXISTS "companies_org_idx";
+DROP INDEX IF EXISTS "businesses_org_idx";
+DROP INDEX IF EXISTS "banks_org_idx";
+DROP INDEX IF EXISTS "products_org_idx";
+DROP INDEX IF EXISTS "clients_org_idx";
+DROP INDEX IF EXISTS "invoices_org_idx";
+DROP INDEX IF EXISTS "activity_log_org_idx";
+DROP INDEX IF EXISTS "memos_org_idx";
+DROP INDEX IF EXISTS "invoices_number_org_unique";
+CREATE UNIQUE INDEX IF NOT EXISTS "invoices_number_unique" ON "invoices" ("number");
+DROP INDEX IF EXISTS "settings_org_key_unique";
+CREATE UNIQUE INDEX IF NOT EXISTS "settings_key_unique" ON "settings" ("key");
+DROP TABLE IF EXISTS "invitation" CASCADE;
+DROP TABLE IF EXISTS "member" CASCADE;
+DROP TABLE IF EXISTS "organization" CASCADE;
+ALTER TABLE "session" DROP COLUMN IF EXISTS "active_organization_id";

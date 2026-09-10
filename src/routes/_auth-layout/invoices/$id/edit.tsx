@@ -35,38 +35,36 @@ function EditInvoicePage() {
 
 	if (isLoading) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center justify-between">
-					<h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">
-						Edit Invoice
-					</h1>
-					<Skeleton className="h-6 w-24 rounded-none" />
-				</div>
-				<div className="grid lg:grid-cols-[1.55fr_1fr] gap-8">
-					<div className="space-y-4">
-						<Skeleton className="h-8 w-40 rounded-none" />
-						<Skeleton className="h-20 w-full rounded-none" />
-						<Skeleton className="h-20 w-full rounded-none" />
-						<Skeleton className="h-32 w-full rounded-none" />
+			<div className="grid lg:grid-cols-[1.55fr_1fr] items-start" style={{ padding: '28px 24px 56px', gap: 32 }}>
+				<div className="flex flex-col gap-6">
+					<div className="flex items-end justify-between gap-4 border-b-2 border-[#201e1d] pb-3">
+						<h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">
+							Edit Invoice
+						</h1>
+						<Skeleton className="h-9 w-24 rounded-none" />
 					</div>
-					<Skeleton className="h-64 w-full rounded-none" />
+					<Skeleton className="h-8 w-40 rounded-none" />
+					<Skeleton className="h-20 w-full rounded-none" />
+					<Skeleton className="h-20 w-full rounded-none" />
+					<Skeleton className="h-32 w-full rounded-none" />
 				</div>
+				<Skeleton className="h-64 w-full rounded-none border-l-2 border-[#201e1d]" />
 			</div>
 		);
 	}
 
 	if (error) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center justify-between">
-					<h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">
+			<div style={{ padding: '28px 24px 56px' }}>
+				<div className="flex items-end justify-between gap-4 border-b-2 border-[#201e1d] pb-3 mb-6">
+					<h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">
 						Edit Invoice
 					</h1>
 					<Button variant="outline" onClick={() => refetch()}>
 						Retry
 					</Button>
 				</div>
-				<div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
+				<div className="rounded-none border bg-red-50 p-6 dark:bg-red-900/20">
 					<p className="text-red-600 dark:text-red-400">
 						Failed to load invoice: {(error as Error).message}
 					</p>
@@ -77,13 +75,13 @@ function EditInvoicePage() {
 
 	if (!data?.invoice) {
 		return (
-			<div className="space-y-6">
-				<div className="flex items-center justify-between">
-					<h1 className="text-[30px] font-medium tracking-[-0.02em] leading-none text-[#201e1d]">
+			<div style={{ padding: '28px 24px 56px' }}>
+				<div className="flex items-end justify-between gap-4 border-b-2 border-[#201e1d] pb-3 mb-6">
+					<h1 className="text-[30px] font-bold tracking-[-0.02em] leading-none text-[#201e1d]">
 						Edit Invoice
 					</h1>
 				</div>
-				<div className="rounded-none border bg-red-50 p-6  dark:bg-red-900/20">
+				<div className="rounded-none border bg-red-50 p-6 dark:bg-red-900/20">
 					<p className="text-red-600 dark:text-red-400">Invoice not found</p>
 				</div>
 			</div>
@@ -139,12 +137,10 @@ function EditInvoicePage() {
 	};
 
 	return (
-		<div className="space-y-6">
-			<InvoiceForm
-				initialData={initialData}
-				isEditing={true}
-				invoiceId={invoiceId}
-			/>
-		</div>
+		<InvoiceForm
+			initialData={initialData}
+			isEditing={true}
+			invoiceId={invoiceId}
+		/>
 	);
 }

@@ -433,14 +433,17 @@ export function InvoiceForm({
 
   if (!businessesData || !companiesData || !clientsData) {
     return (
-      <div className="grid lg:grid-cols-[1.55fr_1fr] gap-8 p-6">
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-40 rounded-none" />
+      <div className="grid lg:grid-cols-[1.55fr_1fr] items-start" style={{ padding: '28px 24px 56px', gap: 32 }}>
+        <div className="flex flex-col gap-6">
+          <div className="flex items-end justify-between gap-4 border-b-2 border-[#201e1d] pb-3">
+            <Skeleton className="h-7 w-36 rounded-none" />
+            <Skeleton className="h-9 w-24 rounded-none" />
+          </div>
           <Skeleton className="h-20 w-full rounded-none" />
           <Skeleton className="h-20 w-full rounded-none" />
           <Skeleton className="h-32 w-full rounded-none" />
         </div>
-        <Skeleton className="h-64 w-full rounded-none" />
+        <Skeleton className="h-64 w-full rounded-none border-l-2 border-[#201e1d]" />
       </div>
     );
   }
@@ -455,12 +458,12 @@ export function InvoiceForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid lg:grid-cols-[1.55fr_1fr] gap-8"
+      className="grid lg:grid-cols-[1.55fr_1fr] items-start"
       style={{ padding: '28px 24px 56px', gap: 32 }}
     >
       {/* Left */}
-      <div className="flex flex-col gap-24">
-        <div className="flex items-end justify-between gap-16 border-b-2 border-[#201e1d] pb-12">
+      <div className="flex flex-col gap-6">
+        <div className="flex items-end justify-between gap-4 border-b-2 border-[#201e1d] pb-3">
           <div className="text-[30px] font-bold tracking-[-0.02em] leading-none">
             {editTitle}
           </div>
@@ -493,9 +496,9 @@ export function InvoiceForm({
       </div>
 
       {/* Right sidebar — SAVE NOTE + COMMENTARY + HISTORY like template */}
-      <div className="border-l-2 border-[#201e1d] pl-6.5 flex flex-col gap-20 lg:sticky lg:top-18 self-start">
-        {/* Live preview — Teams-like right pane, read-only, no duplicate status/payment */}
-        <InvoiceLivePreview form={form} />
+      <div className="border-l-2 border-[#201e1d] pl-6.5 flex flex-col gap-5 lg:sticky lg:top-18 self-start">
+        {/* Live preview — edit only, per template new has no preview */}
+        {isEditing && <InvoiceLivePreview form={form} />}
 
         {/* Warning banner for paid/partially paid/voided invoices */}
         {isEditing &&
@@ -536,7 +539,7 @@ export function InvoiceForm({
           )}
 
         <div>
-          <div className="text-[10px] tracking-[0.12em] font-semibold mb-10">
+          <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-3">
             SAVE NOTE
           </div>
           <Textarea
@@ -546,23 +549,23 @@ export function InvoiceForm({
             rows={3}
             className="w-full"
           />
-          <div className="text-[11px] text-[#5c5755] mt-8">
+          <div className="text-[11px] text-[#5c5755] mt-2">
             Every save records who, when, each field changed (old → new), your
             note and a full snapshot.
           </div>
         </div>
-        <div className="border-t-2 border-[#201e1d] pt-14">
-          <div className="flex items-baseline justify-between gap-10 mb-10">
+        <div className="border-t-2 border-[#201e1d] pt-5">
+          <div className="flex items-baseline justify-between gap-3 mb-3">
             <div className="text-[10px] tracking-[0.12em] font-semibold">
               COMMENTARY
             </div>
             <div className="text-[11px] text-[#5c5755]">0 comments</div>
           </div>
-          <div className="text-xs text-[#5c5755] mb-12">
+          <div className="text-xs text-[#5c5755] mb-3">
             Save the invoice first, then the team can comment on it.
           </div>
-          <div className="border-t border-[#d6d3d1] pt-12">
-            <div className="flex flex-col gap-8">
+          <div className="border-t border-[#d6d3d1] pt-3">
+            <div className="flex flex-col gap-3">
               <textarea
                 rows={3}
                 placeholder="Add a comment for the team"
@@ -575,26 +578,28 @@ export function InvoiceForm({
                 Post comment
               </Button>
             </div>
-            <div className="text-[12px] text-[#5c5755] mt-10">
+            <div className="text-[12px] text-[#5c5755] mt-3">
               No comments yet. Anyone on the team can read and add them.
             </div>
           </div>
         </div>
-        <div className="border-t-2 border-[#201e1d] pt-14">
-          <div className="text-[10px] tracking-[0.12em] font-semibold mb-10">
-            EDIT HISTORY
+        {isEditing && (
+          <div className="border-t-2 border-[#201e1d] pt-5">
+            <div className="text-[10px] tracking-[0.12em] font-semibold mb-3">
+              EDIT HISTORY
+            </div>
+            <div className="text-xs text-[#5c5755]">
+              No history yet — first save will create an entry.
+            </div>
           </div>
-          <div className="text-xs text-[#5c5755]">
-            No history yet — first save will create an entry.
-          </div>
-        </div>
+        )}
 
-        {/* Payment History */}
+        {/* Payment History — edit only, tighter spacing per template */}
         {isEditing &&
           initialData?.payments &&
           initialData.payments.length > 0 && (
-            <div className="border-t-2 border-[#201e1d] pt-14">
-              <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-12">
+            <div className="border-t-2 border-[#201e1d] pt-5">
+              <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10] mb-3">
                 PAYMENTS RECEIVED
               </div>
               <div className="space-y-2">
@@ -637,7 +642,7 @@ export function InvoiceForm({
                     size="sm"
                     variant="outline"
                     onClick={() => setShowPaymentModal(true)}
-                    className="mt-12 w-full border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#ec3013]"
+                    className="mt-3 w-full border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none text-[#ec3013]"
                   >
                     Record Payment
                   </Button>

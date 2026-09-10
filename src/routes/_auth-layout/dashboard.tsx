@@ -375,10 +375,12 @@ function Dashboard() {
         months.push(c0);
         c0 = shift(c0, 1);
       }
+      if (months.length === 1) {
+        months.unshift(shift(months[0], -1));
+      }
     } else {
-      // fallback to current month if no data
       const now = new Date().toISOString().slice(0, 7);
-      months.push(now);
+      months.push(shift(now, -1), now);
     }
     const buckets = new Map<string, { month: string; invoiced: number; collected: number }>();
     months.forEach((m) => {
@@ -833,66 +835,68 @@ function Dashboard() {
             Invoiced · thin bar is collected
           </div>
           <div className="flex flex-col gap-3.5">
-            {businessNames.map((b) => {
-              const bizInvs =
-                biz === 'All'
-                  ? invoices.filter((i) => i.business === b)
-                  : filtered.filter((i) => i.business === b);
-              const invSum = bizInvs.reduce(
-                (s: number, i) =>
-                  s +
-                  convertToReportCurrency(
-                    Number(String(i.total).replace(/[^0-9.-]/g, '')) || 0,
-                    i.currency,
+            {(() => {
+              const convertedSums = businessNames.map((x) =>
+                filtered
+                  .filter((i) => i.business === x)
+                  .reduce(
+                    (s, i) =>
+                      s +
+                      convertToReportCurrency(
+                        Number(String(i.total).replace(/[^0-9.-]/g, '')) || 0,
+                        i.currency,
+                      ),
+                    0,
                   ),
-                0,
               );
-              const colSum = bizInvs
-                .filter((i) => i.status === 'paid')
-                .reduce(
+              const max = Math.max(1, ...convertedSums);
+              return businessNames.map((b) => {
+                const bizInvs = filtered.filter((i) => i.business === b);
+                const invSum = bizInvs.reduce(
                   (s: number, i) =>
-                    s + (Number(String(i.total).replace(/[^0-9.-]/g, '')) || 0),
+                    s +
+                    convertToReportCurrency(
+                      Number(String(i.total).replace(/[^0-9.-]/g, '')) || 0,
+                      i.currency,
+                    ),
                   0,
                 );
-              const max = Math.max(
-                ...businessNames.map((x) =>
-                  invoices
-                    .filter((i) => i.business === x)
-                    .reduce(
-                      (s: number, i) =>
-                        s +
-                        (Number(String(i.total).replace(/[^0-9.-]/g, '')) || 0),
-                      0,
-                    ),
-                ),
-                1,
-              );
-              const pct = max ? (invSum / max) * 100 : 0;
-              const colPct = invSum ? (colSum / invSum) * 100 : 0;
-              return (
-                <div key={b} className="py-1">
-                  <div className="flex justify-between items-baseline gap-2.5 mb-1.5">
-                    <div className="text-[12.5px] font-semibold">{b}</div>
-                    <div className="text-[12.5px] tabular-nums whitespace-nowrap">
-                      {fmtShort(invSum)}
-                    </div>
-                  </div>
-                  <div className="h-3.5 bg-[#e7e4e2] w-full">
-                    <div
-                      className="h-full bg-[#ec3013]"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div
-                    className="h-1 bg-[#201e1d] mt-1"
-                    style={{ width: `${colPct}%` }}
-                  />
-                  <div className="text-[10px] text-[#5c5755] mt-1.5">
-                    {bizInvs.length} invoices
+                const colSum = bizInvs.reduce((s, i) => {
+                  const amt = convertToReportCurrency(
+                    Number(String(i.total).replace(/[^0-9.-]/g, '')) || 0,
+                    i.currency,
+                  );
+                  if (i.status === 'paid') return s + amt;
+                  if (i.status === 'part_paid') return s + amt * 0.5;
+                  return s;
+                }, 0);
+                const pct = Math.round((invSum / max) * 100);
+                const colPct = invSum ? Math.round((colSum / invSum) * 100) : 0;
+                return { b, bizInvs, invSum, colSum, pct, colPct };
+              });
+            })().map(({ b, bizInvs, invSum, pct, colPct }) => (
+              <div key={b} className="py-1">
+                <div className="flex justify-between items-baseline gap-2.5 mb-1.5">
+                  <div className="text-[12.5px] font-semibold">{b}</div>
+                  <div className="text-[12.5px] tabular-nums whitespace-nowrap">
+                    {fmtShort(invSum)}
                   </div>
                 </div>
-              );
-            })}
+                <div className="h-3.5 bg-[#e7e4e2] w-full">
+                  <div
+                    className="h-full bg-[#ec3013]"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div
+                  className="h-1 bg-[#201e1d] mt-1"
+                  style={{ width: `${colPct}%` }}
+                />
+                <div className="text-[10px] text-[#5c5755] mt-1.5">
+                  {bizInvs.length} invoices
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         <div className="bg-white p-4 lg:p-5">
@@ -1117,6 +1121,8 @@ function Dashboard() {
           ) : (
             <div className="flex flex-col gap-0">
               {outstandingCustomers.map((c) => (
+                // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
+                // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
                 <div
                   key={c.name}
                   onClick={() =>
@@ -1125,7 +1131,7 @@ function Dashboard() {
                       search: {
                         searchQuery: c.name,
                         business: biz !== 'All' ? biz : undefined,
-                      } as any,
+                      },
                     })
                   }
                   title={`${c.name} · ${c.count} invoice${c.count === 1 ? '' : 's'} · ${fmt(c.out)} outstanding${c.over ? ` (${fmt(c.over)} overdue)` : ''} — click to filter`}
@@ -1176,13 +1182,15 @@ function Dashboard() {
                   const isOver = Boolean(dueRaw && dueRaw < todayISO);
                   const dueLabel = dueRaw
                     ? new Date(dueRaw).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })
                     : '—';
                   const meta = isOver ? `due ${dueLabel} · Overdue` : `due ${dueLabel}`;
                   return (
+                    // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
+                    // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
                     <div
                       key={inv.id}
                       onClick={() => navigate({ to: '/invoices/$id', params: { id: inv.id } })}

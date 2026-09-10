@@ -6,9 +6,5 @@ export const Route = createFileRoute('/_auth-layout/invoices/new')({
 });
 
 function NewInvoicePage() {
-  return (
-    <div className="space-y-6">
-      <InvoiceForm />
-    </div>
-  );
+  return <InvoiceForm />;
 }
