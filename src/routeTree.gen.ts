@@ -16,6 +16,7 @@ import { Route as AuthLayoutActivityRouteImport } from './routes/_auth-layout/ac
 import { Route as AuthLayoutDashboardRouteImport } from './routes/_auth-layout/dashboard'
 import { Route as AuthLayoutSettingRouteImport } from './routes/_auth-layout/setting'
 import { Route as AuthLayoutTeamRouteImport } from './routes/_auth-layout/team'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AuthLayoutClientsIndexRouteImport } from './routes/_auth-layout/clients/index'
 import { Route as AuthLayoutInvoicesIndexRouteImport } from './routes/_auth-layout/invoices/index'
 import { Route as AuthLayoutInvoicesNewRouteImport } from './routes/_auth-layout/invoices/new'
@@ -67,6 +68,11 @@ const AuthLayoutTeamRoute = AuthLayoutTeamRouteImport.update({
   id: '/team',
   path: '/team',
   getParentRoute: () => AuthLayoutRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthLayoutClientsIndexRoute = AuthLayoutClientsIndexRouteImport.update({
   id: '/clients/',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthLayoutDashboardRoute
   '/setting': typeof AuthLayoutSettingRoute
   '/team': typeof AuthLayoutTeamRoute
+  '/api/health': typeof ApiHealthRoute
   '/invoices/new': typeof AuthLayoutInvoicesNewRoute
   '/settings/banks': typeof AuthLayoutSettingsBanksRoute
   '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthLayoutDashboardRoute
   '/setting': typeof AuthLayoutSettingRoute
   '/team': typeof AuthLayoutTeamRoute
+  '/api/health': typeof ApiHealthRoute
   '/invoices/new': typeof AuthLayoutInvoicesNewRoute
   '/settings/banks': typeof AuthLayoutSettingsBanksRoute
   '/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/_auth-layout/dashboard': typeof AuthLayoutDashboardRoute
   '/_auth-layout/setting': typeof AuthLayoutSettingRoute
   '/_auth-layout/team': typeof AuthLayoutTeamRoute
+  '/api/health': typeof ApiHealthRoute
   '/_auth-layout/invoices/new': typeof AuthLayoutInvoicesNewRoute
   '/_auth-layout/settings/banks': typeof AuthLayoutSettingsBanksRoute
   '/_auth-layout/settings/businesses': typeof AuthLayoutSettingsBusinessesRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
+    | '/api/health'
     | '/invoices/new'
     | '/settings/banks'
     | '/settings/businesses'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/setting'
     | '/team'
+    | '/api/health'
     | '/invoices/new'
     | '/settings/banks'
     | '/settings/businesses'
@@ -303,6 +314,7 @@ export interface FileRouteTypes {
     | '/_auth-layout/dashboard'
     | '/_auth-layout/setting'
     | '/_auth-layout/team'
+    | '/api/health'
     | '/_auth-layout/invoices/new'
     | '/_auth-layout/settings/banks'
     | '/_auth-layout/settings/businesses'
@@ -327,6 +339,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   AuthLayoutRoute: typeof AuthLayoutRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCronFxRatesRoute: typeof ApiCronFxRatesRoute
 }
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/team'
       preLoaderRoute: typeof AuthLayoutTeamRouteImport
       parentRoute: typeof AuthLayoutRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_auth-layout/clients/': {
       id: '/_auth-layout/clients/'
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   AuthLayoutRoute: AuthLayoutRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCronFxRatesRoute: ApiCronFxRatesRoute,
 }
