@@ -66,6 +66,7 @@
     "react-dom": "^19.2.0",
     "recharts": "3.8.0",
     "resend": "^6.22.1",
+    "srvx": "^1.0.4",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.18",
     "tw-animate-css": "^1.3.6",
