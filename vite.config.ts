@@ -27,6 +27,11 @@ const config = defineConfig({
 				'/products/**': { swr: 300 }, // 5 min
 				'/api/**': { swr: 60 }, // 1 min for API routes if needed
 			},
+			output: {
+				dir: 'dist',
+				serverDir: 'dist/server',
+				publicDir: 'dist/public',
+			},
 		}),
 		tailwindcss(),
 		// tanstackRouter({
