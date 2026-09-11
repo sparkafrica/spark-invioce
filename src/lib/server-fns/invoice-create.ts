@@ -13,15 +13,22 @@ import { user } from '#/db/auth-schema';
 import { logActivity, withActivity } from '#/lib/activity';
 import { CURRENCIES } from '#/lib/currencies';
 
-async function assertCanMutate(session: { user: { id: string } } | null) {
-	if (!session?.user?.id) throw new Error('Unauthorized');
-	const roleFromSession = (session.user as unknown as { role?: string | null })?.role;
+function getSessionUser(ctx: unknown): { id: string; name?: string; email?: string; role?: string | null } | null {
+	const c = ctx as Record<string, unknown>;
+	const u = (c?.user as { id: string; name?: string; email?: string; role?: string | null } | null)
+		?? (c?.session as unknown as { user?: { id: string; name?: string; email?: string; role?: string | null } | null } | null)?.user;
+	if (u && typeof u === 'object' && 'id' in u && typeof (u as { id: unknown }).id === 'string') return u as { id: string; name?: string; email?: string; role?: string | null };
+	return null;
+}
+async function assertCanMutate(ctx: unknown) {
+	const u = getSessionUser(ctx);
+	if (!u?.id) throw new Error('Unauthorized');
+	const roleFromSession = (u as unknown as { role?: string | null })?.role;
 	if (roleFromSession === 'owner' || roleFromSession === 'admin') return;
-	// fallback DB lookup
 	const rows = await db
 		.select({ role: user.role })
 		.from(user)
-		.where(eq(user.id, session.user.id))
+		.where(eq(user.id, u.id))
 		.limit(1);
 	const role = rows[0]?.role;
 	if (role !== 'owner' && role !== 'admin') throw new Error('Forbidden: owner or admin only');
@@ -134,10 +141,9 @@ export const createInvoice = createServerFn({ method: 'POST' })
 	.handler(
 		withActivity(
 			async ({ data, context }) => {
-				const ctx = context as unknown as {
-					session: { user: { id: string; name: string } } | null;
-				};
-				await assertCanMutate(ctx.session as unknown as { user: { id: string } } | null);
+				const ctx = context as unknown as Record<string, unknown>;
+				await assertCanMutate(ctx);
+				const sessionUser = getSessionUser(ctx)!;
 
 
 				// Get business to generate invoice number (org scoped)
@@ -313,15 +319,15 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				// Log activity — never block invoice creation
 				try {
 					await logActivity({
-						userId: ctx.session!.user.id,
-						userName: ctx.session!.user.name,
+						userId: sessionUser.id,
+						userName: sessionUser.name ?? 'Unknown',
 						userRole: 'member',
 						type: 'Created',
 						entity: 'Invoice',
 						label: invoiceNumber,
 						detail: data.saveNote
 							? `Invoice ${invoiceNumber} created — ${data.saveNote}`
-							: `Invoice ${invoiceNumber} created for ${ctx.session!.user.name}`,
+							: `Invoice ${invoiceNumber} created for ${sessionUser.name ?? 'Unknown'}`,
 						metadata: data.saveNote ? { saveNote: data.saveNote } : undefined});
 				} catch {
 					// ignore activity errors — invoice already created
@@ -331,8 +337,8 @@ export const createInvoice = createServerFn({ method: 'POST' })
 				try {
 					await db.insert(invoiceHistory).values({
 						invoiceId,
-						userId: ctx.session!.user.id,
-						userName: ctx.session!.user.name,
+						userId: sessionUser.id,
+						userName: sessionUser.name ?? 'Unknown',
 						action: 'Created',
 						note: data.saveNote || null,
 						changes: [],
@@ -411,10 +417,9 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 	.handler(
 		withActivity(
 			async ({ data, context }) => {
-				const ctx = context as unknown as {
-					session: { user: { id: string; name: string } } | null;
-				};
-				await assertCanMutate(ctx.session as unknown as { user: { id: string } } | null);
+				const ctx = context as unknown as Record<string, unknown>;
+				await assertCanMutate(ctx);
+				const sessionUser = getSessionUser(ctx)!;
 
 				const now = new Date();
 
@@ -621,8 +626,8 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 				try {
 					await db.insert(invoiceHistory).values({
 						invoiceId: data.id,
-						userId: ctx.session!.user.id,
-						userName: ctx.session!.user.name,
+						userId: sessionUser.id,
+						userName: sessionUser.name ?? 'Unknown',
 						action: 'Edited',
 						note: data.saveNote || null,
 						changes: [],
@@ -649,8 +654,8 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 						createdAt: now});
 					if (data.saveNote) {
 						await logActivity({
-														userId: ctx.session!.user.id,
-							userName: ctx.session!.user.name,
+														userId: sessionUser.id,
+							userName: sessionUser.name ?? 'Unknown',
 							userRole: 'member',
 							type: 'Edited',
 							entity: 'Invoice',

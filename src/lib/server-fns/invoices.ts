@@ -158,18 +158,23 @@ export const getInvoices = createServerFn({ method: 'GET' })
 			pageSize};
 	});
 
+function getSessionUserInInvoices(ctx: unknown): { id: string; name?: string; role?: string | null } | null {
+	const c = ctx as Record<string, unknown>;
+	return (c?.user as { id: string; name?: string; role?: string | null } | null)
+		?? (c?.session as unknown as { user?: { id: string; name?: string; role?: string | null } | null } | null)?.user
+		?? null;
+}
 export const deleteInvoice = createServerFn({ method: 'POST' })
 	.validator(z.object({ id: z.string().min(1) }))
 	.handler(async ({ data, context }) => {
-		const ctx = context as unknown as {
-			session: { user: { id: string; name: string; role?: string | null } | null } | null;
-		};
-		if (!ctx.session?.user) {
+		const ctx = context as unknown as Record<string, unknown>;
+		const sessionUser = getSessionUserInInvoices(ctx);
+		if (!sessionUser?.id) {
 			throw new Error('Unauthorized');
 		}
-		const roleFromSession = (ctx.session.user as unknown as { role?: string | null })?.role;
+		const roleFromSession = (sessionUser as unknown as { role?: string | null })?.role;
 		if (roleFromSession !== 'owner' && roleFromSession !== 'admin') {
-			const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, ctx.session.user.id)).limit(1);
+			const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, sessionUser.id)).limit(1);
 			const role = rows[0]?.role;
 			if (role !== 'owner' && role !== 'admin') throw new Error('Forbidden: owner or admin only');
 		}
@@ -195,8 +200,8 @@ export const deleteInvoice = createServerFn({ method: 'POST' })
 
 		try {
 			await logActivity({
-				userId: ctx.session.user!.id,
-				userName: ctx.session.user!.name ?? 'Unknown',
+				userId: sessionUser.id,
+				userName: sessionUser.name ?? 'Unknown',
 				userRole: 'member',
 				type: 'Deleted',
 				entity: 'Invoice',

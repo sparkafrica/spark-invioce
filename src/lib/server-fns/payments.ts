@@ -19,20 +19,21 @@ export const recordPayment = createServerFn({ method: 'POST' })
 	.handler(
 		withActivity(
 			async ({ data, context }) => {
-				const ctx = context as unknown as {
-					session: { user: { id: string; name: string; role?: string | null } } | null;
-				};
-				if (!ctx.session?.user) {
+				const ctx = context as unknown as Record<string, unknown>;
+				const sessionUser = ((ctx as Record<string, unknown>).user as { id: string; name: string; role?: string | null } | null)
+					?? ((ctx as Record<string, unknown>).session as unknown as { user?: { id: string; name: string; role?: string | null } | null } | null)?.user
+					?? null;
+				if (!sessionUser?.id) {
 					throw new Error('Unauthorized');
 				}
-				const roleFromSession = (ctx.session.user as unknown as { role?: string | null })?.role;
+				const roleFromSession = (sessionUser as unknown as { role?: string | null })?.role;
 				if (roleFromSession !== 'owner' && roleFromSession !== 'admin') {
-					const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, ctx.session.user.id)).limit(1);
+					const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, sessionUser.id)).limit(1);
 					const role = rows[0]?.role;
 					if (role !== 'owner' && role !== 'admin') throw new Error('Forbidden: owner or admin only');
 				}
 
-				const userName = ctx.session.user.name;
+				const userName = sessionUser.name ?? 'Unknown';
 
 				// Get invoice details
 				const invoiceResult = await db

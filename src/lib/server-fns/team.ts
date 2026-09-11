@@ -3,6 +3,7 @@ import { createId } from '@paralleldrive/cuid2';
 import { createServerFn } from '@tanstack/react-start';
 import { Resend } from 'resend';
 import * as v from 'valibot';
+import { eq } from 'drizzle-orm';
 import { db } from '#/db';
 import { account, user } from '#/db/auth-schema';
 import { auth } from '#/lib/auth';
@@ -30,11 +31,20 @@ export const inviteMember = createServerFn({ method: 'POST' })
 	.validator((data) => v.parse(inviteMemberSchema, data))
 	.handler(async ({ data, context }) => {
 		const ctx = context as unknown as {
-			session: { user: { id: string; name: string; email: string } } | null;
+			session: { id: string } | null;
+			user: { id: string; name: string; email: string; role?: string | null } | null;
 		};
-
-		if (!ctx.session) {
+		const sessionUser = (ctx as unknown as { user?: { id: string; name: string; email: string; role?: string | null } | null; session?: { user?: { id: string; name: string; email: string; role?: string | null } | null } | null })?.user
+			?? (ctx as unknown as { session?: { user?: { id: string; name: string; email: string; role?: string | null } | null } | null })?.session?.user
+			?? null;
+		if (!sessionUser) {
 			throw new Error('Unauthorized');
+		}
+		const roleFromSession = (sessionUser as unknown as { role?: string | null })?.role;
+		if (roleFromSession !== 'owner' && roleFromSession !== 'admin') {
+			const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, sessionUser.id)).limit(1);
+			const r = rows[0]?.role;
+			if (r !== 'owner' && r !== 'admin') throw new Error('Forbidden: owner or admin only');
 		}
 
 		const existing = await db.query.user.findFirst({
@@ -92,7 +102,7 @@ export const inviteMember = createServerFn({ method: 'POST' })
 
 		const baseUrl = getBaseUrl();
 		const loginUrl = `${baseUrl}/auth/login`;
-		const inviterName = ctx.session.user.name ?? 'Spark team';
+		const inviterName = sessionUser.name ?? sessionUser.email ?? 'Spark team';
 
 		if (!process.env.RESEND_API_KEY) {
 			console.log(
@@ -151,9 +161,13 @@ export const inviteMember = createServerFn({ method: 'POST' })
 export const listUsers = createServerFn({ method: 'GET' }).handler(
 	async ({ context }) => {
 		const ctx = context as unknown as {
-			session: { user: { id: string } } | null;
+			session: { id: string } | null;
+			user: { id: string } | null;
 		};
-		if (!ctx.session) {
+		const sessionUser = (ctx as unknown as { user?: { id: string } | null; session?: { user?: { id: string } | null } | null })?.user
+			?? (ctx as unknown as { session?: { user?: { id: string } | null } | null })?.session?.user
+			?? null;
+		if (!sessionUser) {
 			throw new Error('Unauthorized');
 		}
 		const users = await db
