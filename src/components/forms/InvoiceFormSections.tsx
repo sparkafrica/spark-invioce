@@ -414,13 +414,13 @@ export function ClientSection({ form }: { form: InvoiceFormApi }) {
             );
             if (!selected) {
               return (
-                <div className="border-l-2 border-[#201e1d] pl-3.5 py-3 border-dashed text-xs leading-[1.5] text-[#5c5755]">
+                <div className="border-l-2 border-[#201e1d] pl-3.5 py-3 border-dashed text-xs leading-normal text-[#5c5755]">
                   Select a client to preview details
                 </div>
               );
             }
             return (
-              <div className="border-l-2 border-[#201e1d] pl-3.5 text-xs leading-[1.5]">
+              <div className="border-l-2 border-[#201e1d] pl-3.5 text-xs leading-normal">
                 <div className="font-semibold text-[#201e1d]">{selected.name}</div>
                 <div className="text-[#5c5755]">{selected.reg || '—'}</div>
                 <div className="text-[#5c5755]">{selected.address || '—'}</div>
@@ -428,7 +428,7 @@ export function ClientSection({ form }: { form: InvoiceFormApi }) {
                   {[selected.contact, selected.email].filter(Boolean).join(' · ') || '—'}
                 </div>
                 {selected.notes ? (
-                  <div className="mt-1.5 text-[#201e1d] leading-[1.5]">{selected.notes}</div>
+                  <div className="mt-1.5 text-[#201e1d] leading-normal">{selected.notes}</div>
                 ) : null}
               </div>
             );

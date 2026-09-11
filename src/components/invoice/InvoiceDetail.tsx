@@ -439,7 +439,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                 onValueChange={handleStatusChange}
                 disabled={statusMutation.isPending}
               >
-                <SelectTrigger className="h-8 min-w-42 rounded-none border-[#201e1d] bg-white text-xs font-semibold">
+                <SelectTrigger className="h-8 min-w-34! rounded-none border-[#201e1d] bg-white text-xs font-semibold capitalize">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-none border-[#201e1d]">
@@ -485,10 +485,10 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                 <Link to="/invoices/$id/edit" params={{ id: invoice.id }} />
               }
               nativeButton={false}
-            className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none"
-          >
-            Edit
-          </Button>
+              className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none"
+            >
+              Edit
+            </Button>
           )}
           <Button
             type="button"

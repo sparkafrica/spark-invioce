@@ -13,7 +13,9 @@ import {
 	invoiceTranches,
 	payments} from '#/db/schema';
 import { user } from '#/db/auth-schema';
+import { auth } from '#/lib/auth';
 import { logActivity } from '#/lib/activity';
+import { getRequestHeaders } from '@tanstack/react-start/server';
 
 type InvoiceStatus =
 	| 'draft'
@@ -158,21 +160,14 @@ export const getInvoices = createServerFn({ method: 'GET' })
 			pageSize};
 	});
 
-function getSessionUserInInvoices(ctx: unknown): { id: string; name?: string; role?: string | null } | null {
-	const c = ctx as Record<string, unknown>;
-	return (c?.user as { id: string; name?: string; role?: string | null } | null)
-		?? (c?.session as unknown as { user?: { id: string; name?: string; role?: string | null } | null } | null)?.user
-		?? null;
-}
 export const deleteInvoice = createServerFn({ method: 'POST' })
 	.validator(z.object({ id: z.string().min(1) }))
-	.handler(async ({ data, context }) => {
-		const ctx = context as unknown as Record<string, unknown>;
-		const sessionUser = getSessionUserInInvoices(ctx);
-		if (!sessionUser?.id) {
-			throw new Error('Unauthorized');
-		}
-		const roleFromSession = (sessionUser as unknown as { role?: string | null })?.role;
+	.handler(async ({ data }) => {
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+		const sessionUser = session?.user as unknown as { id: string; name: string; role?: string | null } | null;
+		if (!sessionUser?.id) throw new Error('Unauthorized');
+		const roleFromSession = sessionUser.role;
 		if (roleFromSession !== 'owner' && roleFromSession !== 'admin') {
 			const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, sessionUser.id)).limit(1);
 			const role = rows[0]?.role;

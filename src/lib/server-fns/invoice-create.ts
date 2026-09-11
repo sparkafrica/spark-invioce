@@ -10,21 +10,18 @@ import {
 	invoices,
 	invoiceTranches} from '#/db/schema';
 import { user } from '#/db/auth-schema';
+import { auth } from '#/lib/auth';
 import { logActivity, withActivity } from '#/lib/activity';
 import { CURRENCIES } from '#/lib/currencies';
+import { getRequestHeaders } from '@tanstack/react-start/server';
 
-function getSessionUser(ctx: unknown): { id: string; name?: string; email?: string; role?: string | null } | null {
-	const c = ctx as Record<string, unknown>;
-	const u = (c?.user as { id: string; name?: string; email?: string; role?: string | null } | null)
-		?? (c?.session as unknown as { user?: { id: string; name?: string; email?: string; role?: string | null } | null } | null)?.user;
-	if (u && typeof u === 'object' && 'id' in u && typeof (u as { id: unknown }).id === 'string') return u as { id: string; name?: string; email?: string; role?: string | null };
-	return null;
-}
-async function assertCanMutate(ctx: unknown) {
-	const u = getSessionUser(ctx);
+async function requireOwnerOrAdmin(): Promise<{ id: string; name: string; role?: string | null }> {
+	const headers = getRequestHeaders();
+	const session = await auth.api.getSession({ headers });
+	const u = session?.user as unknown as { id: string; name: string; role?: string | null } | null;
 	if (!u?.id) throw new Error('Unauthorized');
 	const roleFromSession = (u as unknown as { role?: string | null })?.role;
-	if (roleFromSession === 'owner' || roleFromSession === 'admin') return;
+	if (roleFromSession === 'owner' || roleFromSession === 'admin') return u as { id: string; name: string; role?: string | null };
 	const rows = await db
 		.select({ role: user.role })
 		.from(user)
@@ -32,6 +29,7 @@ async function assertCanMutate(ctx: unknown) {
 		.limit(1);
 	const role = rows[0]?.role;
 	if (role !== 'owner' && role !== 'admin') throw new Error('Forbidden: owner or admin only');
+	return u as { id: string; name: string; role?: string | null };
 }
 
 const invoiceItemSchema = z.object({
@@ -140,10 +138,8 @@ export const createInvoice = createServerFn({ method: 'POST' })
 	.validator(createInvoiceSchema)
 	.handler(
 		withActivity(
-			async ({ data, context }) => {
-				const ctx = context as unknown as Record<string, unknown>;
-				await assertCanMutate(ctx);
-				const sessionUser = getSessionUser(ctx)!;
+			async ({ data }) => {
+				const sessionUser = await requireOwnerOrAdmin();
 
 
 				// Get business to generate invoice number (org scoped)
@@ -416,10 +412,8 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 	.validator(updateInvoiceSchema)
 	.handler(
 		withActivity(
-			async ({ data, context }) => {
-				const ctx = context as unknown as Record<string, unknown>;
-				await assertCanMutate(ctx);
-				const sessionUser = getSessionUser(ctx)!;
+			async ({ data }) => {
+				const sessionUser = await requireOwnerOrAdmin();
 
 				const now = new Date();
 

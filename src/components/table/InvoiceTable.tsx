@@ -32,7 +32,7 @@ import {
   TableRow,
 } from '#/components/ui/table';
 import { cn } from '#/lib/utils';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 
 export interface Invoice {
   id: string;
@@ -97,6 +97,7 @@ export function InvoiceTable({
   pagination: propsPagination,
   onPaginationChange: propsOnPaginationChange,
 }: InvoiceTableProps) {
+  const navigate = useNavigate();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [internalGlobalFilter, setInternalGlobalFilter] = useState('');
@@ -193,7 +194,7 @@ export function InvoiceTable({
         cell: (info) => {
           const invoice = info.row.original;
           return (
-            <div className="flex items-center justify-end gap-1">
+            <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
               {allowEdit && (
                 <Button
                   variant="outline"
@@ -309,6 +310,7 @@ export function InvoiceTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
+                  onClick={() => navigate({ to: '/invoices/$id', params: { id: row.original.id } })}
                   className={cn(
                     'border-b border-[#d6d3d1] bg-white hover:bg-[#f0dcd8] cursor-pointer',
                     row.original.status === 'voided' && 'opacity-60',

@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '#/db';
 import { account, user } from '#/db/auth-schema';
 import { auth } from '#/lib/auth';
+import { getRequestHeaders } from '@tanstack/react-start/server';
 
 const RESEND_FROM =
 	process.env.RESEND_FROM ?? 'Spark Invoice <no-reply@sparkafrica.co>';
@@ -29,18 +30,14 @@ export type InviteMemberInput = v.InferOutput<typeof inviteMemberSchema>;
 
 export const inviteMember = createServerFn({ method: 'POST' })
 	.validator((data) => v.parse(inviteMemberSchema, data))
-	.handler(async ({ data, context }) => {
-		const ctx = context as unknown as {
-			session: { id: string } | null;
-			user: { id: string; name: string; email: string; role?: string | null } | null;
-		};
-		const sessionUser = (ctx as unknown as { user?: { id: string; name: string; email: string; role?: string | null } | null; session?: { user?: { id: string; name: string; email: string; role?: string | null } | null } | null })?.user
-			?? (ctx as unknown as { session?: { user?: { id: string; name: string; email: string; role?: string | null } | null } | null })?.session?.user
-			?? null;
-		if (!sessionUser) {
+	.handler(async ({ data }) => {
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+		const sessionUser = session?.user as unknown as { id: string; name: string; email: string; role?: string | null } | null;
+		if (!sessionUser?.id) {
 			throw new Error('Unauthorized');
 		}
-		const roleFromSession = (sessionUser as unknown as { role?: string | null })?.role;
+		const roleFromSession = sessionUser.role;
 		if (roleFromSession !== 'owner' && roleFromSession !== 'admin') {
 			const rows = await db.select({ role: user.role }).from(user).where(eq(user.id, sessionUser.id)).limit(1);
 			const r = rows[0]?.role;
@@ -158,16 +155,11 @@ export const inviteMember = createServerFn({ method: 'POST' })
 		};
 	});
 
-export const listUsers = createServerFn({ method: 'GET' }).handler(
-	async ({ context }) => {
-		const ctx = context as unknown as {
-			session: { id: string } | null;
-			user: { id: string } | null;
-		};
-		const sessionUser = (ctx as unknown as { user?: { id: string } | null; session?: { user?: { id: string } | null } | null })?.user
-			?? (ctx as unknown as { session?: { user?: { id: string } | null } | null })?.session?.user
-			?? null;
-		if (!sessionUser) {
+export const listUsers = createServerFn({ method: 'GET' }).handler(async () => {
+		const headers = getRequestHeaders();
+		const session = await auth.api.getSession({ headers });
+		const sessionUser = session?.user as unknown as { id: string } | null;
+		if (!sessionUser?.id) {
 			throw new Error('Unauthorized');
 		}
 		const users = await db
