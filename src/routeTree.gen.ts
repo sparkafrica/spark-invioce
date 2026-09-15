@@ -32,6 +32,7 @@ import { Route as AuthAuthLoginRouteImport } from './routes/_auth/auth/login'
 import { Route as AuthAuthResetPasswordRouteImport } from './routes/_auth/auth/reset-password'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiCronFxRatesRouteImport } from './routes/api/cron/fx-rates'
+import { Route as ApiCronOverdueRouteImport } from './routes/api/cron/overdue'
 import { Route as AuthLayoutInvoicesIdIndexRouteImport } from './routes/_auth-layout/invoices/$id/index'
 import { Route as AuthLayoutInvoicesIdEditRouteImport } from './routes/_auth-layout/invoices/$id/edit'
 
@@ -152,6 +153,11 @@ const ApiCronFxRatesRoute = ApiCronFxRatesRouteImport.update({
   path: '/api/cron/fx-rates',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronOverdueRoute = ApiCronOverdueRouteImport.update({
+  id: '/api/cron/overdue',
+  path: '/api/cron/overdue',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLayoutInvoicesIdIndexRoute =
   AuthLayoutInvoicesIdIndexRouteImport.update({
     id: '/invoices/$id/',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password': typeof AuthAuthResetPasswordRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
+  '/api/cron/overdue': typeof ApiCronOverdueRoute
   '/clients/': typeof AuthLayoutClientsIndexRoute
   '/invoices/': typeof AuthLayoutInvoicesIndexRoute
   '/memos/': typeof AuthLayoutMemosIndexRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof AuthAuthResetPasswordRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
+  '/api/cron/overdue': typeof ApiCronOverdueRoute
   '/clients': typeof AuthLayoutClientsIndexRoute
   '/invoices': typeof AuthLayoutInvoicesIndexRoute
   '/memos': typeof AuthLayoutMemosIndexRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/_auth/auth/reset-password': typeof AuthAuthResetPasswordRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/cron/fx-rates': typeof ApiCronFxRatesRoute
+  '/api/cron/overdue': typeof ApiCronOverdueRoute
   '/_auth-layout/clients/': typeof AuthLayoutClientsIndexRoute
   '/_auth-layout/invoices/': typeof AuthLayoutInvoicesIndexRoute
   '/_auth-layout/memos/': typeof AuthLayoutMemosIndexRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/api/auth/$'
     | '/api/cron/fx-rates'
+    | '/api/cron/overdue'
     | '/clients/'
     | '/invoices/'
     | '/memos/'
@@ -287,6 +297,7 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/api/auth/$'
     | '/api/cron/fx-rates'
+    | '/api/cron/overdue'
     | '/clients'
     | '/invoices'
     | '/memos'
@@ -314,6 +325,7 @@ export interface FileRouteTypes {
     | '/_auth/auth/reset-password'
     | '/api/auth/$'
     | '/api/cron/fx-rates'
+    | '/api/cron/overdue'
     | '/_auth-layout/clients/'
     | '/_auth-layout/invoices/'
     | '/_auth-layout/memos/'
@@ -329,6 +341,7 @@ export interface RootRouteChildren {
   AuthLayoutRoute: typeof AuthLayoutRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiCronFxRatesRoute: typeof ApiCronFxRatesRoute
+  ApiCronOverdueRoute: typeof ApiCronOverdueRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -494,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCronFxRatesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/overdue': {
+      id: '/api/cron/overdue'
+      path: '/api/cron/overdue'
+      fullPath: '/api/cron/overdue'
+      preLoaderRoute: typeof ApiCronOverdueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_auth-layout/invoices/$id/': {
       id: '/_auth-layout/invoices/$id/'
       path: '/invoices/$id'
@@ -575,6 +595,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthLayoutRoute: AuthLayoutRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiCronFxRatesRoute: ApiCronFxRatesRoute,
+  ApiCronOverdueRoute: ApiCronOverdueRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
