@@ -169,7 +169,7 @@ export function DateRangePicker({
           }}
           numberOfMonths={2}
           captionLayout="dropdown"
-          className="p-3"
+          className="p-3 w-full"
         />
         <div className="p-2 border-t border-[#d6d3d1] flex flex-wrap gap-1.5">
           {presets.map((p) => (
