@@ -1,5 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { markOverdueInvoicesCron } from '#/lib/server/overdue';
+import { and, inArray, lt } from 'drizzle-orm';
+import { db } from '#/db';
+import { activityLog, invoiceHistory, invoices } from '#/db/schema';
+
+// Statuses eligible for auto-overdue. Excludes draft (not yet sent),
+// paid / voided / overdue (terminal or already overdue).
+const ELIGIBLE_STATUSES = ['due', 'part_paid'] as const;
 
 function isAuthorized(request: Request): boolean {
 	const secret = process.env.CRON_SECRET;
@@ -8,17 +14,86 @@ function isAuthorized(request: Request): boolean {
 	return header === `Bearer ${secret}`;
 }
 
-function parseParams(url: string): { dryRun: boolean; limit: number } {
-	const u = new URL(url);
-	const dryRun =
-		u.searchParams.get('dryRun') === '1' ||
-		u.searchParams.get('dryRun') === 'true';
-	const rawLimit = Number(u.searchParams.get('limit'));
-	const limit =
-		Number.isFinite(rawLimit) && rawLimit > 0
-			? Math.min(Math.floor(rawLimit), 1000)
-			: 500;
-	return { dryRun, limit };
+export async function markOverdueInvoicesCron() {
+	const now = new Date();
+	const startOfToday = new Date(now);
+	startOfToday.setUTCHours(0, 0, 0, 0);
+
+	// Find invoices past due date that are still due / part_paid
+	const candidates = await db
+		.select({
+			id: invoices.id,
+			number: invoices.number,
+			status: invoices.status,
+			dueDate: invoices.dueDate,
+		})
+		.from(invoices)
+		.where(
+			and(
+				lt(invoices.dueDate, startOfToday),
+				inArray(invoices.status, [...ELIGIBLE_STATUSES]),
+			),
+		);
+
+	const ids = candidates.map((c) => c.id);
+
+	// Bulk status update
+	await db
+		.update(invoices)
+		.set({ status: 'overdue', updatedAt: now })
+		.where(inArray(invoices.id, ids));
+
+	// Per-invoice audit history (cron as actor)
+	try {
+		await db.insert(invoiceHistory).values(
+			candidates.map((c) => ({
+				invoiceId: c.id,
+				userId: 'system',
+				userName: 'cron',
+				action: 'Auto-overdue',
+				note: 'Past due date — auto-marked overdue by cron',
+				changes: [{ field: 'status', from: c.status, to: 'overdue' }],
+				createdAt: now,
+			})),
+		);
+	} catch (error) {
+		console.error('Overdue cron history insert failed:', error);
+	}
+
+	// Single summary activity entry
+	try {
+		await db.insert(activityLog).values({
+			userId: 'system',
+			userName: 'cron',
+			type: 'Edited',
+			entity: 'Invoice',
+			label: `${candidates.length} invoice(s)`,
+			detail: `Auto-marked ${candidates.length} invoice(s) overdue (past due date)`,
+			metadata: {
+				changes: [],
+				cron: 'overdue',
+				count: candidates.length,
+				numbers: candidates.map((c) => c.number),
+			},
+		});
+	} catch (error) {
+		console.error('Overdue cron activity insert failed:', error);
+	}
+
+	return {
+		success: true,
+		checkedAt: now.toISOString(),
+		startOfToday: startOfToday.toISOString(),
+		updatedCount: candidates.length,
+		dryRun: false,
+		updated: candidates.map((c) => ({
+			id: c.id,
+			number: c.number,
+			prevStatus: c.status,
+			dueDate:
+				c.dueDate instanceof Date ? c.dueDate.toISOString() : String(c.dueDate),
+		})),
+	};
 }
 
 async function handle(request: Request): Promise<Response> {
@@ -29,8 +104,7 @@ async function handle(request: Request): Promise<Response> {
 		});
 	}
 	try {
-		const { dryRun, limit } = parseParams(request.url);
-		const result = await markOverdueInvoicesCron({ data: { dryRun, limit } });
+		const result = await markOverdueInvoicesCron();
 		return new Response(JSON.stringify(result), {
 			headers: { 'Content-Type': 'application/json' },
 		});
