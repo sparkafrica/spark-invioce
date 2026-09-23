@@ -366,6 +366,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
     })
     : '—';
   const taxRate = Number(invoice.taxRate || 0);
+  const sanitizedCurrency = String(invoice.currency || 'NGN').replace(/[^A-Za-z]/g, '').toUpperCase() || 'NGN';
 
   // Build lines like template: if tranche, use tranches; else use items
   const lines =
@@ -383,6 +384,8 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
               year: 'numeric',
             })
             : '—',
+          qty: '—',
+          rate: '—',
           amount: formatMoney(amt, invoice.currency),
           tax: formatMoney(tax, invoice.currency),
           total: formatMoney(amt + tax, invoice.currency),
@@ -401,6 +404,8 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
           name: it.name,
           deliverables: it.description || '—',
           due: dueDate,
+          qty: String(qty),
+          rate: formatMoney(cost, invoice.currency),
           amount: formatMoney(net, invoice.currency),
           tax: formatMoney(tax, invoice.currency),
           total: formatMoney(net + tax, invoice.currency),
@@ -568,7 +573,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         </div>
 
         <div className="overflow-x-auto">
-          <Table className="w-full border-collapse min-w-175">
+          <Table className="w-full border-collapse min-w-190">
             <TableHeader>
               <TableRow className="border-b-2 border-[#201e1d] hover:bg-transparent">
                 <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
@@ -580,14 +585,20 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                 <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
                   DUE
                 </TableHead>
+                <TableHead className="text-center py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                  QTY
+                </TableHead>
                 <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
-                  AMOUNT
+                  RATE ({sanitizedCurrency})
+                </TableHead>
+                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                  AMOUNT ({sanitizedCurrency})
                 </TableHead>
                 <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
                   TAX
                 </TableHead>
                 <TableHead className="text-right py-2 text-[9.5px] tracking-widest font-semibold h-auto">
-                  TOTAL
+                  TOTAL ({sanitizedCurrency})
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -605,6 +616,12 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                   </TableCell>
                   <TableCell className="py-2.5 pr-2 align-top text-xs whitespace-nowrap">
                     {l.due}
+                  </TableCell>
+                  <TableCell className="py-2.5 pr-2 text-center align-top tabular-nums text-xs">
+                    {l.qty}
+                  </TableCell>
+                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">
+                    {l.rate}
                   </TableCell>
                   <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">
                     {l.amount}

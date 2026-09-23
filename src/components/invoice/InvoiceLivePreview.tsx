@@ -165,6 +165,8 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 				const taxAmount = subtotal * (rate / 100);
 				const total = subtotal + taxAmount;
 
+				const sanitizedCur = String(cur || 'NGN').replace(/[^A-Za-z]/g, '').toUpperCase() || 'NGN';
+
 				const lines =
 					paymentType === 'tranche' && trancheList.length > 0
 						? trancheList.map((t) => {
@@ -180,6 +182,8 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 												year: 'numeric',
 											})
 										: '—',
+									qty: '—',
+									rate: '—',
 									amount: formatMoney(amt, cur),
 									tax: formatMoney(tax, cur),
 									total: formatMoney(amt + tax, cur),
@@ -198,6 +202,8 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 									name: it.name || '—',
 									deliverables: it.description || '—',
 									due: dueFmt,
+									qty: String(qty),
+									rate: formatMoney(cost, cur),
 									amount: formatMoney(net, cur),
 									tax: formatMoney(tax, cur),
 									total: formatMoney(net + tax, cur),
@@ -290,14 +296,20 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
 												DUE
 											</TableHead>
+											<TableHead className="text-center py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+												QTY
+											</TableHead>
 											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
-												AMOUNT
+												RATE ({sanitizedCur})
+											</TableHead>
+											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+												AMOUNT ({sanitizedCur})
 											</TableHead>
 											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
 												TAX
 											</TableHead>
 											<TableHead className="text-right py-1 text-[8px] tracking-widest font-semibold h-auto">
-												TOTAL
+												TOTAL ({sanitizedCur})
 											</TableHead>
 										</TableRow>
 									</TableHeader>
@@ -305,7 +317,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 										{lines.length === 0 ? (
 											<TableRow className="border-b border-[#d6d3d1]">
 												<TableCell
-													colSpan={6}
+													colSpan={8}
 													className="py-2 text-center text-[11px] text-[#5c5755]"
 												>
 													No items
@@ -325,6 +337,12 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 													</TableCell>
 													<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-nowrap">
 														{l.due}
+													</TableCell>
+													<TableCell className="py-1 pr-1 text-center align-top tabular-nums text-[11px]">
+														{l.qty}
+													</TableCell>
+													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px]">
+														{l.rate}
 													</TableCell>
 													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px]">
 														{l.amount}

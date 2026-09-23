@@ -220,23 +220,28 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   th: {
-    fontSize: 7.5,
-    letterSpacing: 0.75,
+    fontSize: 7,
+    letterSpacing: 0.65,
     fontWeight: 600,
     color: '#201e1d',
     textTransform: 'uppercase',
     fontFamily: 'Archivo',
-    paddingRight: 10,
+    paddingRight: 8,
   },
   thRight: {
     textAlign: 'right',
   },
-  colMilestone: { width: '17%' },
-  colDeliverables: { width: '33%' },
-  colDue: { width: '12%' },
-  colAmount: { width: '12.66%', textAlign: 'right' },
-  colTax: { width: '12.66%', textAlign: 'right' },
-  colTotal: { width: '12.66%', textAlign: 'right' },
+  thCenter: {
+    textAlign: 'center',
+  },
+  colMilestone: { width: '14%' },
+  colDeliverables: { width: '23%' },
+  colDue: { width: '10%' },
+  colQty: { width: '7%', textAlign: 'center' },
+  colRate: { width: '11%', textAlign: 'right' },
+  colAmount: { width: '11.66%', textAlign: 'right' },
+  colTax: { width: '11.67%', textAlign: 'right' },
+  colTotal: { width: '11.67%', textAlign: 'right' },
   tdRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -455,6 +460,8 @@ function fmt(amount: number, currency: string) {
 
 export function InvoicePDF({ data }: { data: InvoicePDFData }) {
   const taxRate = Number(data.invoice.taxRate || 0);
+  const sanitizedCurrency = String(data.invoice.currency || 'NGN').replace(/[^A-Za-z]/g, '').toUpperCase() || 'NGN';
+  const curForFmt = sanitizedCurrency as Currency;
 
   const lines =
     data.invoice.paymentType === 'tranche' && data.tranches.length > 0
@@ -465,9 +472,11 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
           name: t.name,
           deliverables: t.deliverables || '—',
           due: t.dueDate || '—',
-          amount: fmt(amt, data.invoice.currency),
-          tax: fmt(tax, data.invoice.currency),
-          total: fmt(amt + tax, data.invoice.currency),
+          qty: '—',
+          rate: '—',
+          amount: fmt(amt, curForFmt),
+          tax: fmt(tax, curForFmt),
+          total: fmt(amt + tax, curForFmt),
         };
       })
       : data.items.map((it) => {
@@ -483,9 +492,11 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
           name: it.name,
           deliverables: it.description || '—',
           due: data.invoice.dueDate || '—',
-          amount: fmt(net, data.invoice.currency),
-          tax: fmt(tax, data.invoice.currency),
-          total: fmt(net + tax, data.invoice.currency),
+          qty: String(qty),
+          rate: fmt(cost, curForFmt),
+          amount: fmt(net, curForFmt),
+          tax: fmt(tax, curForFmt),
+          total: fmt(net + tax, curForFmt),
         };
       });
 
@@ -495,7 +506,7 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
     : data.invoice.paymentType === 'tranche' && data.tranches.length > 0
       ? 0
       : data.total;
-  const dueNow = fmt(dueNowAmount, data.invoice.currency);
+  const dueNow = fmt(dueNowAmount, curForFmt);
 
   const isVoided = data.invoice.status === 'voided';
 
@@ -570,14 +581,18 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
               DELIVERABLES
             </Text>
             <Text style={[styles.th, styles.colDue]}>DUE</Text>
+            <Text style={[styles.th, styles.colQty, styles.thCenter]}>QTY</Text>
+            <Text style={[styles.th, styles.colRate, styles.thRight]}>
+              RATE ({sanitizedCurrency})
+            </Text>
             <Text style={[styles.th, styles.colAmount, styles.thRight]}>
-              AMOUNT ({data.invoice.currency})
+              AMOUNT ({sanitizedCurrency})
             </Text>
             <Text style={[styles.th, styles.colTax, styles.thRight]}>
               {data.invoice.taxName} {taxRate ? `${taxRate}%` : ''}
             </Text>
             <Text style={[styles.th, styles.colTotal, styles.thRight]}>
-              TOTAL ({data.invoice.currency})
+              TOTAL ({sanitizedCurrency})
             </Text>
           </View>
           {lines.map((l, i) => {
@@ -594,6 +609,12 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                   {l.deliverables}
                 </Text>
                 <Text style={[styles.td, styles.colDue]}>{l.due}</Text>
+                <Text style={[styles.td, styles.tdTabular, styles.colQty, { textAlign: 'center' }]}>
+                  {l.qty}
+                </Text>
+                <Text style={[styles.td, styles.tdTabular, styles.colRate]}>
+                  {l.rate}
+                </Text>
                 <Text style={[styles.td, styles.tdTabular, styles.colAmount]}>
                   {l.amount}
                 </Text>
@@ -622,7 +643,7 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal</Text>
               <Text style={styles.totalValue}>
-                {fmt(data.subtotal, data.invoice.currency)}
+                {fmt(data.subtotal, curForFmt)}
               </Text>
             </View>
             <View style={styles.totalRow}>
@@ -630,13 +651,13 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                 {data.invoice.taxName} ({data.invoice.taxRate}%)
               </Text>
               <Text style={styles.totalValue}>
-                {fmt(data.taxAmount, data.invoice.currency)}
+                {fmt(data.taxAmount, curForFmt)}
               </Text>
             </View>
             <View style={styles.grandTotalRow}>
               <Text style={styles.grandLabel}>Total due</Text>
               <Text style={styles.grandValue}>
-                {fmt(data.total, data.invoice.currency)}
+                {fmt(data.total, curForFmt)}
               </Text>
             </View>
             <View style={styles.dueNowBlock}>
@@ -693,7 +714,7 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                   <Text> · {p.recordedBy}</Text>
                 </Text>
                 <Text style={styles.paymentAmount}>
-                  {fmt(Number(p.amount), data.invoice.currency)}
+                  {fmt(Number(p.amount), curForFmt)}
                 </Text>
               </View>
             ))}
