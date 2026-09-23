@@ -368,9 +368,9 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
   const taxRate = Number(invoice.taxRate || 0);
   const sanitizedCurrency = String(invoice.currency || 'NGN').replace(/[^A-Za-z]/g, '').toUpperCase() || 'NGN';
 
+  const isTranche = invoice.paymentType === 'tranche' && invoice.tranches.length > 0;
   // Build lines like template: if tranche, use tranches; else use items
-  const lines =
-    invoice.paymentType === 'tranche' && invoice.tranches.length > 0
+  const lines = isTranche
       ? invoice.tranches.map((t) => {
         const amt = Number(t.amount || 0);
         const tax = (amt * taxRate) / 100;
@@ -403,7 +403,6 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         return {
           name: it.name,
           deliverables: it.description || '—',
-          due: dueDate,
           qty: String(qty),
           rate: formatMoney(cost, invoice.currency),
           amount: formatMoney(net, invoice.currency),
@@ -413,12 +412,23 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
       });
 
   const nextUnpaid = invoice.tranches.find((t) => !t.paid);
-  const dueNow = nextUnpaid
-    ? formatMoney(
-      Number(nextUnpaid.amount) * (1 + taxRate / 100),
-      invoice.currency,
-    )
-    : formatMoney(0, invoice.currency);
+  const dueNow = isTranche
+    ? nextUnpaid
+      ? formatMoney(
+        Number(nextUnpaid.amount) * (1 + taxRate / 100),
+        invoice.currency,
+      )
+      : formatMoney(0, invoice.currency)
+    : formatMoney(invoice.total, invoice.currency);
+  const dueOnDate = isTranche
+    ? nextUnpaid?.dueDate
+      ? new Date(nextUnpaid.dueDate).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
+      : dueDate
+    : dueDate;
 
   return (
     <div className="flex flex-col gap-4 py-6" style={{ padding: 26 }}>
@@ -573,7 +583,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         </div>
 
         <div className="overflow-x-auto">
-          <Table className="w-full border-collapse min-w-190">
+          <Table className={isTranche ? "w-full border-collapse min-w-190" : "w-full border-collapse min-w-175"}>
             <TableHeader>
               <TableRow className="border-b-2 border-[#201e1d] hover:bg-transparent">
                 <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
@@ -582,9 +592,11 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                 <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
                   DELIVERABLES
                 </TableHead>
-                <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
-                  DUE
-                </TableHead>
+                {isTranche && (
+                  <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                    DUE
+                  </TableHead>
+                )}
                 <TableHead className="text-center py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
                   QTY
                 </TableHead>
@@ -614,9 +626,11 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                   <TableCell className="py-2.5 pr-2 align-top text-xs">
                     {l.deliverables}
                   </TableCell>
-                  <TableCell className="py-2.5 pr-2 align-top text-xs whitespace-nowrap">
-                    {l.due}
-                  </TableCell>
+                  {isTranche && (
+                    <TableCell className="py-2.5 pr-2 align-top text-xs whitespace-nowrap">
+                      {(l as any).due}
+                    </TableCell>
+                  )}
                   <TableCell className="py-2.5 pr-2 text-center align-top tabular-nums text-xs">
                     {l.qty}
                   </TableCell>
@@ -663,7 +677,7 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
             </div>
             <div className="flex justify-between items-baseline mt-3 bg-[#ec3013] text-white p-3">
               <span className="text-[10px] tracking-widest font-semibold">
-                DUE NOW
+                DUE ON {dueOnDate}
               </span>
               <span className="font-bold text-sm tabular-nums">{dueNow}</span>
             </div>

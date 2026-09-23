@@ -242,6 +242,14 @@ const styles = StyleSheet.create({
   colAmount: { width: '11.66%', textAlign: 'right' },
   colTax: { width: '11.67%', textAlign: 'right' },
   colTotal: { width: '11.67%', textAlign: 'right' },
+  // Full (no DUE) — redistributed 10% from colDue
+  colMilestoneFull: { width: '15%' },
+  colDeliverablesFull: { width: '26%' },
+  colQtyFull: { width: '7%', textAlign: 'center' },
+  colRateFull: { width: '12%', textAlign: 'right' },
+  colAmountFull: { width: '12.66%', textAlign: 'right' },
+  colTaxFull: { width: '13.67%', textAlign: 'right' },
+  colTotalFull: { width: '13.67%', textAlign: 'right' },
   tdRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -463,8 +471,8 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
   const sanitizedCurrency = String(data.invoice.currency || 'NGN').replace(/[^A-Za-z]/g, '').toUpperCase() || 'NGN';
   const curForFmt = sanitizedCurrency as Currency;
 
-  const lines =
-    data.invoice.paymentType === 'tranche' && data.tranches.length > 0
+  const isTranche = data.invoice.paymentType === 'tranche' && data.tranches.length > 0;
+  const lines = isTranche
       ? data.tranches.map((t) => {
         const amt = Number(t.amount || 0);
         const tax = amt * (taxRate / 100);
@@ -491,7 +499,6 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
         return {
           name: it.name,
           deliverables: it.description || '—',
-          due: data.invoice.dueDate || '—',
           qty: String(qty),
           rate: fmt(cost, curForFmt),
           amount: fmt(net, curForFmt),
@@ -501,12 +508,15 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
       });
 
   const nextUnpaid = data.tranches.find((t) => !t.paid);
-  const dueNowAmount = nextUnpaid
-    ? Number(nextUnpaid.amount) * (1 + taxRate / 100)
-    : data.invoice.paymentType === 'tranche' && data.tranches.length > 0
-      ? 0
-      : data.total;
+  const dueNowAmount = isTranche
+    ? nextUnpaid
+      ? Number(nextUnpaid.amount) * (1 + taxRate / 100)
+      : 0
+    : data.total;
   const dueNow = fmt(dueNowAmount, curForFmt);
+  const dueOnDate = isTranche
+    ? nextUnpaid?.dueDate || data.invoice.dueDate || '—'
+    : data.invoice.dueDate || '—';
 
   const isVoided = data.invoice.status === 'voided';
 
@@ -576,22 +586,22 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
         {/* Milestone Table - unified tranches xor items */}
         <View style={styles.table}>
           <View style={styles.tableHeaderRow}>
-            <Text style={[styles.th, styles.colMilestone]}>MILESTONE</Text>
-            <Text style={[styles.th, styles.colDeliverables]}>
+            <Text style={[styles.th, isTranche ? styles.colMilestone : styles.colMilestoneFull]}>MILESTONE</Text>
+            <Text style={[styles.th, isTranche ? styles.colDeliverables : styles.colDeliverablesFull]}>
               DELIVERABLES
             </Text>
-            <Text style={[styles.th, styles.colDue]}>DUE</Text>
-            <Text style={[styles.th, styles.colQty, styles.thCenter]}>QTY</Text>
-            <Text style={[styles.th, styles.colRate, styles.thRight]}>
+            {isTranche && <Text style={[styles.th, styles.colDue]}>DUE</Text>}
+            <Text style={[styles.th, isTranche ? styles.colQty : styles.colQtyFull, styles.thCenter]}>QTY</Text>
+            <Text style={[styles.th, isTranche ? styles.colRate : styles.colRateFull, styles.thRight]}>
               RATE ({sanitizedCurrency})
             </Text>
-            <Text style={[styles.th, styles.colAmount, styles.thRight]}>
+            <Text style={[styles.th, isTranche ? styles.colAmount : styles.colAmountFull, styles.thRight]}>
               AMOUNT ({sanitizedCurrency})
             </Text>
-            <Text style={[styles.th, styles.colTax, styles.thRight]}>
+            <Text style={[styles.th, isTranche ? styles.colTax : styles.colTaxFull, styles.thRight]}>
               {data.invoice.taxName} {taxRate ? `${taxRate}%` : ''}
             </Text>
-            <Text style={[styles.th, styles.colTotal, styles.thRight]}>
+            <Text style={[styles.th, isTranche ? styles.colTotal : styles.colTotalFull, styles.thRight]}>
               TOTAL ({sanitizedCurrency})
             </Text>
           </View>
@@ -602,23 +612,23 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                 key={i}
                 style={[styles.tdRow, isLast ? styles.tdRowLast : {}]}
               >
-                <Text style={[styles.td, styles.tdBold, styles.colMilestone]}>
+                <Text style={[styles.td, styles.tdBold, isTranche ? styles.colMilestone : styles.colMilestoneFull]}>
                   {l.name}
                 </Text>
-                <Text style={[styles.td, styles.colDeliverables]}>
+                <Text style={[styles.td, isTranche ? styles.colDeliverables : styles.colDeliverablesFull]}>
                   {l.deliverables}
                 </Text>
-                <Text style={[styles.td, styles.colDue]}>{l.due}</Text>
-                <Text style={[styles.td, styles.tdTabular, styles.colQty, { textAlign: 'center' }]}>
+                {isTranche && <Text style={[styles.td, styles.colDue]}>{(l as any).due}</Text>}
+                <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colQty : styles.colQtyFull, { textAlign: 'center' }]}>
                   {l.qty}
                 </Text>
-                <Text style={[styles.td, styles.tdTabular, styles.colRate]}>
+                <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colRate : styles.colRateFull]}>
                   {l.rate}
                 </Text>
-                <Text style={[styles.td, styles.tdTabular, styles.colAmount]}>
+                <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colAmount : styles.colAmountFull]}>
                   {l.amount}
                 </Text>
-                <Text style={[styles.td, styles.tdTabular, styles.colTax]}>
+                <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colTax : styles.colTaxFull]}>
                   {l.tax}
                 </Text>
                 <Text
@@ -626,7 +636,7 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                     styles.td,
                     styles.tdBold,
                     styles.tdTabular,
-                    styles.colTotal,
+                    isTranche ? styles.colTotal : styles.colTotalFull,
                   ]}
                 >
                   {l.total}
@@ -661,7 +671,7 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
               </Text>
             </View>
             <View style={styles.dueNowBlock}>
-              <Text style={styles.dueNowLabel}>DUE TODAY</Text>
+              <Text style={styles.dueNowLabel}>DUE ON {dueOnDate}</Text>
               <Text style={styles.dueNowValue}>{dueNow}</Text>
             </View>
           </View>

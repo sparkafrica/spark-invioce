@@ -166,9 +166,9 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 				const total = subtotal + taxAmount;
 
 				const sanitizedCur = String(cur || 'NGN').replace(/[^A-Za-z]/g, '').toUpperCase() || 'NGN';
+				const isTranche = paymentType === 'tranche' && trancheList.length > 0;
 
-				const lines =
-					paymentType === 'tranche' && trancheList.length > 0
+				const lines = isTranche
 						? trancheList.map((t) => {
 								const amt = Number(t.amount || 0);
 								const tax = (amt * rate) / 100;
@@ -201,7 +201,6 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 								return {
 									name: it.name || '—',
 									deliverables: it.description || '—',
-									due: dueFmt,
 									qty: String(qty),
 									rate: formatMoney(cost, cur),
 									amount: formatMoney(net, cur),
@@ -211,9 +210,20 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 							});
 
 				const nextUnpaid = trancheList.find((t) => !t.paid);
-				const dueNow = nextUnpaid
-					? formatMoney(Number(nextUnpaid.amount) * (1 + rate / 100), cur)
-					: formatMoney(0, cur);
+				const dueNow = isTranche
+					? nextUnpaid
+						? formatMoney(Number(nextUnpaid.amount) * (1 + rate / 100), cur)
+						: formatMoney(0, cur)
+					: formatMoney(total, cur);
+				const dueOnDate = isTranche
+					? nextUnpaid?.dueDate
+						? new Date(nextUnpaid.dueDate).toLocaleDateString('en-GB', {
+								day: 'numeric',
+								month: 'short',
+								year: 'numeric',
+							})
+						: dueFmt
+					: dueFmt;
 
 				return (
 					<div className="flex flex-col gap-2">
@@ -293,9 +303,11 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
 												DELIVERABLES
 											</TableHead>
-											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
-												DUE
-											</TableHead>
+											{isTranche && (
+												<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+													DUE
+												</TableHead>
+											)}
 											<TableHead className="text-center py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
 												QTY
 											</TableHead>
@@ -317,7 +329,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 										{lines.length === 0 ? (
 											<TableRow className="border-b border-[#d6d3d1]">
 												<TableCell
-													colSpan={8}
+													colSpan={isTranche ? 8 : 7}
 													className="py-2 text-center text-[11px] text-[#5c5755]"
 												>
 													No items
@@ -335,9 +347,11 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 													<TableCell className="py-1 pr-1 align-top text-[11px]">
 														{l.deliverables}
 													</TableCell>
-													<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-nowrap">
-														{l.due}
-													</TableCell>
+													{isTranche && (
+														<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-nowrap">
+															{(l as any).due}
+														</TableCell>
+													)}
 													<TableCell className="py-1 pr-1 text-center align-top tabular-nums text-[11px]">
 														{l.qty}
 													</TableCell>
@@ -385,7 +399,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 									</div>
 									<div className="flex justify-between items-baseline mt-2 bg-[#ec3013] text-white p-2">
 										<span className="text-[8px] tracking-widest font-semibold">
-											DUE NOW
+											DUE ON {dueOnDate}
 										</span>
 										<span className="font-bold text-[11px] tabular-nums">
 											{dueNow}
