@@ -234,22 +234,21 @@ const styles = StyleSheet.create({
   thCenter: {
     textAlign: 'center',
   },
-  colMilestone: { width: '14%' },
-  colDeliverables: { width: '23%' },
+  // 7-col tranche (with DUE) — TAX removed, RATE→UNIT PRICE
+  colMilestone: { width: '15%' },
+  colDeliverables: { width: '27%' },
   colDue: { width: '10%' },
   colQty: { width: '7%', textAlign: 'center' },
-  colRate: { width: '11%', textAlign: 'right' },
-  colAmount: { width: '11.66%', textAlign: 'right' },
-  colTax: { width: '11.67%', textAlign: 'right' },
-  colTotal: { width: '11.67%', textAlign: 'right' },
-  // Full (no DUE) — redistributed 10% from colDue
-  colMilestoneFull: { width: '15%' },
-  colDeliverablesFull: { width: '26%' },
+  colRate: { width: '13%', textAlign: 'right' },
+  colAmount: { width: '13%', textAlign: 'right' },
+  colTotal: { width: '15%', textAlign: 'right' },
+  // 6-col full (no DUE, no TAX)
+  colMilestoneFull: { width: '16%' },
+  colDeliverablesFull: { width: '32%' },
   colQtyFull: { width: '7%', textAlign: 'center' },
-  colRateFull: { width: '12%', textAlign: 'right' },
-  colAmountFull: { width: '12.66%', textAlign: 'right' },
-  colTaxFull: { width: '13.67%', textAlign: 'right' },
-  colTotalFull: { width: '13.67%', textAlign: 'right' },
+  colRateFull: { width: '13%', textAlign: 'right' },
+  colAmountFull: { width: '15%', textAlign: 'right' },
+  colTotalFull: { width: '17%', textAlign: 'right' },
   tdRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -593,13 +592,10 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
             {isTranche && <Text style={[styles.th, styles.colDue]}>DUE</Text>}
             <Text style={[styles.th, isTranche ? styles.colQty : styles.colQtyFull, styles.thCenter]}>QTY</Text>
             <Text style={[styles.th, isTranche ? styles.colRate : styles.colRateFull, styles.thRight]}>
-              RATE ({sanitizedCurrency})
+              UNIT PRICE ({sanitizedCurrency})
             </Text>
             <Text style={[styles.th, isTranche ? styles.colAmount : styles.colAmountFull, styles.thRight]}>
               AMOUNT ({sanitizedCurrency})
-            </Text>
-            <Text style={[styles.th, isTranche ? styles.colTax : styles.colTaxFull, styles.thRight]}>
-              {data.invoice.taxName} {taxRate ? `${taxRate}%` : ''}
             </Text>
             <Text style={[styles.th, isTranche ? styles.colTotal : styles.colTotalFull, styles.thRight]}>
               TOTAL ({sanitizedCurrency})
@@ -627,9 +623,6 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                 </Text>
                 <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colAmount : styles.colAmountFull]}>
                   {l.amount}
-                </Text>
-                <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colTax : styles.colTaxFull]}>
-                  {l.tax}
                 </Text>
                 <Text
                   style={[

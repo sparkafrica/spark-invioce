@@ -601,13 +601,10 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                   QTY
                 </TableHead>
                 <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
-                  RATE ({sanitizedCurrency})
+                  UNIT PRICE ({sanitizedCurrency})
                 </TableHead>
                 <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
                   AMOUNT ({sanitizedCurrency})
-                </TableHead>
-                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
-                  TAX
                 </TableHead>
                 <TableHead className="text-right py-2 text-[9.5px] tracking-widest font-semibold h-auto">
                   TOTAL ({sanitizedCurrency})
@@ -639,9 +636,6 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                   </TableCell>
                   <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">
                     {l.amount}
-                  </TableCell>
-                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">
-                    {l.tax}
                   </TableCell>
                   <TableCell className="py-2.5 text-right align-top font-semibold tabular-nums text-xs">
                     {l.total}

@@ -312,13 +312,10 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 												QTY
 											</TableHead>
 											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
-												RATE ({sanitizedCur})
+												UNIT PRICE ({sanitizedCur})
 											</TableHead>
 											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
 												AMOUNT ({sanitizedCur})
-											</TableHead>
-											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
-												TAX
 											</TableHead>
 											<TableHead className="text-right py-1 text-[8px] tracking-widest font-semibold h-auto">
 												TOTAL ({sanitizedCur})
@@ -329,7 +326,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 										{lines.length === 0 ? (
 											<TableRow className="border-b border-[#d6d3d1]">
 												<TableCell
-													colSpan={isTranche ? 8 : 7}
+													colSpan={isTranche ? 7 : 6}
 													className="py-2 text-center text-[11px] text-[#5c5755]"
 												>
 													No items
@@ -360,9 +357,6 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 													</TableCell>
 													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px]">
 														{l.amount}
-													</TableCell>
-													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px]">
-														{l.tax}
 													</TableCell>
 													<TableCell className="py-1 text-right align-top font-semibold tabular-nums text-[11px]">
 														{l.total}
