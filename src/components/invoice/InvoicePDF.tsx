@@ -38,6 +38,8 @@ Font.register({
   ],
 });
 
+// Font.registerHyphenationCallback((word) => [word]);
+
 export interface InvoicePDFData {
   invoice: {
     number: string;
@@ -236,7 +238,11 @@ const styles = StyleSheet.create({
   },
   // 7-col tranche (with DUE) — TAX removed, RATE→UNIT PRICE
   colMilestone: { width: '15%' },
-  colDeliverables: { width: '27%' },
+  colDeliverables: {
+    width: '27%',
+    flexShrink: 1,
+    minWidth: 0,
+  },
   colDue: { width: '10%' },
   colQty: { width: '7%', textAlign: 'center' },
   colRate: { width: '13%', textAlign: 'right' },
@@ -244,7 +250,11 @@ const styles = StyleSheet.create({
   colTotal: { width: '15%', textAlign: 'right' },
   // 6-col full (no DUE, no TAX)
   colMilestoneFull: { width: '16%' },
-  colDeliverablesFull: { width: '32%' },
+  colDeliverablesFull: {
+    width: '32%',
+    flexShrink: 1,
+    minWidth: 0,
+  },
   colQtyFull: { width: '7%', textAlign: 'center' },
   colRateFull: { width: '13%', textAlign: 'right' },
   colAmountFull: { width: '15%', textAlign: 'right' },
@@ -264,6 +274,8 @@ const styles = StyleSheet.create({
     color: '#201e1d',
     fontFamily: 'Archivo',
     paddingRight: 10,
+    flexShrink: 1,
+    minWidth: 0,
   },
   tdBold: {
     fontWeight: 700,
@@ -472,39 +484,39 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
 
   const isTranche = data.invoice.paymentType === 'tranche' && data.tranches.length > 0;
   const lines = isTranche
-      ? data.tranches.map((t) => {
-        const amt = Number(t.amount || 0);
-        const tax = amt * (taxRate / 100);
-        return {
-          name: t.name,
-          deliverables: t.deliverables || '—',
-          due: t.dueDate || '—',
-          qty: '—',
-          rate: '—',
-          amount: fmt(amt, curForFmt),
-          tax: fmt(tax, curForFmt),
-          total: fmt(amt + tax, curForFmt),
-        };
-      })
-      : data.items.map((it) => {
-        const qty = Number(it.qty || 0);
-        const cost = Number(it.cost || 0);
-        const amt = qty * cost;
-        const disc =
-          Number(it.discountAmt || 0) +
-          (amt * Number(it.discountPct || 0)) / 100;
-        const net = amt - disc;
-        const tax = net * (taxRate / 100);
-        return {
-          name: it.name,
-          deliverables: it.description || '—',
-          qty: String(qty),
-          rate: fmt(cost, curForFmt),
-          amount: fmt(net, curForFmt),
-          tax: fmt(tax, curForFmt),
-          total: fmt(net + tax, curForFmt),
-        };
-      });
+    ? data.tranches.map((t) => {
+      const amt = Number(t.amount || 0);
+      const tax = amt * (taxRate / 100);
+      return {
+        name: t.name,
+        deliverables: t.deliverables || '—',
+        due: t.dueDate || '—',
+        qty: '—',
+        rate: '—',
+        amount: fmt(amt, curForFmt),
+        tax: fmt(tax, curForFmt),
+        total: fmt(amt + tax, curForFmt),
+      };
+    })
+    : data.items.map((it) => {
+      const qty = Number(it.qty || 0);
+      const cost = Number(it.cost || 0);
+      const amt = qty * cost;
+      const disc =
+        Number(it.discountAmt || 0) +
+        (amt * Number(it.discountPct || 0)) / 100;
+      const net = amt - disc;
+      const tax = net * (taxRate / 100);
+      return {
+        name: it.name,
+        deliverables: it.description || '—',
+        qty: String(qty),
+        rate: fmt(cost, curForFmt),
+        amount: fmt(net, curForFmt),
+        tax: fmt(tax, curForFmt),
+        total: fmt(net + tax, curForFmt),
+      };
+    });
 
   const nextUnpaid = data.tranches.find((t) => !t.paid);
   const dueNowAmount = isTranche
@@ -611,7 +623,17 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                 <Text style={[styles.td, styles.tdBold, isTranche ? styles.colMilestone : styles.colMilestoneFull]}>
                   {l.name}
                 </Text>
-                <Text style={[styles.td, isTranche ? styles.colDeliverables : styles.colDeliverablesFull]}>
+                <Text
+                  style={[
+                    styles.td,
+                    isTranche ? styles.colDeliverables : styles.colDeliverablesFull,
+                    {
+                      flexShrink: 1,
+                      minWidth: 0,
+                      flexWrap: 'wrap',
+                    },
+                  ]}
+                >
                   {l.deliverables}
                 </Text>
                 {isTranche && <Text style={[styles.td, styles.colDue]}>{(l as any).due}</Text>}
