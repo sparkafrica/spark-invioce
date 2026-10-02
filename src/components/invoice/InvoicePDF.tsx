@@ -38,8 +38,6 @@ Font.register({
   ],
 });
 
-// Font.registerHyphenationCallback((word) => [word]);
-
 export interface InvoicePDFData {
   invoice: {
     number: string;
@@ -238,11 +236,7 @@ const styles = StyleSheet.create({
   },
   // 7-col tranche (with DUE) — TAX removed, RATE→UNIT PRICE
   colMilestone: { width: '15%' },
-  colDeliverables: {
-    width: '27%',
-    flexShrink: 1,
-    minWidth: 0,
-  },
+  colDeliverables: { width: '27%' },
   colDue: { width: '10%' },
   colQty: { width: '7%', textAlign: 'center' },
   colRate: { width: '13%', textAlign: 'right' },
@@ -250,11 +244,7 @@ const styles = StyleSheet.create({
   colTotal: { width: '15%', textAlign: 'right' },
   // 6-col full (no DUE, no TAX)
   colMilestoneFull: { width: '16%' },
-  colDeliverablesFull: {
-    width: '32%',
-    flexShrink: 1,
-    minWidth: 0,
-  },
+  colDeliverablesFull: { width: '32%' },
   colQtyFull: { width: '7%', textAlign: 'center' },
   colRateFull: { width: '13%', textAlign: 'right' },
   colAmountFull: { width: '15%', textAlign: 'right' },
@@ -274,8 +264,7 @@ const styles = StyleSheet.create({
     color: '#201e1d',
     fontFamily: 'Archivo',
     paddingRight: 10,
-    flexShrink: 1,
-    minWidth: 0,
+    boxSizing: 'border-box',
   },
   tdBold: {
     fontWeight: 700,
@@ -627,11 +616,6 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                   style={[
                     styles.td,
                     isTranche ? styles.colDeliverables : styles.colDeliverablesFull,
-                    {
-                      flexShrink: 1,
-                      minWidth: 0,
-                      flexWrap: 'wrap',
-                    },
                   ]}
                 >
                   {l.deliverables}

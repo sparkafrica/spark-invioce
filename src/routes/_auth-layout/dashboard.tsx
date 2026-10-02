@@ -634,7 +634,7 @@ function Dashboard() {
         <div className="bg-white px-4 py-3 grid grid-cols-[110px_1fr] gap-3.5 items-center">
           <div className="text-[10px] tracking-[0.12em] font-semibold text-[#c02a10]">CUSTOM RANGE</div>
           <div className="flex gap-2 items-center flex-wrap">
-            <div className="min-w-[280px] flex-1 max-w-[420px]">
+            <div className="min-w-70 flex-1 max-w-105">
               <DateRangePicker
                 value={customRange}
                 onChange={setCustomRange}
