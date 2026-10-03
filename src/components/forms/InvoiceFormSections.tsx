@@ -1265,13 +1265,13 @@ export function PaymentDestinationSection({ form }: { form: InvoiceFormApi }) {
               {(field) => (
                 <Field>
                   <FieldLabel>
-                    Editable note printed at the foot of the invoice
+                    Editable note printed at the foot of the invoice (optional)
                   </FieldLabel>
                   <Textarea
                     value={(field.state.value as string) || ''}
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
-                    placeholder="Withholding tax of 5% applies per clause 5.5 ..."
+                    placeholder="Optional — leave blank to omit footer note"
                     rows={3}
                   />
                   <FieldError errors={field.state.meta.errors} />

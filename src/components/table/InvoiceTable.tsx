@@ -199,7 +199,7 @@ export function InvoiceTable({
                 <Button
                   variant="outline"
                   size="sm"
-                  render={<Link to="/invoices/$id/edit" params={{ id: invoice.id }} />}
+                  render={<Link to="/invoices/$id/edit" params={{ id: invoice.id }} search={{ from: 'invoices' }} />}
                   nativeButton={false}
                   className="border border-[#201e1d] bg-white px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#f0dcd8] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
                 >
@@ -209,7 +209,7 @@ export function InvoiceTable({
               <Button
                 variant="default"
                 size="sm"
-                render={<Link to="/invoices/$id" params={{ id: invoice.id }} />}
+                render={<Link to="/invoices/$id" params={{ id: invoice.id }} search={{ from: 'invoices' }} />}
                 nativeButton={false}
                 className="bg-[#201e1d] text-white border border-[#201e1d] px-2.5 py-1.5 text-[11px] font-semibold hover:bg-[#c02a10] hover:border-[#c02a10] focus-visible:outline-2 focus-visible:outline-[#ec3013] rounded-none h-auto"
               >
@@ -310,7 +310,7 @@ export function InvoiceTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  onClick={() => navigate({ to: '/invoices/$id', params: { id: row.original.id } })}
+                  onClick={() => navigate({ to: '/invoices/$id', params: { id: row.original.id }, search: { from: 'invoices' } })}
                   className={cn(
                     'border-b border-[#d6d3d1] bg-white hover:bg-[#f0dcd8] cursor-pointer',
                     row.original.status === 'voided' && 'opacity-60',

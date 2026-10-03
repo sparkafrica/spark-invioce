@@ -293,31 +293,53 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 								<strong>Re:</strong> {(description as string) || '—'}
 							</div>
 
-							<div className="overflow-x-auto">
-								<Table className="w-full border-collapse min-w-0">
+							<div className="overflow-x-auto min-w-0">
+								<Table className="w-full border-collapse table-fixed min-w-0">
+									<colgroup>
+										{isTranche ? (
+											<>
+												<col style={{ width: '15%' }} />
+												<col style={{ width: '27%' }} />
+												<col style={{ width: '10%' }} />
+												<col style={{ width: '7%' }} />
+												<col style={{ width: '13%' }} />
+												<col style={{ width: '13%' }} />
+												<col style={{ width: '15%' }} />
+											</>
+										) : (
+											<>
+												<col style={{ width: '16%' }} />
+												<col style={{ width: '32%' }} />
+												<col style={{ width: '7%' }} />
+												<col style={{ width: '13%' }} />
+												<col style={{ width: '15%' }} />
+												<col style={{ width: '17%' }} />
+											</>
+										)}
+									</colgroup>
 									<TableHeader>
 										<TableRow className="border-b-2 border-[#201e1d] hover:bg-transparent">
-											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
 												MILESTONE
 											</TableHead>
-											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
 												DELIVERABLES
 											</TableHead>
 											{isTranche && (
-												<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+												<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
 													DUE
 												</TableHead>
 											)}
-											<TableHead className="text-center py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+											<TableHead className="text-center py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
 												QTY
 											</TableHead>
-											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
 												UNIT PRICE ({sanitizedCur})
 											</TableHead>
-											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto">
+											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
 												AMOUNT ({sanitizedCur})
 											</TableHead>
-											<TableHead className="text-right py-1 text-[8px] tracking-widest font-semibold h-auto">
+											<TableHead className="text-right py-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
 												TOTAL ({sanitizedCur})
 											</TableHead>
 										</TableRow>
@@ -327,7 +349,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 											<TableRow className="border-b border-[#d6d3d1]">
 												<TableCell
 													colSpan={isTranche ? 7 : 6}
-													className="py-2 text-center text-[11px] text-[#5c5755]"
+													className="py-2 text-center text-[11px] text-[#5c5755] whitespace-normal"
 												>
 													No items
 												</TableCell>
@@ -338,10 +360,10 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 													key={i}
 													className="border-b border-[#d6d3d1] hover:bg-transparent"
 												>
-													<TableCell className="py-1 pr-1 font-semibold align-top text-[11px]">
+													<TableCell className="py-1 pr-1 font-semibold align-top text-[11px] whitespace-normal break-words min-w-0">
 														{l.name}
 													</TableCell>
-													<TableCell className="py-1 pr-1 align-top text-[11px]">
+													<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-normal break-words min-w-0">
 														{l.deliverables}
 													</TableCell>
 													{isTranche && (
@@ -349,16 +371,16 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 															{(l as any).due}
 														</TableCell>
 													)}
-													<TableCell className="py-1 pr-1 text-center align-top tabular-nums text-[11px]">
+													<TableCell className="py-1 pr-1 text-center align-top tabular-nums text-[11px] whitespace-nowrap">
 														{l.qty}
 													</TableCell>
-													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px]">
+													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px] whitespace-nowrap">
 														{l.rate}
 													</TableCell>
-													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px]">
+													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px] whitespace-nowrap">
 														{l.amount}
 													</TableCell>
-													<TableCell className="py-1 text-right align-top font-semibold tabular-nums text-[11px]">
+													<TableCell className="py-1 text-right align-top font-semibold tabular-nums text-[11px] whitespace-nowrap">
 														{l.total}
 													</TableCell>
 												</TableRow>
@@ -424,10 +446,11 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 										</div>
 									)}
 								</div>
-								<div className="text-[10px] text-[#5c5755]">
-									{(memo as string) ||
-										'Withholding tax of 5% applies per clause 5.5; please remit WHT credit note with payment.'}
-								</div>
+								{typeof memo === 'string' && memo.trim() ? (
+									<div className="text-[10px] text-[#5c5755] break-words">
+										{memo}
+									</div>
+								) : null}
 							</div>
 						</div>
 						<div className="text-[10px] text-[#5c5755] text-center">

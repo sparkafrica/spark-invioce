@@ -212,7 +212,10 @@ export const createInvoice = createServerFn({ method: 'POST' })
 							taxName: data.taxName,
 							taxRate: data.taxRate,
 							description: data.description,
-							memo: data.memo,
+							memo:
+								typeof data.memo === 'string' && data.memo.trim() === ''
+									? null
+									: data.memo,
 							bankId: finalBankId,
 							paymentType: data.paymentType,
 							paymentMethod: data.paymentMethod,
@@ -512,7 +515,10 @@ export const updateInvoice = createServerFn({ method: 'POST' })
 							taxName: data.taxName,
 							taxRate: data.taxRate,
 							description: data.description,
-							memo: data.memo,
+							memo:
+								typeof data.memo === 'string' && data.memo.trim() === ''
+									? null
+									: data.memo,
 							bankId: finalBankId,
 							paymentType: data.paymentType,
 							paymentMethod: data.paymentMethod,

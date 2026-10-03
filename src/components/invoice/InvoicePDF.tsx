@@ -703,10 +703,9 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
             )}
           </View>
           <View style={[styles.paymentCol, styles.memoThanksGap]}>
-            <Text style={styles.memoText}>
-              {data.invoice.memo ||
-                'Withholding tax of 5% applies per clause 5.5 of the Statement of Work; please remit the WHT credit note with payment.'}
-            </Text>
+            {data.invoice.memo?.trim() ? (
+              <Text style={styles.memoText}>{data.invoice.memo}</Text>
+            ) : null}
             <Text style={styles.thanksText}>Thanks for your business.</Text>
           </View>
         </View>

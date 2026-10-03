@@ -5,6 +5,11 @@ import { Button } from '#/components/ui/button';
 import { Skeleton } from '#/components/ui/skeleton';
 import { getSession } from '#/lib/auth.functions';
 import { getInvoiceDetail } from '#/lib/server-fns/invoice-detail';
+import { createStandardSchemaV1, parseAsString } from 'nuqs';
+
+const editSearchParams = {
+  from: parseAsString.withDefault('invoices'),
+};
 
 export const Route = createFileRoute('/_auth-layout/invoices/$id/edit')({
 	beforeLoad: async ({ params }) => {
@@ -22,10 +27,14 @@ export const Route = createFileRoute('/_auth-layout/invoices/$id/edit')({
 		return { user: session.user, session: session.session };
 	},
 	component: EditInvoicePage,
+	validateSearch: createStandardSchemaV1(editSearchParams, {
+		partialOutput: true,
+	}),
 });
 
 function EditInvoicePage() {
 	const { id: invoiceId } = Route.useParams();
+	const { from } = Route.useSearch();
 
 	const { data, isLoading, error, refetch } = useQuery({
 		queryKey: ['invoice', { id: invoiceId }],
@@ -141,6 +150,7 @@ function EditInvoicePage() {
 			initialData={initialData}
 			isEditing={true}
 			invoiceId={invoiceId}
+			from={from}
 		/>
 	);
 }

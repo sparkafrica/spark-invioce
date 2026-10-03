@@ -185,12 +185,14 @@ interface InvoiceFormProps {
   };
   isEditing?: boolean;
   invoiceId?: string;
+  from?: string;
 }
 
 export function InvoiceForm({
   initialData,
   isEditing = false,
   invoiceId,
+  from,
 }: InvoiceFormProps) {
   const navigate = useNavigate();
   const { data: businessesData } = useQuery({
@@ -384,11 +386,19 @@ export function InvoiceForm({
         if (isEditing && invoiceId) {
           await updateInvoice({ data: { ...payload, id: invoiceId } });
           toast.add({ title: 'Invoice updated successfully', type: 'success' });
-          navigate({ to: `/invoices/${invoiceId}` });
+          navigate({
+            to: '/invoices/$id',
+            params: { id: invoiceId },
+            search: { from: from ?? 'invoices' },
+          });
         } else {
           const result = await createInvoice({ data: payload });
           toast.add({ title: 'Invoice created successfully', type: 'success' });
-          navigate({ to: `/invoices/${result.invoiceId}` });
+          navigate({
+            to: '/invoices/$id',
+            params: { id: result.invoiceId },
+            search: { from: 'invoices' },
+          });
         }
       } catch (e: unknown) {
         if (import.meta.env.VITE_DEBUG === 'true') {
@@ -502,22 +512,46 @@ export function InvoiceForm({
             {editTitle}
           </div>
 
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate({ to: '/invoices' })}
-              className="border border-[#201e1d] text-[12px] font-semibold hover:bg-[#f0dcd8] rounded-none"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-[#ec3013] text-white border border-[#ec3013] text-[12px] font-semibold hover:bg-[#c02a10] rounded-none"
-            >
-              {isEditing ? 'Save invoice' : 'Create invoice'}
-            </Button>
-          </div>
+          <form.Subscribe
+            selector={(s: any) => [s.canSubmit, s.isSubmitting] as const}
+          >
+            {([canSubmit, isSubmitting]) => (
+              <div className="flex gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    if (isEditing && invoiceId) {
+                      navigate({
+                        to: '/invoices/$id',
+                        params: { id: invoiceId },
+                        search: { from: from ?? 'invoices' },
+                      });
+                    } else {
+                      navigate({ to: '/invoices' });
+                    }
+                  }}
+                  className="border border-[#201e1d] text-[12px] font-semibold hover:bg-[#f0dcd8] rounded-none"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!canSubmit || isSubmitting}
+                  className="bg-[#ec3013] text-white border border-[#ec3013] text-[12px] font-semibold hover:bg-[#c02a10] rounded-none"
+                >
+                  {isSubmitting
+                    ? isEditing
+                      ? 'Saving…'
+                      : 'Creating…'
+                    : isEditing
+                      ? 'Save invoice'
+                      : 'Create invoice'}
+                </Button>
+              </div>
+            )}
+          </form.Subscribe>
         </div>
 
         <BusinessEntitySection form={form} />
@@ -703,22 +737,31 @@ export function InvoiceForm({
             >
               Cancel
             </Button>
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => {
-                (
-                  form as unknown as {
-                    setFieldValue: (name: string, value: string) => void;
-                  }
-                ).setFieldValue('number', suggestedNumber);
-                setCollisionOpen(false);
-                setTimeout(() => form.handleSubmit(), 0);
-              }}
-              className="bg-[#ec3013] text-white border border-[#ec3013] px-3 py-2 text-xs font-semibold hover:bg-[#c02a10] rounded-none"
+            <form.Subscribe
+              selector={(s: any) => [s.canSubmit, s.isSubmitting] as const}
             >
-              Proceed with {suggestedNumber}
-            </Button>
+              {([canSubmit, isSubmitting]) => (
+                <Button
+                  type="button"
+                  variant="default"
+                  disabled={!canSubmit || isSubmitting}
+                  onClick={() => {
+                    (
+                      form as unknown as {
+                        setFieldValue: (name: string, value: string) => void;
+                      }
+                    ).setFieldValue('number', suggestedNumber);
+                    setCollisionOpen(false);
+                    setTimeout(() => form.handleSubmit(), 0);
+                  }}
+                  className="bg-[#ec3013] text-white border border-[#ec3013] px-3 py-2 text-xs font-semibold hover:bg-[#c02a10] rounded-none"
+                >
+                  {isSubmitting
+                    ? 'Saving…'
+                    : `Proceed with ${suggestedNumber}`}
+                </Button>
+              )}
+            </form.Subscribe>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1234,7 +1234,7 @@ function Dashboard() {
                     // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
                     <div
                       key={inv.id}
-                      onClick={() => navigate({ to: '/invoices/$id', params: { id: inv.id } })}
+                      onClick={() => navigate({ to: '/invoices/$id', params: { id: inv.id }, search: { from: 'dashboard' } })}
                       title={`${inv.number} — ${meta}`}
                       className="flex justify-between gap-3 py-2.5 border-b border-[#d6d3d1] cursor-pointer hover:bg-[#f0dcd8] px-1 -mx-1"
                     >

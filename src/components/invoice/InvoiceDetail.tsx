@@ -127,6 +127,7 @@ export interface InvoiceDetail {
 
 interface InvoiceDetailProps {
   invoice: InvoiceDetail;
+  from?: string;
 }
 
 function formatMoney(n: number, currency: string) {
@@ -138,8 +139,10 @@ function formatMoney(n: number, currency: string) {
   }).format(n);
 }
 
-export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
+export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
   const navigate = useNavigate();
+  const backTo = from === 'dashboard' ? '/dashboard' : '/invoices';
+  const backLabel = from === 'dashboard' ? 'Back to Dashboard' : 'Back';
   const { data: sessionData } = authClient.useSession();
   const role = (sessionData?.user as unknown as { role?: string | null })?.role;
   const canMutate = role === 'owner' || role === 'admin';
@@ -440,11 +443,11 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         <Button
           type="button"
           variant="outline"
-          render={<Link to="/invoices" />}
+          render={<Link to={backTo} />}
           nativeButton={false}
           className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none"
         >
-          Back
+          {backLabel}
         </Button>
         <div className="flex items-center gap-2">
           {canMutate && (
@@ -497,7 +500,11 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
               type="button"
               variant="outline"
               render={
-                <Link to="/invoices/$id/edit" params={{ id: invoice.id }} />
+                <Link
+                  to="/invoices/$id/edit"
+                  params={{ id: invoice.id }}
+                  search={{ from: from ?? 'invoices' }}
+                />
               }
               nativeButton={false}
               className="border border-[#201e1d] bg-white px-3 py-2 text-xs font-semibold hover:bg-[#f0dcd8] rounded-none"
@@ -583,30 +590,52 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
         </div>
 
         <div className="overflow-x-auto">
-          <Table className={isTranche ? "w-full border-collapse min-w-190" : "w-full border-collapse min-w-175"}>
+          <Table className="w-full border-collapse table-fixed min-w-0">
+            <colgroup>
+              {isTranche ? (
+                <>
+                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '27%' }} />
+                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '13%' }} />
+                  <col style={{ width: '13%' }} />
+                  <col style={{ width: '15%' }} />
+                </>
+              ) : (
+                <>
+                  <col style={{ width: '16%' }} />
+                  <col style={{ width: '32%' }} />
+                  <col style={{ width: '7%' }} />
+                  <col style={{ width: '13%' }} />
+                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '17%' }} />
+                </>
+              )}
+            </colgroup>
             <TableHeader>
               <TableRow className="border-b-2 border-[#201e1d] hover:bg-transparent">
-                <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
                   MILESTONE
                 </TableHead>
-                <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
                   DELIVERABLES
                 </TableHead>
                 {isTranche && (
-                  <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                  <TableHead className="text-left py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
                     DUE
                   </TableHead>
                 )}
-                <TableHead className="text-center py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                <TableHead className="text-center py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
                   QTY
                 </TableHead>
-                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
                   UNIT PRICE ({sanitizedCurrency})
                 </TableHead>
-                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
                   AMOUNT ({sanitizedCurrency})
                 </TableHead>
-                <TableHead className="text-right py-2 text-[9.5px] tracking-widest font-semibold h-auto">
+                <TableHead className="text-right py-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
                   TOTAL ({sanitizedCurrency})
                 </TableHead>
               </TableRow>
@@ -617,10 +646,10 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                   key={i}
                   className="border-b border-[#d6d3d1] hover:bg-transparent"
                 >
-                  <TableCell className="py-2.5 pr-2 font-semibold align-top text-xs">
+                  <TableCell className="py-2.5 pr-2 font-semibold align-top text-xs whitespace-normal break-words min-w-0">
                     {l.name}
                   </TableCell>
-                  <TableCell className="py-2.5 pr-2 align-top text-xs">
+                  <TableCell className="py-2.5 pr-2 align-top text-xs whitespace-normal break-words min-w-0">
                     {l.deliverables}
                   </TableCell>
                   {isTranche && (
@@ -628,16 +657,16 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
                       {(l as any).due}
                     </TableCell>
                   )}
-                  <TableCell className="py-2.5 pr-2 text-center align-top tabular-nums text-xs">
+                  <TableCell className="py-2.5 pr-2 text-center align-top tabular-nums text-xs whitespace-nowrap">
                     {l.qty}
                   </TableCell>
-                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">
+                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs whitespace-nowrap">
                     {l.rate}
                   </TableCell>
-                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs">
+                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs whitespace-nowrap">
                     {l.amount}
                   </TableCell>
-                  <TableCell className="py-2.5 text-right align-top font-semibold tabular-nums text-xs">
+                  <TableCell className="py-2.5 text-right align-top font-semibold tabular-nums text-xs whitespace-nowrap">
                     {l.total}
                   </TableCell>
                 </TableRow>
@@ -694,10 +723,11 @@ export function InvoiceDetail({ invoice }: InvoiceDetailProps) {
             {invoice.companyTin && <div>TIN: {invoice.companyTin}</div>}
           </div>
           <div className="flex flex-col justify-between gap-2.5">
-            <div className="text-[#5c5755] text-[11.5px]">
-              {invoice.memo ||
-                'Withholding tax of 5% applies per clause 5.5 of the Statement of Work; please remit the WHT credit note with payment.'}
-            </div>
+            {invoice.memo?.trim() ? (
+              <div className="text-[#5c5755] text-[11.5px]">
+                {invoice.memo}
+              </div>
+            ) : null}
             <div className="font-semibold text-sm">
               Thanks for your business.
             </div>
