@@ -33,6 +33,7 @@ import {
 } from '#/components/ui/table';
 import { Textarea } from '#/components/ui/textarea';
 import { toast } from '#/components/ui/toast';
+import { moneyWithBreaks, useFittedMoneyStep } from '#/hooks/useFittedMoneyStep';
 import { authClient } from '#/lib/auth-client';
 import { getErrorMessage } from '#/lib/errors';
 import { generateInvoicePDF } from '#/lib/server-fns/generate-invoice-pdf';
@@ -137,6 +138,17 @@ function formatMoney(n: number, currency: string) {
     style: 'currency',
     currency,
   }).format(n);
+}
+
+/** Money text with <wbr> after commas so overlong figures wrap cleanly. */
+function moneyNodes(text: string) {
+  const parts = moneyWithBreaks(text);
+  return parts.map((part, k) => (
+    <React.Fragment key={k}>
+      {part}
+      {k < parts.length - 1 ? <wbr /> : null}
+    </React.Fragment>
+  ));
 }
 
 export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
@@ -433,6 +445,34 @@ export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
       : dueDate
     : dueDate;
 
+  // Measured shrink-to-fit for money columns (actual canvas widths, floored).
+  // Residual overflow wraps after commas (<wbr>) and clips — never overlaps.
+  const tableRef = React.useRef<HTMLDivElement>(null);
+  const moneyTexts = lines.flatMap((l) => [l.rate, l.amount, l.total]);
+  const minMoneyPct = isTranche ? 15 : 17;
+  const moneyStep = useFittedMoneyStep(
+    tableRef,
+    moneyTexts,
+    minMoneyPct,
+    [12, 11, 10],
+    400,
+  );
+  const moneyHeaderStep = useFittedMoneyStep(
+    tableRef,
+    [
+      `UNIT PRICE (${sanitizedCurrency})`,
+      `AMOUNT (${sanitizedCurrency})`,
+      `TOTAL (${sanitizedCurrency})`,
+    ],
+    minMoneyPct,
+    [9.5, 8.5],
+    600,
+  );
+  const moneyTdSize =
+    moneyStep === 0 ? 'text-xs' : moneyStep === 1 ? 'text-[11px]' : 'text-[10px]';
+  const moneyThSize =
+    moneyHeaderStep === 0 ? 'text-[9.5px]' : 'text-[8.5px]';
+
   return (
     <div className="flex flex-col gap-4 py-6" style={{ padding: 26 }}>
       {/* Chrome */}
@@ -589,26 +629,26 @@ export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
           <strong>Re:</strong> {invoice.description || '—'}
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" ref={tableRef}>
           <Table className="w-full border-collapse table-fixed min-w-0">
             <colgroup>
               {isTranche ? (
                 <>
-                  <col style={{ width: '15%' }} />
-                  <col style={{ width: '27%' }} />
-                  <col style={{ width: '10%' }} />
-                  <col style={{ width: '7%' }} />
                   <col style={{ width: '13%' }} />
-                  <col style={{ width: '13%' }} />
+                  <col style={{ width: '24%' }} />
+                  <col style={{ width: '9%' }} />
+                  <col style={{ width: '6%' }} />
+                  <col style={{ width: '16%' }} />
+                  <col style={{ width: '17%' }} />
                   <col style={{ width: '15%' }} />
                 </>
               ) : (
                 <>
-                  <col style={{ width: '16%' }} />
-                  <col style={{ width: '32%' }} />
-                  <col style={{ width: '7%' }} />
-                  <col style={{ width: '13%' }} />
-                  <col style={{ width: '15%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '28%' }} />
+                  <col style={{ width: '6%' }} />
+                  <col style={{ width: '17%' }} />
+                  <col style={{ width: '18%' }} />
                   <col style={{ width: '17%' }} />
                 </>
               )}
@@ -629,13 +669,13 @@ export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
                 <TableHead className="text-center py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
                   QTY
                 </TableHead>
-                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
+                <TableHead className={`text-right py-2 pr-2 ${moneyThSize} tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0 overflow-hidden`}>
                   UNIT PRICE ({sanitizedCurrency})
                 </TableHead>
-                <TableHead className="text-right py-2 pr-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
+                <TableHead className={`text-right py-2 pr-2 ${moneyThSize} tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0 overflow-hidden`}>
                   AMOUNT ({sanitizedCurrency})
                 </TableHead>
-                <TableHead className="text-right py-2 text-[9.5px] tracking-widest font-semibold h-auto whitespace-nowrap">
+                <TableHead className={`text-right py-2 ${moneyThSize} tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0 overflow-hidden`}>
                   TOTAL ({sanitizedCurrency})
                 </TableHead>
               </TableRow>
@@ -660,14 +700,14 @@ export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
                   <TableCell className="py-2.5 pr-2 text-center align-top tabular-nums text-xs whitespace-nowrap">
                     {l.qty}
                   </TableCell>
-                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs whitespace-nowrap">
-                    {l.rate}
+                  <TableCell className={`py-2.5 pr-2 text-right align-top tabular-nums ${moneyTdSize} whitespace-normal break-words min-w-0 overflow-hidden`}>
+                    {moneyNodes(l.rate)}
                   </TableCell>
-                  <TableCell className="py-2.5 pr-2 text-right align-top tabular-nums text-xs whitespace-nowrap">
-                    {l.amount}
+                  <TableCell className={`py-2.5 pr-2 text-right align-top tabular-nums ${moneyTdSize} whitespace-normal break-words min-w-0 overflow-hidden`}>
+                    {moneyNodes(l.amount)}
                   </TableCell>
-                  <TableCell className="py-2.5 text-right align-top font-semibold tabular-nums text-xs whitespace-nowrap">
-                    {l.total}
+                  <TableCell className={`py-2.5 text-right align-top font-semibold tabular-nums ${moneyTdSize} whitespace-normal break-words min-w-0 overflow-hidden`}>
+                    {moneyNodes(l.total)}
                   </TableCell>
                 </TableRow>
               ))}

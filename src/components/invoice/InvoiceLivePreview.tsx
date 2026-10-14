@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment, useRef } from 'react';
 import type { InvoiceFormApi } from '#/components/forms/InvoiceForm';
 import {
 	Table,
@@ -9,6 +10,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '#/components/ui/table';
+import { moneyWithBreaks, useFittedMoneyStep } from '#/hooks/useFittedMoneyStep';
 import {
 	useBanks,
 	useBusinesses,
@@ -27,6 +29,162 @@ function formatMoney(n: number, currency: string) {
 	} catch {
 		return `${currency} ${n.toFixed(2)}`;
 	}
+}
+
+interface PreviewLine {
+	name: string;
+	deliverables: string;
+	due?: string;
+	qty: string;
+	rate: string;
+	amount: string;
+	tax: string;
+	total: string;
+}
+
+/** Money text with <wbr> after commas so overlong figures wrap cleanly. */
+function previewMoneyNodes(text: string) {
+	const parts = moneyWithBreaks(text);
+	return parts.map((part, k) => (
+		<Fragment key={k}>
+			{part}
+			{k < parts.length - 1 ? <wbr /> : null}
+		</Fragment>
+	));
+}
+
+function PreviewLinesTable({
+	lines,
+	isTranche,
+	sanitizedCur,
+}: {
+	lines: Array<PreviewLine>;
+	isTranche: boolean;
+	sanitizedCur: string;
+}) {
+	const tableRef = useRef<HTMLDivElement>(null);
+	const moneyTexts = lines.flatMap((l) => [l.rate, l.amount, l.total]);
+	const minMoneyPct = isTranche ? 15 : 17;
+	const moneyStep = useFittedMoneyStep(
+		tableRef,
+		moneyTexts,
+		minMoneyPct,
+		[11, 10, 9],
+		400,
+	);
+	const moneyHeaderStep = useFittedMoneyStep(
+		tableRef,
+		[
+			`UNIT PRICE (${sanitizedCur})`,
+			`AMOUNT (${sanitizedCur})`,
+			`TOTAL (${sanitizedCur})`,
+		],
+		minMoneyPct,
+		[8, 7],
+		600,
+	);
+	const moneyTdSize =
+		moneyStep === 0 ? 'text-[11px]' : moneyStep === 1 ? 'text-[10px]' : 'text-[9px]';
+	const moneyThSize = moneyHeaderStep === 0 ? 'text-[8px]' : 'text-[7px]';
+
+	return (
+		<div className="overflow-x-auto min-w-0" ref={tableRef}>
+			<Table className="w-full border-collapse table-fixed min-w-0">
+				<colgroup>
+					{isTranche ? (
+						<>
+							<col style={{ width: '13%' }} />
+							<col style={{ width: '24%' }} />
+							<col style={{ width: '9%' }} />
+							<col style={{ width: '6%' }} />
+							<col style={{ width: '16%' }} />
+							<col style={{ width: '17%' }} />
+							<col style={{ width: '15%' }} />
+						</>
+					) : (
+						<>
+							<col style={{ width: '14%' }} />
+							<col style={{ width: '28%' }} />
+							<col style={{ width: '6%' }} />
+							<col style={{ width: '17%' }} />
+							<col style={{ width: '18%' }} />
+							<col style={{ width: '17%' }} />
+						</>
+					)}
+				</colgroup>
+				<TableHeader>
+					<TableRow className="border-b-2 border-[#201e1d] hover:bg-transparent">
+						<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
+							MILESTONE
+						</TableHead>
+						<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
+							DELIVERABLES
+						</TableHead>
+						{isTranche && (
+							<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
+								DUE
+							</TableHead>
+						)}
+						<TableHead className="text-center py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
+							QTY
+						</TableHead>
+						<TableHead className={`text-right py-1 pr-1 ${moneyThSize} tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0 overflow-hidden`}>
+							UNIT PRICE ({sanitizedCur})
+						</TableHead>
+						<TableHead className={`text-right py-1 pr-1 ${moneyThSize} tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0 overflow-hidden`}>
+							AMOUNT ({sanitizedCur})
+						</TableHead>
+						<TableHead className={`text-right py-1 ${moneyThSize} tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0 overflow-hidden`}>
+							TOTAL ({sanitizedCur})
+						</TableHead>
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{lines.length === 0 ? (
+						<TableRow className="border-b border-[#d6d3d1]">
+							<TableCell
+								colSpan={isTranche ? 7 : 6}
+								className="py-2 text-center text-[11px] text-[#5c5755] whitespace-normal"
+							>
+								No items
+							</TableCell>
+						</TableRow>
+					) : (
+						lines.map((l, i) => (
+							<TableRow
+								key={i}
+								className="border-b border-[#d6d3d1] hover:bg-transparent"
+							>
+								<TableCell className="py-1 pr-1 font-semibold align-top text-[11px] whitespace-normal break-words min-w-0">
+									{l.name}
+								</TableCell>
+								<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-normal break-words min-w-0">
+									{l.deliverables}
+								</TableCell>
+								{isTranche && (
+									<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-nowrap">
+										{l.due}
+									</TableCell>
+								)}
+								<TableCell className={`py-1 pr-1 text-center align-top tabular-nums text-[11px] whitespace-nowrap`}>
+									{l.qty}
+								</TableCell>
+								<TableCell className={`py-1 pr-1 text-right align-top tabular-nums ${moneyTdSize} whitespace-normal break-words min-w-0 overflow-hidden`}>
+									{previewMoneyNodes(l.rate)}
+								</TableCell>
+								<TableCell className={`py-1 pr-1 text-right align-top tabular-nums ${moneyTdSize} whitespace-normal break-words min-w-0 overflow-hidden`}>
+									{previewMoneyNodes(l.amount)}
+								</TableCell>
+								<TableCell className={`py-1 text-right align-top font-semibold tabular-nums ${moneyTdSize} whitespace-normal break-words min-w-0 overflow-hidden`}>
+									{previewMoneyNodes(l.total)}
+								</TableCell>
+							</TableRow>
+						))
+					)}
+				</TableBody>
+			</Table>
+		</div>
+	);
 }
 
 export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
@@ -293,102 +451,11 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 								<strong>Re:</strong> {(description as string) || '—'}
 							</div>
 
-							<div className="overflow-x-auto min-w-0">
-								<Table className="w-full border-collapse table-fixed min-w-0">
-									<colgroup>
-										{isTranche ? (
-											<>
-												<col style={{ width: '15%' }} />
-												<col style={{ width: '27%' }} />
-												<col style={{ width: '10%' }} />
-												<col style={{ width: '7%' }} />
-												<col style={{ width: '13%' }} />
-												<col style={{ width: '13%' }} />
-												<col style={{ width: '15%' }} />
-											</>
-										) : (
-											<>
-												<col style={{ width: '16%' }} />
-												<col style={{ width: '32%' }} />
-												<col style={{ width: '7%' }} />
-												<col style={{ width: '13%' }} />
-												<col style={{ width: '15%' }} />
-												<col style={{ width: '17%' }} />
-											</>
-										)}
-									</colgroup>
-									<TableHeader>
-										<TableRow className="border-b-2 border-[#201e1d] hover:bg-transparent">
-											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
-												MILESTONE
-											</TableHead>
-											<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-normal break-words min-w-0">
-												DELIVERABLES
-											</TableHead>
-											{isTranche && (
-												<TableHead className="text-left py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
-													DUE
-												</TableHead>
-											)}
-											<TableHead className="text-center py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
-												QTY
-											</TableHead>
-											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
-												UNIT PRICE ({sanitizedCur})
-											</TableHead>
-											<TableHead className="text-right py-1 pr-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
-												AMOUNT ({sanitizedCur})
-											</TableHead>
-											<TableHead className="text-right py-1 text-[8px] tracking-widest font-semibold h-auto whitespace-nowrap">
-												TOTAL ({sanitizedCur})
-											</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{lines.length === 0 ? (
-											<TableRow className="border-b border-[#d6d3d1]">
-												<TableCell
-													colSpan={isTranche ? 7 : 6}
-													className="py-2 text-center text-[11px] text-[#5c5755] whitespace-normal"
-												>
-													No items
-												</TableCell>
-											</TableRow>
-										) : (
-											lines.map((l, i) => (
-												<TableRow
-													key={i}
-													className="border-b border-[#d6d3d1] hover:bg-transparent"
-												>
-													<TableCell className="py-1 pr-1 font-semibold align-top text-[11px] whitespace-normal break-words min-w-0">
-														{l.name}
-													</TableCell>
-													<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-normal break-words min-w-0">
-														{l.deliverables}
-													</TableCell>
-													{isTranche && (
-														<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-nowrap">
-															{(l as any).due}
-														</TableCell>
-													)}
-													<TableCell className="py-1 pr-1 text-center align-top tabular-nums text-[11px] whitespace-nowrap">
-														{l.qty}
-													</TableCell>
-													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px] whitespace-nowrap">
-														{l.rate}
-													</TableCell>
-													<TableCell className="py-1 pr-1 text-right align-top tabular-nums text-[11px] whitespace-nowrap">
-														{l.amount}
-													</TableCell>
-													<TableCell className="py-1 text-right align-top font-semibold tabular-nums text-[11px] whitespace-nowrap">
-														{l.total}
-													</TableCell>
-												</TableRow>
-											))
-										)}
-									</TableBody>
-								</Table>
-							</div>
+							<PreviewLinesTable
+								lines={lines}
+								isTranche={isTranche}
+								sanitizedCur={sanitizedCur}
+							/>
 
 							<div className="grid grid-cols-[1fr_160px] gap-4 text-[11px]">
 								<div />

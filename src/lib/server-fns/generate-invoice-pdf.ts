@@ -263,11 +263,17 @@ export const generateInvoicePDF = createServerFn({ method: 'GET' })
 
 		// Generate PDF using React-PDF — guarded for font/render failures
 		try {
-			const [React, { renderToStream }, { InvoicePDF }] = await Promise.all([
-				import('react'),
-				import('@react-pdf/renderer'),
-				import('#/components/invoice/InvoicePDF'),
-			]);
+			const [React, { renderToStream }, { InvoicePDF }, { ensureMeasureFonts }] =
+				await Promise.all([
+					import('react'),
+					import('@react-pdf/renderer'),
+					import('#/components/invoice/InvoicePDF'),
+					import('#/lib/pdf-measure'),
+				]);
+
+			// Warm Archivo advances so money cells measure actual glyph widths
+			// (never throws — falls back to heuristic sizing)
+			await ensureMeasureFonts();
 
 			// Generate PDF using React-PDF
 			const stream = await renderToStream(

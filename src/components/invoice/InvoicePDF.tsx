@@ -11,6 +11,13 @@ import {
 } from '@react-pdf/renderer';
 import type { Currency } from '#/lib/currencies';
 import { formatCurrency as formatCurrencyLib } from '#/lib/currencies';
+import {
+	PDF_CONTENT_WIDTH_PT,
+	pickFittingSize,
+	splitMoneyLines,
+	MONEY_BODY_SIZES,
+	MONEY_HEADER_SIZES,
+} from '#/lib/pdf-measure';
 
 Font.register({
   family: 'Archivo',
@@ -103,6 +110,37 @@ export interface InvoicePDFData {
   subtotal: number;
   taxAmount: number;
   total: number;
+}
+
+/**
+ * Milestone-table column widths (% of content width, each mode sums to 100).
+ * Mirrored by the HTML display/preview <colgroup>s — keep in sync.
+ */
+export const COL_PCT = {
+	tranche: {
+		milestone: 13,
+		deliverables: 24,
+		due: 9,
+		qty: 6,
+		rate: 16,
+		amount: 17,
+		total: 15,
+	},
+	full: {
+		milestone: 14,
+		deliverables: 28,
+		qty: 6,
+		rate: 17,
+		amount: 18,
+		total: 17,
+	},
+} as const;
+
+const MONEY_PAD_PT = 6;
+
+/** Usable content width (pt) for a money column after its right padding. */
+export function moneyContentWidthPt(pct: number): number {
+	return (PDF_CONTENT_WIDTH_PT * pct) / 100 - MONEY_PAD_PT;
 }
 
 const styles = StyleSheet.create({
@@ -234,21 +272,53 @@ const styles = StyleSheet.create({
   thCenter: {
     textAlign: 'center',
   },
-  // 7-col tranche (with DUE) — TAX removed, RATE→UNIT PRICE
-  colMilestone: { width: '15%' },
-  colDeliverables: { width: '27%' },
-  colDue: { width: '10%' },
-  colQty: { width: '7%', textAlign: 'center' },
-  colRate: { width: '13%', textAlign: 'right' },
-  colAmount: { width: '13%', textAlign: 'right' },
-  colTotal: { width: '15%', textAlign: 'right' },
+  // 7-col tranche (with DUE) — money cols widened, neighbours trimmed.
+  // Money cells wrap (manual comma-split) + overflow hidden so figures can
+  // never paint into the next column.
+  colMilestone: { width: `${COL_PCT.tranche.milestone}%` },
+  colDeliverables: { width: `${COL_PCT.tranche.deliverables}%` },
+  colDue: { width: `${COL_PCT.tranche.due}%` },
+  colQty: { width: `${COL_PCT.tranche.qty}%`, textAlign: 'center' },
+  colRate: {
+    width: `${COL_PCT.tranche.rate}%`,
+    textAlign: 'right',
+    overflow: 'hidden',
+    paddingRight: 6,
+  },
+  colAmount: {
+    width: `${COL_PCT.tranche.amount}%`,
+    textAlign: 'right',
+    overflow: 'hidden',
+    paddingRight: 6,
+  },
+  colTotal: {
+    width: `${COL_PCT.tranche.total}%`,
+    textAlign: 'right',
+    overflow: 'hidden',
+    paddingRight: 6,
+  },
   // 6-col full (no DUE, no TAX)
-  colMilestoneFull: { width: '16%' },
-  colDeliverablesFull: { width: '32%' },
-  colQtyFull: { width: '7%', textAlign: 'center' },
-  colRateFull: { width: '13%', textAlign: 'right' },
-  colAmountFull: { width: '15%', textAlign: 'right' },
-  colTotalFull: { width: '17%', textAlign: 'right' },
+  colMilestoneFull: { width: `${COL_PCT.full.milestone}%` },
+  colDeliverablesFull: { width: `${COL_PCT.full.deliverables}%` },
+  colQtyFull: { width: `${COL_PCT.full.qty}%`, textAlign: 'center' },
+  colRateFull: {
+    width: `${COL_PCT.full.rate}%`,
+    textAlign: 'right',
+    overflow: 'hidden',
+    paddingRight: 6,
+  },
+  colAmountFull: {
+    width: `${COL_PCT.full.amount}%`,
+    textAlign: 'right',
+    overflow: 'hidden',
+    paddingRight: 6,
+  },
+  colTotalFull: {
+    width: `${COL_PCT.full.total}%`,
+    textAlign: 'right',
+    overflow: 'hidden',
+    paddingRight: 6,
+  },
   tdRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
@@ -466,6 +536,48 @@ function fmt(amount: number, currency: string) {
   }
 }
 
+/**
+ * Money cell that can never overlap its neighbour: fixed % width with
+ * overflow hidden, measured shrink-to-fit size, and pre-split stacked lines
+ * (manual comma-split — react-pdf hyphenation would render a "-" glyph and
+ * corrupt the figure, so wrapping is done here instead of the linebreaker).
+ */
+function MoneyCell({
+	pct,
+	moneyLines,
+	bold,
+	size,
+}: {
+	pct: number;
+	moneyLines: Array<string>;
+	bold: boolean;
+	size: number;
+}) {
+	return (
+		<View
+			style={{
+				width: `${pct}%`,
+				overflow: 'hidden',
+				paddingRight: MONEY_PAD_PT,
+			}}
+		>
+			{moneyLines.map((ln, k) => (
+				<Text
+					key={k}
+					style={[
+						styles.td,
+						bold ? styles.tdBold : null,
+						styles.tdTabular,
+						{ paddingRight: 0, fontSize: size },
+					]}
+				>
+					{ln}
+				</Text>
+			))}
+		</View>
+	);
+}
+
 export function InvoicePDF({ data }: { data: InvoicePDFData }) {
   const taxRate = Number(data.invoice.taxRate || 0);
   const sanitizedCurrency = String(data.invoice.currency || 'NGN').replace(/[^A-Za-z]/g, '').toUpperCase() || 'NGN';
@@ -519,6 +631,47 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
     : data.invoice.dueDate || '—';
 
   const isVoided = data.invoice.status === 'voided';
+
+  // Measured shrink-to-fit for money columns (actual glyph advances, bold
+  // accounted). Falls back to single-line 9pt when fonts aren't warmed.
+  const W = isTranche ? COL_PCT.tranche : COL_PCT.full;
+  const rateW = moneyContentWidthPt(W.rate);
+  const amountW = moneyContentWidthPt(W.amount);
+  const totalW = moneyContentWidthPt(W.total);
+  const rateSize = pickFittingSize(
+    lines.map((l) => l.rate),
+    rateW,
+    MONEY_BODY_SIZES,
+    false,
+  );
+  const amountSize = pickFittingSize(
+    lines.map((l) => l.amount),
+    amountW,
+    MONEY_BODY_SIZES,
+    false,
+  );
+  const totalSize = pickFittingSize(
+    lines.map((l) => l.total),
+    totalW,
+    MONEY_BODY_SIZES,
+    true,
+  );
+  const moneyLines = lines.map((l) => ({
+    rate: splitMoneyLines(l.rate, rateSize, rateW, false),
+    amount: splitMoneyLines(l.amount, amountSize, amountW, false),
+    total: splitMoneyLines(l.total, totalSize, totalW, true),
+  }));
+  const headerSize = pickFittingSize(
+    [
+      `UNIT PRICE (${sanitizedCurrency})`,
+      `AMOUNT (${sanitizedCurrency})`,
+      `TOTAL (${sanitizedCurrency})`,
+    ],
+    Math.min(rateW, amountW, totalW),
+    MONEY_HEADER_SIZES,
+    true,
+    0.65,
+  );
 
   return (
     <Document>
@@ -592,13 +745,13 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
             </Text>
             {isTranche && <Text style={[styles.th, styles.colDue]}>DUE</Text>}
             <Text style={[styles.th, isTranche ? styles.colQty : styles.colQtyFull, styles.thCenter]}>QTY</Text>
-            <Text style={[styles.th, isTranche ? styles.colRate : styles.colRateFull, styles.thRight]}>
+            <Text style={[styles.th, isTranche ? styles.colRate : styles.colRateFull, styles.thRight, { fontSize: headerSize }]}>
               UNIT PRICE ({sanitizedCurrency})
             </Text>
-            <Text style={[styles.th, isTranche ? styles.colAmount : styles.colAmountFull, styles.thRight]}>
+            <Text style={[styles.th, isTranche ? styles.colAmount : styles.colAmountFull, styles.thRight, { fontSize: headerSize }]}>
               AMOUNT ({sanitizedCurrency})
             </Text>
-            <Text style={[styles.th, isTranche ? styles.colTotal : styles.colTotalFull, styles.thRight]}>
+            <Text style={[styles.th, isTranche ? styles.colTotal : styles.colTotalFull, styles.thRight, { fontSize: headerSize }]}>
               TOTAL ({sanitizedCurrency})
             </Text>
           </View>
@@ -624,22 +777,24 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
                 <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colQty : styles.colQtyFull, { textAlign: 'center' }]}>
                   {l.qty}
                 </Text>
-                <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colRate : styles.colRateFull]}>
-                  {l.rate}
-                </Text>
-                <Text style={[styles.td, styles.tdTabular, isTranche ? styles.colAmount : styles.colAmountFull]}>
-                  {l.amount}
-                </Text>
-                <Text
-                  style={[
-                    styles.td,
-                    styles.tdBold,
-                    styles.tdTabular,
-                    isTranche ? styles.colTotal : styles.colTotalFull,
-                  ]}
-                >
-                  {l.total}
-                </Text>
+                <MoneyCell
+                  pct={W.rate}
+                  moneyLines={moneyLines[i].rate}
+                  bold={false}
+                  size={rateSize}
+                />
+                <MoneyCell
+                  pct={W.amount}
+                  moneyLines={moneyLines[i].amount}
+                  bold={false}
+                  size={amountSize}
+                />
+                <MoneyCell
+                  pct={W.total}
+                  moneyLines={moneyLines[i].total}
+                  bold={true}
+                  size={totalSize}
+                />
               </View>
             );
           })}
