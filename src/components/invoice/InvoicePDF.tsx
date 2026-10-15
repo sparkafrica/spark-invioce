@@ -536,6 +536,12 @@ function fmt(amount: number, currency: string) {
   }
 }
 
+/** '10.00' -> '10', ''/'0' -> '' for the discount annotation. */
+function trimPct(raw: string | null | undefined): string {
+  const n = Number(raw || 0);
+  return n ? String(n) : '';
+}
+
 /**
  * Money cell that can never overlap its neighbour: fixed % width with
  * overflow hidden, measured shrink-to-fit size, and pre-split stacked lines
@@ -597,6 +603,9 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
         amount: fmt(amt, curForFmt),
         tax: fmt(tax, curForFmt),
         total: fmt(amt + tax, curForFmt),
+        disc: 0,
+        discountName: null as string | null,
+        discountPct: '',
       };
     })
     : data.items.map((it) => {
@@ -616,6 +625,9 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
         amount: fmt(net, curForFmt),
         tax: fmt(tax, curForFmt),
         total: fmt(net + tax, curForFmt),
+        disc,
+        discountName: it.discountName,
+        discountPct: trimPct(it.discountPct),
       };
     });
 
@@ -764,6 +776,11 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
               >
                 <Text style={[styles.td, styles.tdBold, isTranche ? styles.colMilestone : styles.colMilestoneFull]}>
                   {l.name}
+                  {Math.round(l.disc * 100) / 100 > 0 ? (
+                    <Text style={{ fontSize: 8, color: '#5c5755', fontWeight: 400 }}>
+                      {`\nLess ${l.discountName || 'Discount'}${l.discountPct ? ` ${l.discountPct}%` : ''} −${fmt(l.disc, curForFmt)}`}
+                    </Text>
+                  ) : null}
                 </Text>
                 <Text
                   style={[

@@ -140,6 +140,12 @@ function formatMoney(n: number, currency: string) {
   }).format(n);
 }
 
+/** '10.00' -> '10', ''/'0' -> '' for the discount annotation. */
+function trimPct(raw: string | null | undefined): string {
+  const n = Number(raw || 0);
+  return n ? String(n) : '';
+}
+
 /** Money text with <wbr> after commas so overlong figures wrap cleanly. */
 function moneyNodes(text: string) {
   const parts = moneyWithBreaks(text);
@@ -404,6 +410,9 @@ export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
           amount: formatMoney(amt, invoice.currency),
           tax: formatMoney(tax, invoice.currency),
           total: formatMoney(amt + tax, invoice.currency),
+          disc: 0,
+          discountName: null as string | null,
+          discountPct: '',
         };
       })
       : invoice.items.map((it) => {
@@ -423,6 +432,9 @@ export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
           amount: formatMoney(net, invoice.currency),
           tax: formatMoney(tax, invoice.currency),
           total: formatMoney(net + tax, invoice.currency),
+          disc,
+          discountName: it.discountName,
+          discountPct: trimPct(it.discountPct),
         };
       });
 
@@ -688,6 +700,13 @@ export function InvoiceDetail({ invoice, from }: InvoiceDetailProps) {
                 >
                   <TableCell className="py-2.5 pr-2 font-semibold align-top text-xs whitespace-normal break-words min-w-0">
                     {l.name}
+                    {Math.round(l.disc * 100) / 100 > 0 ? (
+                      <span className="mt-0.5 block text-[10px] font-normal text-[#5c5755]">
+                        Less {l.discountName || 'Discount'}
+                        {l.discountPct ? ` ${l.discountPct}%` : ''} −
+                        {formatMoney(l.disc, invoice.currency)}
+                      </span>
+                    ) : null}
                   </TableCell>
                   <TableCell className="py-2.5 pr-2 align-top text-xs whitespace-normal break-words min-w-0">
                     {l.deliverables}

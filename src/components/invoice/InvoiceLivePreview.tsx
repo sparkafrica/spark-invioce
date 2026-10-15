@@ -40,6 +40,15 @@ interface PreviewLine {
 	amount: string;
 	tax: string;
 	total: string;
+	disc: number;
+	discountName: string | null;
+	discountPct: string;
+}
+
+/** '10.00' -> '10', ''/'0' -> '' for the discount annotation. */
+function trimPreviewPct(raw: string | null | undefined): string {
+	const n = Number(raw || 0);
+	return n ? String(n) : '';
 }
 
 /** Money text with <wbr> after commas so overlong figures wrap cleanly. */
@@ -157,6 +166,13 @@ function PreviewLinesTable({
 							>
 								<TableCell className="py-1 pr-1 font-semibold align-top text-[11px] whitespace-normal break-words min-w-0">
 									{l.name}
+									{Math.round(l.disc * 100) / 100 > 0 ? (
+										<span className="mt-0.5 block text-[10px] font-normal text-[#5c5755]">
+											Less {l.discountName || 'Discount'}
+											{l.discountPct ? ` ${l.discountPct}%` : ''} −
+											{formatMoney(l.disc, sanitizedCur)}
+										</span>
+									) : null}
 								</TableCell>
 								<TableCell className="py-1 pr-1 align-top text-[11px] whitespace-normal break-words min-w-0">
 									{l.deliverables}
@@ -298,6 +314,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 						description?: string | null;
 						qty: string;
 						cost: string;
+						discountName?: string | null;
 						discountPct?: string;
 						discountAmt?: string;
 					}>) || [];
@@ -345,6 +362,9 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 									amount: formatMoney(amt, cur),
 									tax: formatMoney(tax, cur),
 									total: formatMoney(amt + tax, cur),
+									disc: 0,
+									discountName: null as string | null,
+									discountPct: '',
 								};
 							})
 						: itemList.map((it) => {
@@ -364,6 +384,9 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 									amount: formatMoney(net, cur),
 									tax: formatMoney(tax, cur),
 									total: formatMoney(net + tax, cur),
+									disc,
+									discountName: it.discountName ?? null,
+									discountPct: trimPreviewPct(it.discountPct),
 								};
 							});
 
@@ -457,7 +480,7 @@ export function InvoiceLivePreview({ form }: { form: InvoiceFormApi }) {
 								sanitizedCur={sanitizedCur}
 							/>
 
-							<div className="grid grid-cols-[1fr_160px] gap-4 text-[11px]">
+							<div className="grid grid-cols-[1fr_192px] gap-4 text-[11px]">
 								<div />
 								<div>
 									<div className="flex justify-between py-1 border-b border-[#d6d3d1]">
